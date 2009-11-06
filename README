@@ -2,8 +2,11 @@ This module attempts to add HTTP 1.1 chunked transfer
 encoding support for request bodies to nginx 0.8.x and
 0.7.x without patching nginx.
 
-It's not working yet but progressing *very* rapidly. So
+It's NOT working yet but progressing *very* rapidly. So
 go watching it!
+
+Currently I've already got 411 response caused by chunked
+POST/PUT requests back ;)
 
 Usage:
 
