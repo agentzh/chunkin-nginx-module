@@ -18,3 +18,8 @@ Usage:
 That is, the only directive provided by this module is
 "chunkin".
 
+Originall spiked by the discussion in this nginx mailing list
+thread:
+
+  http://forum.nginx.org/read.php?2,4453,15135
+
