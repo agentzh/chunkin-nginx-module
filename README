@@ -1,5 +1,6 @@
-This module attempts to add chunked-encoding request body
-support to nginx 0.8.x and 0.7.x without patching it.
+This module attempts to add HTTP 1.1 chunked transfer
+encoding support for request bodies to nginx 0.8.x and
+0.7.x without patching nginx.
 
 It's not working yet but progressing *very* rapidly. So
 go watching it!
