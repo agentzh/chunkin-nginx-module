@@ -201,8 +201,9 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
         r->headers_in.transfer_encoding->value.len = 0;
         r->headers_in.transfer_encoding->value.data = (u_char*) "";
-        r->headers_out.status = NGX_HTTP_OK;
-        r->headers_in.content_length_n = 1;
+
+        /* XXX this is a hack */
+        r->headers_in.content_length_n = 0;
 
         r->headers_in.content_length = ngx_pcalloc(r->pool,
                 sizeof(ngx_table_elt_t));
