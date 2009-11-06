@@ -69,6 +69,7 @@ hi
     chunkin on;
     location /main {
         echo $request_method;
+        #echo $echo_request_body;
     }
 --- request
 POST /main

@@ -113,7 +113,8 @@ ngx_http_chunkin_filter_init(ngx_conf_t *cf)
 }
 
 static ngx_flag_t
-ngx_http_chunkin_is_chunked_encoding(ngx_http_request_t *r) {
+ngx_http_chunkin_is_chunked_encoding(ngx_http_request_t *r)
+{
     return r->headers_in.transfer_encoding &&
         r->headers_in.transfer_encoding->value.len >= 7 &&
         ngx_strcasestrn(r->headers_in.transfer_encoding->value.data,
@@ -202,7 +203,7 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         r->headers_in.transfer_encoding->value.len = 0;
         r->headers_in.transfer_encoding->value.data = (u_char*) "";
 
-        /* XXX this is a hack */
+        /* XXX this is a hack for now */
         r->headers_in.content_length_n = 0;
 
         r->headers_in.content_length = ngx_pcalloc(r->pool,
