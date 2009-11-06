@@ -1,0 +1,16 @@
+This module attempts to add chunked-encoding request body
+support to nginx 0.8.x and 0.7.x without patching it.
+
+It's not working yet but progressing *very* rapidly. So
+go watching it!
+
+Usage:
+
+    chunkin on;
+    location /foo {
+        # your normal config goes here...
+    }
+
+That is, the only directive provided by this module is
+"chunkin".
+
