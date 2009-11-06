@@ -240,31 +240,34 @@ sub run_test ($) {
             $req->header('Content-Length' => 0);
         }
     }
+
     my $res = $UserAgent->request($req);
+
     if (defined $block->error_code) {
         is($res->code, $block->error_code, "$name - status code ok");
+    } else {
+        is($res->code, 200, "$name - status code ok");
     }
+
     if (defined $block->response_body) {
-        if (!$res->is_success) {
-            fail("$name - response_body - response indicates failure: " . $res->status_line);
-        } else {
-            (my $content = $res->content) =~ s/^TE: deflate,gzip;q=0\.3\r\n//gms;
-            $content =~ s/^Connection: TE, close\r\n//gms;
-            my $expected = $block->response_body;
-            $expected =~ s/\$ServerPort\b/$ServerPort/g;
-            is($content, $expected, "$name - response_body - response is expected");
+        my $content = $res->content;
+        if (defined $content) {
+            $content =~ s/^TE: deflate,gzip;q=0\.3\r\n//gms;
         }
+        $content =~ s/^Connection: TE, close\r\n//gms;
+        my $expected = $block->response_body;
+        $expected =~ s/\$ServerPort\b/$ServerPort/g;
+        is($content, $expected, "$name - response_body - response is expected");
     } elsif (defined $block->response_body_like) {
-        if (!$res->is_success) {
-            fail("$name - response_body - response indicates failure: " . $res->status_line);
-        } else {
-            (my $content = $res->content) =~ s/^TE: deflate,gzip;q=0\.3\r\n//gms;
-            $content =~ s/^Connection: TE, close\r\n//gms;
-            my $expected_pat = $block->response_body_like;
-            $expected_pat =~ s/\$ServerPort\b/$ServerPort/g;
-            my $summary = trim($content);
-            like($content, qr/$expected_pat/s, "$name - response_body_like - response is expected ($summary)");
+        my $content = $res->content;
+        if (defined $content) {
+            $content =~ s/^TE: deflate,gzip;q=0\.3\r\n//gms;
         }
+        $content =~ s/^Connection: TE, close\r\n//gms;
+        my $expected_pat = $block->response_body_like;
+        $expected_pat =~ s/\$ServerPort\b/$ServerPort/g;
+        my $summary = trim($content);
+        like($content, qr/$expected_pat/sm, "$name - response_body_like - response is expected ($summary)");
     }
 }
 
