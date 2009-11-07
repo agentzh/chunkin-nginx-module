@@ -306,7 +306,6 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
 static void
 ngx_http_chunkin_clear_transfer_encoding(ngx_http_request_t *r)
 {
-    return;
     if (r->headers_in.transfer_encoding) {
         r->headers_in.transfer_encoding->hash = 0;
         r->headers_in.transfer_encoding = NULL;
