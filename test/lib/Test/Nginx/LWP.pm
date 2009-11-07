@@ -243,7 +243,20 @@ sub run_test ($) {
         }
     }
 
+    if ($block->more_headers) {
+        my @headers = split /\n+/, $block->more_headers;
+        for my $header (@headers) {
+            next if $header =~ /^\s*\#/;
+            my ($key, $val) = split /:\s*/, $header, 2;
+            warn "[$key, $val]\n";
+            $req->header($key => $val);
+        }
+    }
+    #warn "DONE!!!!!!!!!!!!!!!!!!!!";
+
     my $res = $UserAgent->request($req);
+
+    #warn "res returned!!!";
 
     if (defined $block->error_code) {
         is($res->code, $block->error_code, "$name - status code ok");
