@@ -274,7 +274,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     dd_check_read_event_handler(r);
     dd_check_write_event_handler(r);
 
-    rc = ngx_http_read_client_request_body(r, ngx_http_chunkin_post_read);
+    rc = ngx_http_chunkin_read_chunked_request_body(r,
+            ngx_http_chunkin_post_read);
 
     if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
         dd("read client request body returned special response %d", rc);
