@@ -8,6 +8,10 @@
 
 #include "ngx_http_chunkin_request_body.h"
 
+static void ngx_http_chunkin_clear_transfer_encoding(ngx_http_request_t *r);
+
+static ngx_int_t ngx_http_chunkin_set_content_length_header(ngx_http_request_t *r, size_t len);
+
 static ngx_str_t ngx_http_chunkin_content_length_header_key =
     ngx_string("Content-Length");
 
@@ -236,7 +240,6 @@ static ngx_int_t
 ngx_http_chunkin_handler(ngx_http_request_t *r)
 {
     ngx_int_t                   rc;
-    ngx_table_elt_t             *h;
 
     if (r != r->main) {
         return NGX_DECLINED;
@@ -260,43 +263,13 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     r->headers_in.transfer_encoding->value.data = (u_char*) "";
 
     /* XXX this is a hack for now */
-    r->headers_in.content_length_n = 0;
 
-    r->headers_in.content_length = ngx_pcalloc(r->pool,
-            sizeof(ngx_table_elt_t));
-    if (r->headers_in.content_length == NULL) {
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    /* set new content length header */
+    rc = ngx_http_chunkin_set_content_length_header(r, 0);
+
+    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+        return rc;
     }
-
-    r->headers_in.content_length->value.data =
-        ngx_palloc(r->pool, NGX_OFF_T_LEN);
-
-    if (r->headers_in.content_length->value.data == NULL) {
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-    r->headers_in.content_length->value.len = ngx_sprintf(
-            r->headers_in.content_length->value.data, "%O",
-            r->headers_in.content_length_n) -
-            r->headers_in.content_length->value.data;
-
-    h = ngx_list_push(&r->headers_in.headers);
-
-    if (h == NULL) {
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-    h->hash = r->header_hash;
-
-    h->key = ngx_http_chunkin_content_length_header_key;
-    h->value = r->headers_in.content_length->value;
-
-    h->lowcase_key = ngx_pnalloc(r->pool, h->key.len);
-    if (h->lowcase_key == NULL) {
-        return NGX_HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-    ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
 
     dd_check_read_event_handler(r);
     dd_check_write_event_handler(r);
@@ -309,6 +282,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     }
 
     dd("read client request body returned %d", rc);
+
+    ngx_http_chunkin_clear_transfer_encoding(r);
 
     return rc;
 }
@@ -325,5 +300,54 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
     r->write_event_handler = ngx_http_core_run_phases;
 
     ngx_http_core_run_phases(r);
+}
+
+
+static void
+ngx_http_chunkin_clear_transfer_encoding(ngx_http_request_t *r)
+{
+    return;
+    if (r->headers_in.transfer_encoding) {
+        r->headers_in.transfer_encoding->hash = 0;
+        r->headers_in.transfer_encoding = NULL;
+    }
+}
+
+static ngx_int_t
+ngx_http_chunkin_set_content_length_header(ngx_http_request_t *r, size_t len) {
+    ngx_table_elt_t             *h;
+
+    r->headers_in.content_length_n = 0;
+
+
+    h = ngx_list_push(&r->headers_in.headers);
+
+    if (h == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    h->hash = r->header_hash;
+
+    h->key = ngx_http_chunkin_content_length_header_key;
+
+    h->value.data = ngx_palloc(r->pool, NGX_OFF_T_LEN);
+
+    if (h->value.data == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    h->value.len = ngx_sprintf(h->value.data, "%O",
+            r->headers_in.content_length_n) - h->value.data;
+
+    h->lowcase_key = ngx_pnalloc(r->pool, h->key.len);
+    if (h->lowcase_key == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
+
+    r->headers_in.content_length = h;
+
+    return NGX_OK;
 }
 

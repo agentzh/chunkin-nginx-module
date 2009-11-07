@@ -38,6 +38,8 @@ our @EXPORT = qw( run_tests run_test );
 
 sub trim ($);
 
+sub show_all_chars ($);
+
 sub run_tests () {
     for my $block (shuffle blocks()) {
         run_test($block);
@@ -257,6 +259,7 @@ sub run_test ($) {
         $content =~ s/^Connection: TE, close\r\n//gms;
         my $expected = $block->response_body;
         $expected =~ s/\$ServerPort\b/$ServerPort/g;
+        #warn show_all_chars($content);
         is($content, $expected, "$name - response_body - response is expected");
     } elsif (defined $block->response_body_like) {
         my $content = $res->content;
@@ -275,6 +278,14 @@ sub trim ($) {
     (my $s = shift) =~ s/^\s+|\s+$//g;
     $s =~ s/\n/ /gs;
     $s =~ s/\s{2,}/ /gs;
+    $s;
+}
+
+sub show_all_chars ($) {
+    my $s = shift;
+    $s =~ s/\n/\\n/gs;
+    $s =~ s/\r/\\r/gs;
+    $s =~ s/\t/\\t/gs;
     $s;
 }
 

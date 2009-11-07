@@ -48,8 +48,6 @@ static void dd(const char* fmt, ...) {
             "ngx_http_block_reading" : \
         r->read_event_handler == ngx_http_test_reading ? \
             "ngx_http_test_reading" : \
-        r->read_event_handler == ngx_http_discarded_request_body_handler ? \
-            "ngx_http_discarded_request_body_handler" : \
         r->read_event_handler == ngx_http_request_empty_handler ? \
             "ngx_http_request_empty_handler" : "UNKNOWN")
 

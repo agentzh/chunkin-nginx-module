@@ -5,6 +5,8 @@ use Test::Nginx::LWP;
 
 plan tests => 2 * blocks();
 
+#no_diff;
+
 run_tests();
 
 __DATA__
@@ -96,4 +98,29 @@ POST /main
 body:
 hello
 --- SKIP
+
+
+=== TEST 5: check the new headers filtered by chunkin
+--- config
+    chunkin on;
+    location /headers {
+        proxy_pass $scheme://127.0.0.1:$server_port/foo;
+    }
+    location /foo {
+        echo $echo_client_request_headers;
+    }
+--- request
+POST /headers
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body eval
+"POST /foo HTTP/1.0\r
+Host: 127.0.0.1:\$ServerPort\r
+Connection: close\r
+User-Agent: Test::Nginx::LWP\r
+Content-Type: text/plain\r
+Transfer-Encoding: \r
+Content-Length: 0\r
+"
 
