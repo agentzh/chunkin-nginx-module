@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 #include "ddebug.h"
 
 #include <ngx_config.h>
@@ -32,6 +32,12 @@ static char *ngx_http_chunkin_merge_conf(ngx_conf_t *cf, void *parent,
     void *child);
 static ngx_int_t ngx_http_chunkin_filter_init(ngx_conf_t *cf);
 
+static ngx_int_t ngx_http_chunkin_handler(ngx_http_request_t *r);
+
+static ngx_int_t ngx_http_chunkin_init(ngx_conf_t *cf);
+
+static void ngx_http_chunkin_post_read(ngx_http_request_t *r);
+
 static ngx_command_t  ngx_http_chunkin_commands[] = {
 
     { ngx_string("chunkin"),
@@ -45,8 +51,8 @@ static ngx_command_t  ngx_http_chunkin_commands[] = {
 };
 
 static ngx_http_module_t  ngx_http_chunkin_filter_module_ctx = {
-    NULL,                                  /* preconfiguration */
-    ngx_http_chunkin_filter_init,         /* postconfiguration */
+    NULL,                                 /* preconfiguration */
+    ngx_http_chunkin_init,         /* postconfiguration */
 
     NULL,                                  /* create main configuration */
     NULL,                                  /* init main configuration */
@@ -129,28 +135,28 @@ ngx_http_chunkin_header_filter(ngx_http_request_t *r)
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
 
-    DD("chunkin enabled? %d", conf->enabled);
-    DD("length required status? %d",
+    dd("chunkin enabled? %d", conf->enabled);
+    dd("length required status? %d",
             r->headers_out.status == NGX_HTTP_LENGTH_REQUIRED);
-    DD("is chunked? %d",
+    dd("is chunked? %d",
             ngx_http_chunkin_is_chunked_encoding(r));
 
     if (r != r->main) {
-        DD("We ignore subrequests.");
+        dd("We ignore subrequests.");
         return ngx_http_next_header_filter(r);
     }
 
     if ( ! conf->enabled || r->headers_out.status != NGX_HTTP_LENGTH_REQUIRED
             || ! ngx_http_chunkin_is_chunked_encoding(r))
     {
-        DD("inactive");
+        dd("inactive");
         return ngx_http_next_header_filter(r);
     }
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
 
     if (ctx) {
-        DD("HAHA Found ctx...skipped.");
+        dd("HAHA Found ctx...skipped.");
         return ngx_http_next_header_filter(r);
     }
 
@@ -173,12 +179,11 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     ngx_flag_t                  last;
     ngx_int_t                   rc;
     ngx_chain_t                 *cl;
-    ngx_table_elt_t             *h;
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
 
     if (ctx == NULL || !ctx->ignore_body) {
-        DD("ctx NULL? %s", ctx == NULL ? "yes" : "NO");
+        dd("ctx NULL? %s", ctx == NULL ? "yes" : "NO");
         return ngx_http_next_body_filter(r, in);
     }
 
@@ -193,58 +198,132 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     }
 
     if (last) {
-        DD("ignore last body...");
+        dd("ignore last body...");
 
         r->uri_changes++;
-
-        r->err_status = 0;
+        r->discard_body = 0;
         r->error_page = 0;
 
-        r->headers_in.transfer_encoding->value.len = 0;
-        r->headers_in.transfer_encoding->value.data = (u_char*) "";
-
-        /* XXX this is a hack for now */
-        r->headers_in.content_length_n = 0;
-
-        r->headers_in.content_length = ngx_pcalloc(r->pool,
-                sizeof(ngx_table_elt_t));
-        if (r->headers_in.content_length == NULL) {
-            return NGX_HTTP_INTERNAL_SERVER_ERROR;
-        }
-
-        r->headers_in.content_length->value.data =
-            ngx_palloc(r->pool, NGX_OFF_T_LEN);
-        if (r->headers_in.content_length->value.data == NULL) {
-            return NGX_HTTP_INTERNAL_SERVER_ERROR;
-        }
-        r->headers_in.content_length->value.len = ngx_sprintf(
-                r->headers_in.content_length->value.data, "%O",
-                r->headers_in.content_length_n) -
-                r->headers_in.content_length->value.data;
-
-        h = ngx_list_push(&r->headers_in.headers);
-        if (h == NULL) {
-            return NGX_HTTP_INTERNAL_SERVER_ERROR;
-        }
-
-        h->hash = r->header_hash;
-
-        h->key = ngx_http_chunkin_content_length_header_key;
-        h->value = r->headers_in.content_length->value;
-
-        h->lowcase_key = ngx_pnalloc(r->pool, h->key.len);
-        if (h->lowcase_key == NULL) {
-            return NGX_HTTP_INTERNAL_SERVER_ERROR;
-        }
-
-        ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
-
+        /* unfortunately internal redirect will clear our ctx. */
         rc = ngx_http_internal_redirect(r, &r->uri, &r->args);
         return rc;
     }
 
-    DD("ignore body...");
+    dd("ignore body...");
 
     return NGX_OK;
+}
+
+static ngx_int_t
+ngx_http_chunkin_init(ngx_conf_t *cf)
+{
+    ngx_http_handler_pt        *h;
+    ngx_http_core_main_conf_t  *cmcf;
+
+    cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
+
+    h = ngx_array_push(&cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers);
+    if (h == NULL) {
+        return NGX_ERROR;
+    }
+
+    *h = ngx_http_chunkin_handler;
+
+    return ngx_http_chunkin_filter_init(cf);
+}
+
+static ngx_int_t
+ngx_http_chunkin_handler(ngx_http_request_t *r)
+{
+    ngx_int_t                   rc;
+    ngx_table_elt_t             *h;
+
+    if (r != r->main) {
+        return NGX_DECLINED;
+    }
+
+    /* internal redirect clears our ctx created by our output
+     * header filter, so we have to check the header settings
+     * here again. */
+
+    if (r->err_status != NGX_HTTP_LENGTH_REQUIRED
+            || ! ngx_http_chunkin_is_chunked_encoding(r))
+    {
+        return NGX_DECLINED;
+    }
+
+    r->err_status = 0;
+
+    dd("reading chunked input eagerly...");
+
+    r->headers_in.transfer_encoding->value.len = 0;
+    r->headers_in.transfer_encoding->value.data = (u_char*) "";
+
+    /* XXX this is a hack for now */
+    r->headers_in.content_length_n = 0;
+
+    r->headers_in.content_length = ngx_pcalloc(r->pool,
+            sizeof(ngx_table_elt_t));
+    if (r->headers_in.content_length == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    r->headers_in.content_length->value.data =
+        ngx_palloc(r->pool, NGX_OFF_T_LEN);
+
+    if (r->headers_in.content_length->value.data == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    r->headers_in.content_length->value.len = ngx_sprintf(
+            r->headers_in.content_length->value.data, "%O",
+            r->headers_in.content_length_n) -
+            r->headers_in.content_length->value.data;
+
+    h = ngx_list_push(&r->headers_in.headers);
+
+    if (h == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    h->hash = r->header_hash;
+
+    h->key = ngx_http_chunkin_content_length_header_key;
+    h->value = r->headers_in.content_length->value;
+
+    h->lowcase_key = ngx_pnalloc(r->pool, h->key.len);
+    if (h->lowcase_key == NULL) {
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
+
+    dd_check_read_event_handler(r);
+    dd_check_write_event_handler(r);
+
+    rc = ngx_http_read_client_request_body(r, ngx_http_chunkin_post_read);
+
+    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+        dd("read client request body returned special response %d", rc);
+        return rc;
+    }
+
+    dd("read client request body returned %d", rc);
+
+    return rc;
+}
+
+static void
+ngx_http_chunkin_post_read(ngx_http_request_t *r)
+{
+    dd("post read");
+
+    dd_check_read_event_handler(r);
+    dd_check_write_event_handler(r);
+
+    r->read_event_handler = ngx_http_block_reading;
+    r->write_event_handler = ngx_http_core_run_phases;
+
+    ngx_http_core_run_phases(r);
 }
 

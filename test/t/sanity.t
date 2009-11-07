@@ -79,3 +79,21 @@ POST /main
 --- response_body
 POST
 
+
+=== TEST 5: on & POST & read body
+--- config
+    chunkin on;
+    location /main {
+        echo "body:";
+        echo $echo_request_body;
+    }
+--- request
+POST /main
+--- chunked_body eval
+["hello", "world" x 3024]
+--- error_code: 200
+--- response_body
+body:
+hello
+--- SKIP
+
