@@ -63,6 +63,7 @@ static void dd(const char* fmt, ...) {
 #else
 
 #define dd_check_read_event_handler(r)
+#define dd_check_write_event_handler(r)
 
 #endif
 
