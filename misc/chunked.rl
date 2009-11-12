@@ -5,10 +5,11 @@ enum {
     BUFSIZE = 256
 };
 
-%% machine foo;
+%% machine chunked;
 %% write data;
 
-int main (int argc, char **argv) {
+int main (int argc, char **argv)
+{
     int cs, res = 0;
     char *p, *pe, *eof;
     char buf[BUFSIZE];
@@ -75,14 +76,14 @@ int main (int argc, char **argv) {
 
         chunk_data = chunk_data_octet* %verify_data;
 
-        chunk = chunk_size space* CRLF
+        chunk = chunk_size " "* CRLF
                         chunk_data CRLF;
 
-        last_chunk = "0" space* CRLF $err(bad_last_chunk);
+        last_chunk = "0" " "* CRLF ${ fprintf(stderr, "in last chunk %d (cs: %d)\n", p - buf, cs); }; #$err(bad_last_chunk);
 
-        main := chunk*
+        main := (chunk*
                 last_chunk
-                CRLF @{ res = 1; };
+                CRLF) %err{ fprintf(stderr, "in end %d (cs: %d)\n", p - buf, cs); };
 
     }%%
 
@@ -106,7 +107,7 @@ int main (int argc, char **argv) {
     %% write exec;
 
     printf("cs >= first_final: %d, execute = %i, p moved %d, "
-            "p remaining: %d\n", cs >= foo_first_final, res, p - buf, pe - p);
+            "p remaining: %d\n", cs >= chunked_first_final, res, p - buf, pe - p);
 
     return 0;
 }

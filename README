@@ -5,8 +5,8 @@ encoding support for request bodies to nginx 0.8.x and
 It's NOT working yet but progressing *very* rapidly. So
 go watching it!
 
-Currently I've already got 411 response caused by chunked
-POST/PUT requests back ;)
+Currently extremely short chunked body that is completely
+preread by the nginx header reader can now be handled.
 
 Usage:
 
@@ -17,6 +17,24 @@ Usage:
 
 That is, the only directive provided by this module is
 "chunkin".
+
+To build this module with your nginx:
+
+    $ wget 'http://sysoev.ru/nginx/nginx-0.8.24.tar.gz'
+    $ tar -xzvf nginx-0.8.24.tar.gz
+    $ cd nginx-0.8.24/
+
+    # Here we assume you would install you nginx under /opt/nginx/.
+    $ ./configure --prefix=/opt/nginx \
+        --add-module=/path/to/chunkin-nginx-module
+
+    $ make -j2
+    $ make install
+
+The chunked parser is actually written in Ragel. If you want to
+regenerate the parser, use the following command:
+
+    $ ragel -G2 src/chunked_parser.rl
 
 Originally spiked by the discussion in this nginx mailing list
 thread:

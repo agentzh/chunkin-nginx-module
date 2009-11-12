@@ -2,10 +2,7 @@
 #include "ddebug.h"
 
 #include <ngx_config.h>
-#include <ngx_core.h>
-#include <ngx_http.h>
-#include <nginx.h>
-
+#include "ngx_http_chunkin_filter_module.h"
 #include "ngx_http_chunkin_request_body.h"
 
 static void ngx_http_chunkin_clear_transfer_encoding(ngx_http_request_t *r);
@@ -14,14 +11,6 @@ static ngx_int_t ngx_http_chunkin_set_content_length_header(ngx_http_request_t *
 
 static ngx_str_t ngx_http_chunkin_content_length_header_key =
     ngx_string("Content-Length");
-
-typedef struct {
-    ngx_flag_t          enabled;
-} ngx_http_chunkin_conf_t;
-
-typedef struct {
-    ngx_flag_t          ignore_body;
-} ngx_http_chunkin_ctx_t;
 
 static ngx_http_output_header_filter_pt  ngx_http_next_header_filter;
 

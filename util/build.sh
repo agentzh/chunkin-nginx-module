@@ -2,6 +2,13 @@
 
 # this file is mostly meant to be used by the author himself.
 
+ragel -G2 src/chunked_parser.rl
+
+if [ $? != 0 ]; then
+    echo 'Failed to generate the chunked parser.' 1>&2
+    exit 1;
+fi
+
 root=`pwd`
 cd ~/work
 version=$1

@@ -84,26 +84,7 @@ POST
 
 
 
-=== TEST 6: on & POST & read body
---- config
-    chunkin on;
-    location /main {
-        echo "body:";
-        echo $echo_request_body;
-    }
---- request
-POST /main
---- chunked_body eval
-["hello", "world" x 3024]
---- error_code: 200
---- response_body
-body:
-hello
---- SKIP
-
-
-
-=== TEST 7: raw request headers (indeed chunked)
+=== TEST 6: raw request headers (indeed chunked)
 --- config
     chunkin on;
     location /main {
@@ -124,6 +105,7 @@ Content-Type: text/plain\r
 Transfer-Encoding: chunked\r
 
 "
+
 
 
 === TEST 7: request headers filtered by chunkin
@@ -153,4 +135,60 @@ User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Transfer-Encoding: \r
 Content-Length: 0"
+
+
+
+=== TEST 8: 0 chunk body
+--- config
+    chunkin on;
+    location /main {
+        echo "body:";
+        echo $echo_request_body;
+    }
+--- request
+POST /main
+--- chunked_body eval
+[""]
+--- error_code: 200
+--- response_body eval
+"body:
+
+"
+
+
+
+=== TEST 9: on & POST & read body
+--- config
+    chunkin on;
+    location /main {
+        echo "body:";
+        echo $echo_request_body;
+    }
+--- request
+POST /main
+--- chunked_body eval
+["a"]
+--- error_code: 200
+--- response_body
+body:
+a
+
+
+
+=== TEST 10: on & POST & read body
+--- config
+    chunkin on;
+    location /main {
+        echo "body:";
+        echo $echo_request_body;
+    }
+--- request
+POST /main
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body
+body:
+hello
+--- SKIP
 
