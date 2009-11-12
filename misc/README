@@ -1,0 +1,10 @@
+This is a standalone program that tests the chunked body parser.
+
+To build the "chunked" program, run the following command within this directory:
+
+  $ make chunked
+
+Then invoke the program like this:
+
+  $ perl -e 'print "5\r\nhello\r\n0\r\n\r\n"' | ./chunked
+
