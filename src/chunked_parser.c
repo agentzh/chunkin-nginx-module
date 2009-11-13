@@ -1,5 +1,5 @@
 #line 1 "src/chunked_parser.rl"
-#define DDEBUG 1
+#define DDEBUG 0
 
 #include "ddebug.h"
 
