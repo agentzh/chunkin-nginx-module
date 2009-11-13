@@ -15,6 +15,8 @@ Mostly working now except:
 3. "client_body_in_file_only on" may *not* be obeyed
    for short contents and fast network.
 
+These will be fixed in future versions.
+
 Usage:
 
     chunkin on;
