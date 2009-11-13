@@ -1,5 +1,7 @@
 package Test::Nginx::LWP;
 
+our $NoNginxManager = 0;
+
 use lib 'lib';
 use lib 'inc';
 use Time::HiRes qw(sleep);
@@ -85,7 +87,7 @@ http {
         server_name     localhost;
 
         client_max_body_size 30M;
-        client_body_buffer_size 4k;
+        #client_body_buffer_size 4k;
 
         # Begin test case config...
 $$rconfig
@@ -148,10 +150,10 @@ sub chunk_it ($$$) {
     return sub {
         if ($i == 0) {
             if ($start_delay) {
-                select(undef, undef, undef, $start_delay);
+                sleep($start_delay);
             }
         } elsif ($middle_delay) {
-            select(undef, undef, undef, $middle_delay);
+            sleep($middle_delay);
         }
         return $chunks->[$i++];
     }
@@ -175,41 +177,43 @@ sub run_test ($) {
         die;
     }
 
-    my $nginx_is_running = 1;
-    if (-f $PidFile) {
-        my $pid = get_pid_from_pidfile($name);
-        if (system("ps $pid > /dev/null") == 0) {
-            write_config_file(\$config);
-            if (kill(1, $pid) == 0) { # send HUP signal
-                Test::More::BAIL_OUT("$name - Failed to send signal to the nginx process with PID $pid using signal HUP");
+    if (!$NoNginxManager) {
+        my $nginx_is_running = 1;
+        if (-f $PidFile) {
+            my $pid = get_pid_from_pidfile($name);
+            if (system("ps $pid > /dev/null") == 0) {
+                write_config_file(\$config);
+                if (kill(1, $pid) == 0) { # send HUP signal
+                    Test::More::BAIL_OUT("$name - Failed to send signal to the nginx process with PID $pid using signal HUP");
+                }
+                sleep 0.02;
+            } else {
+                unlink $PidFile or
+                    die "Failed to remove pid file $PidFile\n";
+                undef $nginx_is_running;
             }
-            sleep 0.02;
         } else {
-            unlink $PidFile or
-                die "Failed to remove pid file $PidFile\n";
             undef $nginx_is_running;
         }
-    } else {
-        undef $nginx_is_running;
-    }
 
-    unless ($nginx_is_running) {
-        setup_server_root();
-        write_config_file(\$config);
-        if ( ! Module::Install::Can->can_run('nginx') ) {
-            Test::More::BAIL_OUT("$name - Cannot find the nginx executable in the PATH environment");
-            die;
+        unless ($nginx_is_running) {
+            setup_server_root();
+            write_config_file(\$config);
+            if ( ! Module::Install::Can->can_run('nginx') ) {
+                Test::More::BAIL_OUT("$name - Cannot find the nginx executable in the PATH environment");
+                die;
+            }
+        #if (system("nginx -p $ServRoot -c $ConfFile -t") != 0) {
+        #Test::More::BAIL_OUT("$name - Invalid config file");
+        #}
+        #my $cmd = "nginx -p $ServRoot -c $ConfFile > /dev/null";
+            my $cmd = "nginx -c $ConfFile > /dev/null";
+            if (system($cmd) != 0) {
+                Test::More::BAIL_OUT("$name - Cannot start nginx using command \"$cmd\".");
+                die;
+            }
+            sleep 0.1;
         }
-    #if (system("nginx -p $ServRoot -c $ConfFile -t") != 0) {
-    #Test::More::BAIL_OUT("$name - Invalid config file");
-    #}
-    #my $cmd = "nginx -p $ServRoot -c $ConfFile > /dev/null";
-        my $cmd = "nginx -c $ConfFile > /dev/null";
-        if (system($cmd) != 0) {
-            Test::More::BAIL_OUT("$name - Cannot start nginx using command \"$cmd\".");
-            die;
-        }
-        sleep 0.1;
     }
 
     my $req_spec = parse_request($name, \$request);

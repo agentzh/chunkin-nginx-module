@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
@@ -21,6 +21,8 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
     ctx->chunk_size = 0;
     ctx->chunk_size_order = 0;
     ctx->chunk_bytes_read = 0;
+
+    ctx->chunks_total_size = 0;
 
     ctx->parser_state = cs;
 
@@ -65,6 +67,8 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
             ctx->chunk_bytes_read++;
             ctx->chunk->buf->last++;
             ctx->chunk->buf->end++;
+            ctx->chunks_total_size++;
+
             dd("bytes read: %d", ctx->chunk->buf->last - ctx->chunk->buf->pos);
             ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",

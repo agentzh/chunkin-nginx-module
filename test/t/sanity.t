@@ -134,7 +134,9 @@ Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Transfer-Encoding: \r
-Content-Length: 0"
+Content-Length: 10\r
+
+"
 
 
 
@@ -157,7 +159,61 @@ POST /main
 
 
 
-=== TEST 9: on & POST & read body
+=== TEST 9: 0 chunk body via proxy (header okay)
+--- config
+    chunkin on;
+    location /main {
+        proxy_pass $scheme://127.0.0.1:$server_port/proxy;
+    }
+    location /proxy {
+        echo $echo_client_request_headers;
+    }
+--- request
+POST /main
+--- chunked_body eval
+[""]
+--- error_code: 200
+--- response_body eval
+"POST /proxy HTTP/1.0\r
+Host: 127.0.0.1:\$ServerPort\r
+Connection: close\r
+User-Agent: Test::Nginx::LWP\r
+Content-Type: text/plain\r
+Transfer-Encoding: \r
+Content-Length: 0\r
+
+"
+
+
+
+=== TEST 10: single char in preread
+--- config
+    chunkin on;
+    location /main {
+        proxy_pass $scheme://127.0.0.1:$server_port/proxy;
+    }
+    location /proxy {
+        echo $echo_client_request_headers;
+    }
+--- request
+POST /main
+--- chunked_body eval
+["a"]
+--- error_code: 200
+--- response_body eval
+"POST /proxy HTTP/1.0\r
+Host: 127.0.0.1:\$ServerPort\r
+Connection: close\r
+User-Agent: Test::Nginx::LWP\r
+Content-Type: text/plain\r
+Transfer-Encoding: \r
+Content-Length: 1\r
+
+"
+
+
+
+=== TEST 11: single char in preread (headers okay)
 --- config
     chunkin on;
     location /main {
@@ -175,7 +231,7 @@ a
 
 
 
-=== TEST 10: on & POST & read body
+=== TEST 12: on & POST & read body
 --- config
     chunkin on;
     location /main {
@@ -184,11 +240,132 @@ a
     }
 --- request
 POST /main
+--- middle_chunk_delay: 0.01
 --- chunked_body eval
 ["hello", "world"]
 --- error_code: 200
 --- response_body
 body:
-hello
---- SKIP
+helloworld
+
+
+
+=== TEST 13: request headers filtered by chunkin (with delay)
+This test passes only for nginx versions
+* 0.7.x >= 0.7.21
+* 0.8.x >= 0.8.10
+--- middle_chunk_delay: 0.01
+--- config
+    chunkin on;
+    location /main {
+        proxy_pass_request_headers on;
+        proxy_pass $scheme://127.0.0.1:$server_port/proxy;
+    }
+
+    location /proxy {
+        echo $echo_client_request_headers;
+    }
+--- request
+POST /main
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body eval
+"POST /proxy HTTP/1.0\r
+Host: 127.0.0.1:\$ServerPort\r
+Connection: close\r
+User-Agent: Test::Nginx::LWP\r
+Content-Type: text/plain\r
+Transfer-Encoding: \r
+Content-Length: 10\r
+
+"
+
+
+
+=== TEST 14: small buf (using 2-byte buf)
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    2;
+        echo "body:";
+        echo $echo_request_body;
+        echo_request_body;
+    }
+--- request
+POST /main
+--- start_chunk_delay: 0.01
+--- middle_chunk_delay: 0.01
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body eval
+"body:
+
+helloworld"
+
+
+
+=== TEST 15: small buf (using 3-byte buf)
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    3;
+        echo "body:";
+        echo $echo_request_body;
+        echo_request_body;
+    }
+--- request
+POST /main
+--- start_chunk_delay: 0.01
+--- middle_chunk_delay: 0.01
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body eval
+"body:
+
+helloworld"
+
+
+=== TEST 15: big chunk
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    3;
+        echo "body:";
+        echo $echo_request_body;
+        echo_request_body;
+    }
+--- request
+POST /main
+--- start_chunk_delay: 0.01
+--- middle_chunk_delay: 0.01
+--- chunked_body eval
+["hello", "world" x 1024, "!" x 1024]
+--- error_code: 200
+--- response_body eval
+"body:
+
+hello" . ("world" x 1024) . ('!' x 1024)
+
+
+=== TEST 15: in memory
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    4k;
+        echo "body:";
+        echo $echo_request_body;
+    }
+--- request
+POST /main
+--- start_chunk_delay: 0.01
+--- middle_chunk_delay: 0.01
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body
+body:
+helloworld
 

@@ -15,6 +15,7 @@ typedef struct {
     size_t              chunk_bytes_read;
     size_t              chunk_size;
     int                 chunk_size_order;
+    size_t              chunks_total_size;
     ngx_chain_t         *chunks;
     ngx_chain_t         **next_chunk;
     ngx_chain_t         *chunk;
