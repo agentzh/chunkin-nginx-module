@@ -2,11 +2,18 @@ This module attempts to add HTTP 1.1 chunked transfer
 encoding support for request bodies to nginx 0.8.x and
 0.7.x without patching nginx.
 
-It's NOT working yet but progressing *very* rapidly. So
-go watching it!
+Status
 
-Currently extremely short chunked body that is completely
-preread by the nginx header reader can now be handled.
+Mostly working now except:
+
+1. You will see the harmless "zero size buf in output"
+   alert in your error log.
+
+2. "client_body_in_single_buffer on" may *not* be obeyed
+   for short contents and fast network.
+
+3. "client_body_in_file_only on" may *not* be obeyed
+   for short contents and fast network.
 
 Usage:
 
