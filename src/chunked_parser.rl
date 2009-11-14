@@ -65,8 +65,10 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
         action read_data_byte {
             ctx->chunk_bytes_read++;
-            ctx->chunk->buf->last++;
-            ctx->chunk->buf->end++;
+
+            ctx->chunk->buf->last = p + 1;
+            ctx->chunk->buf->end = p + 1;
+
             ctx->chunks_total_size++;
 
             dd("bytes read: %d", ctx->chunk->buf->last - ctx->chunk->buf->pos);
@@ -97,30 +99,40 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         }
 
         action start_reading_data {
-            b = ngx_calloc_buf(r->pool);
+            if (ctx->next_chunk == NULL || *ctx->next_chunk == NULL) {
+                b = ngx_calloc_buf(r->pool);
 
-            if (b == NULL) {
-                ctx->parser_state = chunked_error;
-                return NGX_HTTP_INTERNAL_SERVER_ERROR;
-            }
+                if (b == NULL) {
+                    ctx->parser_state = chunked_error;
+                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
+                }
 
-            ctx->chunk = ngx_alloc_chain_link(r->pool);
-            if (ctx->chunk == NULL) {
-                ctx->parser_state = chunked_error;
-                return NGX_HTTP_INTERNAL_SERVER_ERROR;
-            }
-            ctx->chunk->buf = b;
-            ctx->chunk->next = NULL;
+                ctx->chunk = ngx_alloc_chain_link(r->pool);
+                if (ctx->chunk == NULL) {
+                    ctx->parser_state = chunked_error;
+                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
+                }
+                ctx->chunk->buf = b;
+                ctx->chunk->next = NULL;
 
-            if (ctx->chunks == NULL) {
-                ctx->chunks = ctx->chunk;
-                ctx->next_chunk = &ctx->chunks->next;
+                if (ctx->chunks == NULL) {
+                    ctx->chunks = ctx->chunk;
+                } else {
+                    *ctx->next_chunk = ctx->chunk;
+                }
+
             } else {
-                *ctx->next_chunk = ctx->chunk;
-                ctx->next_chunk = &ctx->chunk->next;
+                ctx->chunk = *ctx->next_chunk;
+                b = ctx->chunk->buf;
             }
+
+            ctx->chunks_count++;
+
+            ctx->next_chunk = &ctx->chunk->next;
+
             b->end = b->last = b->pos = b->start = p;
             b->memory = 1;
+            b->sync = 0;
         }
 
         action verify_data {

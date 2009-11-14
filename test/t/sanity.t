@@ -5,7 +5,7 @@ use Test::Nginx::LWP;
 
 plan tests => 2 * blocks();
 
-#no_diff;
+no_diff;
 
 run_tests();
 
@@ -306,7 +306,30 @@ helloworld"
 
 
 
-=== TEST 15: small buf (using 3-byte buf)
+=== TEST 15: small buf (using 1-byte buf)
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    1;
+        echo "body:";
+        echo $echo_request_body;
+        echo_request_body;
+    }
+--- request
+POST /main
+--- start_chunk_delay: 0.01
+--- middle_chunk_delay: 0.01
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body eval
+"body:
+
+helloworld"
+
+
+
+=== TEST 16: small buf (using 3-byte buf)
 --- config
     chunkin on;
     location /main {
@@ -328,7 +351,8 @@ POST /main
 helloworld"
 
 
-=== TEST 15: big chunk
+
+=== TEST 17: big chunk
 --- config
     chunkin on;
     location /main {
@@ -350,7 +374,8 @@ POST /main
 hello" . ("world" x 1024) . ('!' x 1024)
 
 
-=== TEST 15: in memory
+
+=== TEST 18: in memory
 --- config
     chunkin on;
     location /main {
