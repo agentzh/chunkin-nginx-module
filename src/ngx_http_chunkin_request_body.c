@@ -1,4 +1,4 @@
-#define DDEBUG 1
+#define DDEBUG 0
 
 #include "ddebug.h"
 
@@ -582,10 +582,6 @@ ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body)
             }
 
             rb->temp_file->offset += n;
-
-            if (saved_next == NULL) {
-                break;
-            }
 
             cl->next = saved_next;
             body = cl->next;
