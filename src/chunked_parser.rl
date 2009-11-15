@@ -1,4 +1,4 @@
-#define DDEBUG 1
+#define DDEBUG 0
 
 #include "ddebug.h"
 
@@ -66,13 +66,8 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         action read_data_byte {
             ctx->chunk_bytes_read++;
 
-            dd("has rb? %d", r->request_body ? 1 : 0);
-            dd("has rb->buf? %d", r->request_body->buf ? 1 : 0);
-            if (r->request_body && r->request_body->buf && ctx->chunk->buf->last >= r->request_body->buf->last) {
-                dd("buf overflows!");
-            }
-            ctx->chunk->buf->last++;
-            ctx->chunk->buf->end++;
+            ctx->chunk->buf->last = p + 1;
+            ctx->chunk->buf->end = p + 1;
 
             ctx->chunks_total_size++;
 
@@ -86,8 +81,6 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
-
-            ctx->chunk = NULL;
         }
 
         action read_size {
@@ -150,7 +143,6 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                         ctx->chunk_size);
                 fbreak;
             }
-            ctx->chunk_size = -1;
         }
 
         CRLF = "\r\n";
@@ -158,11 +150,11 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         chunk_size = (xdigit+ - "0") >start_reading_size $read_size;
 
         chunk_data_octet = any
-                $read_data_byte
                 when test_len $err(bad_chunk_data);
 
         chunk_data = chunk_data_octet*
                 >start_reading_data
+                $read_data_byte
                 %verify_data;
 
         chunk = chunk_size " "* CRLF
@@ -170,7 +162,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
         last_chunk = "0" " "* CRLF;
 
-        main := chunk*
+        main := chunk**
                 last_chunk
                 CRLF @err(bad_chunked) %err(finish);
 

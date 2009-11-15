@@ -4,17 +4,15 @@ encoding support for request bodies to nginx 0.8.x and
 
 Status
 
-This module is still at its early phase and is highly
-experimental. You're encouraged to test it in your
-development and testing environment and report any
-issues that you find.
-
 Mostly working now except:
 
-1. "client_body_in_single_buffer on" may *not* be obeyed
+1. You will see the harmless "zero size buf in output"
+   alert in your error log.
+
+2. "client_body_in_single_buffer on" may *not* be obeyed
    for short contents and fast network.
 
-2. "client_body_in_file_only on" may *not* be obeyed
+3. "client_body_in_file_only on" may *not* be obeyed
    for short contents and fast network.
 
 These will be fixed in future versions.

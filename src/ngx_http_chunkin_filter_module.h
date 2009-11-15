@@ -21,8 +21,6 @@ typedef struct {
     size_t              chunks_written_size;
     int                 chunks_count;
 
-    size_t              raw_body_size;
-
     ngx_chain_t         *chunks;
     ngx_chain_t         **next_chunk;
     ngx_chain_t         *chunk;
