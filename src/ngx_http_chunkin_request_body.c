@@ -125,6 +125,8 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
             r->request_length += preread;
 
+            ctx->raw_body_size += preread;
+
             return NGX_OK;
         }
 
@@ -196,8 +198,25 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
     done = 0;
 
+    clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
+
     for ( ;; ) {
         for ( ;; ) {
+            dd("client_max_body_size: %d, raw_body_size: %d",
+                    (int)clcf->client_max_body_size,
+                    ctx->raw_body_size);
+
+            if (clcf->client_max_body_size
+                    && clcf->client_max_body_size < ctx->raw_body_size)
+            {
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          "client intended to send too large body: %O bytes",
+                          (off_t) ctx->raw_body_size);
+
+                (void) ngx_http_discard_request_body(r);
+                return NGX_HTTP_REQUEST_ENTITY_TOO_LARGE;
+            }
+
             if (rb->buf->last == rb->buf->end
                     || ctx->chunks_count >= MAX_CHUNKS_COUNT_PER_BUF)
             {
@@ -280,6 +299,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
             r->request_length += n;
 
+            ctx->raw_body_size += n;
+
             if (rc == NGX_OK) {
                 done = 1;
                 break;
@@ -295,7 +316,6 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
         }
 
         if (!c->read->ready) {
-            clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
             ngx_add_timer(c->read, clcf->client_body_timeout);
 
             if (ngx_handle_read_event(c->read, 0) != NGX_OK) {
