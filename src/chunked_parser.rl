@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
@@ -100,6 +100,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
         action start_reading_data {
             if (ctx->next_chunk == NULL || *ctx->next_chunk == NULL) {
+                dd("Creating new chunk object (parser)");
                 b = ngx_calloc_buf(r->pool);
 
                 if (b == NULL) {

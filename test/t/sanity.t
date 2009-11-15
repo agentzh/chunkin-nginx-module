@@ -231,10 +231,11 @@ a
 
 
 
-=== TEST 12: on & POST & read body
+=== TEST 12: on & POST & read body & no single buf
 --- config
     chunkin on;
     location /main {
+        client_body_in_single_buffer off;
         echo "body:";
         echo $echo_request_body;
     }
@@ -250,7 +251,48 @@ helloworld
 
 
 
-=== TEST 13: request headers filtered by chunkin (with delay)
+=== TEST 13: on & POST & read body & single buf
+--- config
+    chunkin on;
+    location /main {
+        client_body_in_single_buffer on;
+        echo "body:";
+        echo $echo_request_body;
+    }
+--- request
+POST /main
+--- middle_chunk_delay: 0.01
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body
+body:
+helloworld
+
+
+
+=== TEST 14: on & POST & read body & no single buf & echo_request_body
+--- config
+    chunkin on;
+    location /main {
+        client_body_in_single_buffer on;
+        echo "body:";
+        echo_request_body;
+        echo;
+    }
+--- request
+POST /main
+--- middle_chunk_delay: 0.01
+--- chunked_body eval
+["hello", "world"]
+--- error_code: 200
+--- response_body
+body:
+helloworld
+
+
+
+=== TEST 15: request headers filtered by chunkin (with delay)
 This test passes only for nginx versions
 * 0.7.x >= 0.7.21
 * 0.8.x >= 0.8.10
@@ -283,7 +325,7 @@ Content-Length: 10\r
 
 
 
-=== TEST 14: small buf (using 2-byte buf)
+=== TEST 16: small buf (using 2-byte buf)
 --- config
     chunkin on;
     location /main {
@@ -306,7 +348,7 @@ helloworld"
 
 
 
-=== TEST 15: small buf (using 1-byte buf)
+=== TEST 17: small buf (using 1-byte buf)
 --- config
     chunkin on;
     location /main {
@@ -329,7 +371,7 @@ helloworld"
 
 
 
-=== TEST 16: small buf (using 3-byte buf)
+=== TEST 18: small buf (using 3-byte buf)
 --- config
     chunkin on;
     location /main {
@@ -352,7 +394,7 @@ helloworld"
 
 
 
-=== TEST 17: big chunk
+=== TEST 19: big chunk
 --- config
     chunkin on;
     location /main {
@@ -375,7 +417,7 @@ hello" . ("world" x 1024) . ('!' x 1024)
 
 
 
-=== TEST 18: in memory
+=== TEST 20: in memory
 --- config
     chunkin on;
     location /main {

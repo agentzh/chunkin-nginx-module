@@ -81,3 +81,22 @@ POST /main
 --- response_body eval
 "a" x 1024
 
+
+
+=== TEST 5: next chunk reset bug
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    600;
+        client_max_body_size       8k;
+
+        echo_request_body;
+    }
+--- request
+POST /main
+--- chunked_body eval
+[split //,
+  ("a" x 700) . 'e']
+--- response_body eval
+"a" x 700 . 'e'
+
