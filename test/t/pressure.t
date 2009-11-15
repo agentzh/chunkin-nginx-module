@@ -70,7 +70,7 @@ POST /main
     chunkin on;
     location /main {
         client_body_buffer_size    512;
-        client_max_body_size       1024;
+        client_max_body_size       1048;
 
         echo_request_body;
     }

@@ -235,7 +235,6 @@ a
 --- config
     chunkin on;
     location /main {
-        client_body_in_single_buffer off;
         echo "body:";
         echo $echo_request_body;
     }
