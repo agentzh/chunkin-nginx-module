@@ -200,6 +200,34 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
+    if (ctx->chunks) {
+        if (ctx->chunk_bytes_read) {
+            b = ngx_calloc_buf(r->pool);
+
+            if (b == NULL) {
+                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+
+            ctx->chunk = ngx_alloc_chain_link(r->pool);
+            if (ctx->chunk == NULL) {
+                return NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+
+            ctx->chunk->buf = b;
+            ctx->chunk->next = NULL;
+
+            *ctx->next_chunk = ctx->chunk;
+            ctx->chunks_count++;
+
+            ctx->next_chunk = &ctx->chunk->next;
+            b->memory = 1;
+        } else {
+            b = ctx->chunk->buf;
+        }
+
+        b->end = b->last = b->pos = b->start = rb->buf->start;
+    }
+
     for ( ;; ) {
         for ( ;; ) {
             dd("client_max_body_size: %d, raw_body_size: %d",

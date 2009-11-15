@@ -103,13 +103,11 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                 b = ngx_calloc_buf(r->pool);
 
                 if (b == NULL) {
-                    ctx->parser_state = chunked_error;
                     return NGX_HTTP_INTERNAL_SERVER_ERROR;
                 }
 
                 ctx->chunk = ngx_alloc_chain_link(r->pool);
                 if (ctx->chunk == NULL) {
-                    ctx->parser_state = chunked_error;
                     return NGX_HTTP_INTERNAL_SERVER_ERROR;
                 }
                 ctx->chunk->buf = b;
@@ -132,7 +130,6 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
             b->end = b->last = b->pos = b->start = p;
             b->memory = 1;
-            b->sync = 0;
         }
 
         action verify_data {
@@ -141,7 +138,8 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                         "ERROR: chunk size not meet: "
                         "%uz != %uz\n", ctx->chunk_bytes_read,
                         ctx->chunk_size);
-                fbreak;
+                ctx->parser_state = chunked_error;
+                return NGX_ERROR;
             }
         }
 
@@ -162,7 +160,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
         last_chunk = "0" " "* CRLF;
 
-        main := chunk**
+        main := chunk*
                 last_chunk
                 CRLF @err(bad_chunked) %err(finish);
 
