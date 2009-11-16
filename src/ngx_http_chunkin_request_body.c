@@ -19,7 +19,8 @@ static void ngx_http_chunkin_read_chunked_request_body_handler(
 static ngx_int_t ngx_http_chunkin_do_read_chunked_request_body(
         ngx_http_request_t *r);
 
-static ngx_int_t ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body);
+static ngx_int_t ngx_http_write_request_body(ngx_http_request_t *r,
+        ngx_chain_t *body, int chain_count);
 
 /* this function's implementation is borrowed from nginx 0.8.20
  * and modified a bit to work with the chunked encoding.
@@ -279,7 +280,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                     saved_next_chunk = *ctx->next_chunk;
                     *ctx->next_chunk = NULL;
 
-                    rc = ngx_http_write_request_body(r, ctx->chunks);
+                    rc = ngx_http_write_request_body(r, ctx->chunks, ctx->chunks_count);
                     if (rc != NGX_OK) {
                         return NGX_HTTP_INTERNAL_SERVER_ERROR;
                     }
@@ -398,7 +399,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
         dd("for total %d chunks found", n);
 
         /* save the last part */
-        if (ngx_http_write_request_body(r, ctx->chunks) != NGX_OK) {
+        rc = ngx_http_write_request_body(r, ctx->chunks, ctx->chunks_count);
+        if (rc != NGX_OK) {
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
 
@@ -521,7 +523,8 @@ ngx_http_test_expect(ngx_http_request_t *r)
 }
 
 static ngx_int_t
-ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body)
+ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body,
+        int chain_count)
 {
     ssize_t                    n;
     ngx_temp_file_t           *tf;
@@ -567,27 +570,29 @@ ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body)
      *   [alert] 13493#0: *1 pread() read only 1024
      *   of 3603 from
      *   "/opt/nginx/client_body_temp/0000000001" */
-    i = 0;
-    for (cl = body; cl; cl = cl->next) {
-        if (i >= MAX_CHUNKS_COUNT_PER_BUF) {
-            dd("wrote %d links first...", i+1);
+    if (chain_count > MAX_CHUNKS_COUNT_PER_BUF) {
+        i = 0;
+        for (cl = body; cl; cl = cl->next) {
+            if (i >= MAX_CHUNKS_COUNT_PER_BUF) {
+                dd("wrote %d links first...", i+1);
 
-            saved_next = cl->next;
-            cl->next = NULL;
-            n = ngx_write_chain_to_temp_file(rb->temp_file, body);
-            /* TODO: n == 0 or not complete and level event */
+                saved_next = cl->next;
+                cl->next = NULL;
+                n = ngx_write_chain_to_temp_file(rb->temp_file, body);
+                /* TODO: n == 0 or not complete and level event */
 
-            if (n == NGX_ERROR) {
-                return NGX_ERROR;
+                if (n == NGX_ERROR) {
+                    return NGX_ERROR;
+                }
+
+                rb->temp_file->offset += n;
+
+                cl->next = saved_next;
+                body = cl->next;
+                i = 0;
+            } else {
+                i++;
             }
-
-            rb->temp_file->offset += n;
-
-            cl->next = saved_next;
-            body = cl->next;
-            i = 0;
-        } else {
-            i++;
         }
     }
 
