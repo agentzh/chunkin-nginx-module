@@ -18,7 +18,7 @@ This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-
 
 = Description =
 
-This module adds HTTP 1.1 chunked input support for Nginx without the need of patching the Nginx core.
+This module adds [http://tools.ietf.org/html/rfc2616#section-3.6.1 HTTP 1.1 chunked] input support for Nginx without the need of patching the Nginx core.
 
 Behind the scene, it registers an access-phase handler that will eagerly read and decode incoming request bodies when a "Transfer-Encoding: chunked" header triggers a 411 error page in Nginx (hey, that's what you have to pay for avoiding patching the core ;)). For requests that are not in the "chunked" transfer encoding, this module is a "no-op".
 
@@ -31,6 +31,10 @@ To enable the magic, just turn on the "chunkin" config option like this:
 </geshi>
 
 No other modification is required in your nginx.conf file. (The "chunkin" directive is not allowed in the location block BTW.)
+
+The core module's [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]], [[NginxHttpCoreModule#client_max_body_size|client_max_body_size]], and [[NginxHttpCoreModule#client_body_timeout|client_body_timeout]] directive settings are honored.
+
+The [[NginxHttpCoreModule#client_body_in_file_only|client_body_in_file_only]] and [[NginxHttpCoreModule#client_body_in_single_buffer|client_body_in_single_buffer]] settings are followed partially. See [[#Known Issues|Know Issues]].
 
 WARNING: This module is in its very early phase in development and is considered ''highly experimental''. But you're encouraged to play and test it in your non-production environment and report any quirks that you find.
 
@@ -133,7 +137,8 @@ Some parts of the test suite requires modules [[NginxHttpProxyModule|proxy]] and
 
 = TODO =
 
-Fix the [[#Known Issues|known issues]].
+# Fix the [[#Known Issues|known issues]].
+# Add support for trailers and chunked extensions as specified in the [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC]
 
 = Getting involved =
 
@@ -180,4 +185,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * The original thread on Nginx mailing list that inspires this module's development: [http://forum.nginx.org/read.php?2,4453,20543 "'Content-Length' header for POSTs"].
 * The original [http://agentzh.spaces.live.com/blog/cns!FF3A735632E41548!481.entry blog post] about this module's initial development.
 * The [[NginxHttpEchoModule|echo module]] for Nginx module's automated testing.
+* [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC 2616 - Chunked Transfer Coding].
 

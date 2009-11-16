@@ -16,8 +16,9 @@ Synopsis
       ...
 
 Description
-    This module adds HTTP 1.1 chunked input support for Nginx without the
-    need of patching the Nginx core.
+    This module adds HTTP 1.1 chunked
+    (<http://tools.ietf.org/html/rfc2616#section-3.6.1>) input support for
+    Nginx without the need of patching the Nginx core.
 
     Behind the scene, it registers an access-phase handler that will eagerly
     read and decode incoming request bodies when a "Transfer-Encoding:
@@ -33,6 +34,12 @@ Description
 
     No other modification is required in your nginx.conf file. (The
     "chunkin" directive is not allowed in the location block BTW.)
+
+    The core module's client_body_buffer_size, client_max_body_size, and
+    client_body_timeout directive settings are honored.
+
+    The client_body_in_file_only and client_body_in_single_buffer settings
+    are followed partially. See Know Issues.
 
     WARNING: This module is in its very early phase in development and is
     considered *highly experimental*. But you're encouraged to play and test
@@ -156,7 +163,10 @@ Known Issues
         and fast network.
 
 TODO
-    Fix the known issues.
+    1.  Fix the known issues.
+
+    2.  Add support for trailers and chunked extensions as specified in the
+        RFC (<http://tools.ietf.org/html/rfc2616#section-3.6.1>)
 
 Getting involved
     You'll be very welcomed to submit patches to the author or just ask for
@@ -218,4 +228,7 @@ See Also
         >) about this module's initial development.
 
     *   The echo module for Nginx module's automated testing.
+
+    *   RFC 2616 - Chunked Transfer Coding
+        (<http://tools.ietf.org/html/rfc2616#section-3.6.1>).
 
