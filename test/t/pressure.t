@@ -100,3 +100,21 @@ POST /main
 --- response_body eval
 "a" x 700 . 'e'
 
+
+
+=== TEST 6: normal POST with chunkin on
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    600;
+        client_max_body_size       8k;
+
+        echo_read_request_body;
+        echo_request_body;
+    }
+--- request
+POST /main
+hello, world
+--- response_body chomp
+hello, world
+
