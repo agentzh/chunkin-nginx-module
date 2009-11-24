@@ -32,8 +32,10 @@ Description
         location /foo { ... }
         ....
 
-    No other modification is required in your nginx.conf file. (The
-    "chunkin" directive is not allowed in the location block BTW.)
+    No other modification is required in your nginx.conf file and everything
+    should work out of the box including the standard proxy module (except
+    for those known issues). Note that the "chunkin" directive is not
+    allowed in the location block BTW.
 
     The core module's client_body_buffer_size, client_max_body_size, and
     client_body_timeout directive settings are honored.
@@ -65,12 +67,12 @@ Directives
 
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/>), for
-    example, the version 0.8.24 (see nginx compatibility), and then build
+    example, the version 0.8.28 (see nginx compatibility), and then build
     the source with this module:
 
-        $ wget 'http://sysoev.ru/nginx/nginx-0.8.24.tar.gz'
-        $ tar -xzvf nginx-0.8.24.tar.gz
-        $ cd nginx-0.8.24/
+        $ wget 'http://sysoev.ru/nginx/nginx-0.8.28.tar.gz'
+        $ tar -xzvf nginx-0.8.28.tar.gz
+        $ cd nginx-0.8.28/
 
         # Here we assume you would install you nginx under /opt/nginx/.
         $ ./configure --prefix=/opt/nginx \
@@ -96,9 +98,9 @@ Installation
 Compatibility
     The following versions of Nginx should work with this module:
 
-    *   0.8.x (last tested version is 0.8.24)
+    *   0.8.x (last tested version is 0.8.28)
 
-    *   0.7.x >= 0.7.21 (last tested version is 0.7.63)
+    *   0.7.x >= 0.7.21 (last tested version is 0.7.64)
 
     Earlier versions of Nginx like 0.6.x and 0.5.x will *not* work.
 
@@ -156,17 +158,27 @@ Test Suite
     enabled as well when building Nginx.
 
 Known Issues
-    1.  "client_body_in_single_buffer on" may *not* be obeyed for short
+    *   May not work properly if keep-alive is enabled in Nginx. Use it with
+        keep-alive at your own risk.
+
+    *   May not work with certain 3rd party modules like the upload module
+        (<http://www.grid.net.ru/nginx/upload.en.html>) because it
+        implements its own request body reading mechanism.
+
+    *   "client_body_in_single_buffer on" may *not* be obeyed for short
         contents and fast network.
 
-    2.  "client_body_in_file_only on" may *not* be obeyed for short contents
+    *   "client_body_in_file_only on" may *not* be obeyed for short contents
         and fast network.
 
 TODO
-    1.  Fix the known issues.
+    *   Fix the known issues.
 
-    2.  Add support for trailers and chunked extensions as specified in the
+    *   Add support for trailers and chunked extensions as specified in the
         RFC (<http://tools.ietf.org/html/rfc2616#section-3.6.1>)
+
+    *   Add tests for invalid chunked input by implementing
+        Test::Nginx::Socket in the test scaffold.
 
 Getting involved
     You'll be very welcomed to submit patches to the author or just ask for
@@ -219,9 +231,13 @@ Copyright & License
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 See Also
-    *   The original thread on Nginx mailing list that inspires this
+    *   The original thread on the Nginx mailing list that inspires this
         module's development: "'Content-Length' header for POSTs"
         (<http://forum.nginx.org/read.php?2,4453,20543>).
+
+    *   The orginal announcement thread on the Nginx mailing list: "The
+        chunkin module: Experimental chunked input support for Nginx"
+        (<http://forum.nginx.org/read.php?2,22967>).
 
     *   The original blog post
         (<http://agentzh.spaces.live.com/blog/cns!FF3A735632E41548!481.entry
