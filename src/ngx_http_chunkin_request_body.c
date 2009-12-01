@@ -1,4 +1,4 @@
-#define DDEBUG 1
+#define DDEBUG 0
 
 #include "ddebug.h"
 
@@ -8,7 +8,7 @@
 #include "ngx_http_chunkin_request_body.h"
 
 enum {
-    MAX_CHUNKS_COUNT_PER_BUF = 1
+    MAX_CHUNKS_COUNT_PER_BUF = 512
 };
 
 static ngx_int_t ngx_http_test_expect(ngx_http_request_t *r);

@@ -109,8 +109,11 @@ ngx_http_chunkin_get_buf(ngx_pool_t *pool, ngx_http_chunkin_ctx_t *ctx)
         cl->buf->shadow = NULL;
         cl->next = NULL;
 
+        dd("returned free buf");
         return cl;
     }
+
+    dd("allocate new buf");
 
     cl = ngx_alloc_chain_link(pool);
     if (cl == NULL) {

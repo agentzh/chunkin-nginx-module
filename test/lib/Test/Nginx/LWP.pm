@@ -1,7 +1,7 @@
 package Test::Nginx::LWP;
 
 our $NoNginxManager = 0;
-our $RepeatEach = 100;
+our $RepeatEach = 1;
 
 use lib 'lib';
 use lib 'inc';

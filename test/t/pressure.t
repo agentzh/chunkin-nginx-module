@@ -46,7 +46,25 @@ POST /main
 
 
 
-=== TEST 3: exceeding max body limit
+=== TEST 3: many little chunks (more!)
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    60;
+        #echo_sleep 500;
+        echo_request_body;
+    }
+--- request
+POST /main
+--- chunked_body eval
+[split //,
+  ("hello world blah blah blah! oh, yah!" x 100) . 'end']
+--- response_body eval
+("hello world blah blah blah! oh, yah!" x 100) . 'end'
+
+
+
+=== TEST 4: exceeding max body limit
 --- config
     chunkin on;
     location /main {
@@ -65,7 +83,7 @@ POST /main
 
 
 
-=== TEST 4: not exceeding max body limit (chunk spanning preread and rb->buf)
+=== TEST 5: not exceeding max body limit (chunk spanning preread and rb->buf)
 --- config
     chunkin on;
     location /main {
@@ -82,7 +100,8 @@ POST /main
 "a" x 1024
 
 
-=== TEST 5: next chunk reset bug
+
+=== TEST 6: next chunk reset bug
 --- config
     chunkin on;
     location /main {
@@ -101,7 +120,7 @@ POST /main
 
 
 
-=== TEST 6: normal POST with chunkin on
+=== TEST 7: normal POST with chunkin on
 --- config
     chunkin on;
     location /main {
