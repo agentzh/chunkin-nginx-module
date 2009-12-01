@@ -3,7 +3,7 @@
 use lib 'lib';
 use Test::Nginx::LWP;
 
-plan tests => 2 * blocks();
+plan tests => $Test::Nginx::LWP::RepeatEach * 2 * blocks();
 
 #no_diff;
 
@@ -32,7 +32,7 @@ POST /main
 --- config
     chunkin on;
     location /main {
-        client_body_buffer_size    8k;
+        client_body_buffer_size    1k;
         #echo_sleep 500;
         echo_request_body;
     }
@@ -40,9 +40,9 @@ POST /main
 POST /main
 --- chunked_body eval
 [split //,
-  ("hello world blah blah blah! oh, yay!" x 100) . 'end']
+  ("hello world blah blah blah! o, yah!" x 4) . 'end']
 --- response_body eval
-("hello world blah blah blah! oh, yay!" x 100) . 'end'
+("hello world blah blah blah! o, yah!" x 4) . 'end'
 
 
 
@@ -80,7 +80,6 @@ POST /main
 ["a" x 1024]
 --- response_body eval
 "a" x 1024
-
 
 
 === TEST 5: next chunk reset bug

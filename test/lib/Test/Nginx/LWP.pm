@@ -1,10 +1,12 @@
 package Test::Nginx::LWP;
 
 our $NoNginxManager = 0;
+our $RepeatEach = 100;
 
 use lib 'lib';
 use lib 'inc';
 use Time::HiRes qw(sleep);
+use Test::LongString;
 
 #use Smart::Comments::JSON '##';
 use LWP::UserAgent; # XXX should use a socket level lib here
@@ -15,7 +17,7 @@ use File::Spec ();
 use Cwd qw( cwd );
 
 our $UserAgent = LWP::UserAgent->new;
-$UserAgent->agent("Test::Nginx::LWP");
+$UserAgent->agent(__PACKAGE__);
 #$UserAgent->default_headers(HTTP::Headers->new);
 
 our $Workers                = 1;
@@ -24,6 +26,10 @@ our $LogLevel               = 'debug';
 #our $MasterProcessEnabled   = 'on';
 #our $DaemonEnabled          = 'on';
 our $ServerPort             = 1984;
+our $ServerPortForClient    = 1200;
+
+our $NginxVersion;
+our $NginxRawVersion;
 
 #our ($PrevRequest, $PrevConfig);
 
@@ -36,15 +42,57 @@ our $ConfDir    = File::Spec->catfile($ServRoot, 'conf');
 our $ConfFile   = File::Spec->catfile($ConfDir, 'nginx.conf');
 our $PidFile    = File::Spec->catfile($LogDir, 'nginx.pid');
 
-our @EXPORT = qw( run_tests run_test );
+our @EXPORT = qw( plan run_tests run_test );
+
+=begin cmt
+
+sub plan (@) {
+    if (@_ == 2 && $_[0] eq 'tests' && defined $RepeatEach) {
+        #$_[1] *= $RepeatEach;
+    }
+    super;
+}
+
+=end cmt
+
+=cut
 
 sub trim ($);
 
 sub show_all_chars ($);
 
+sub parse_headers ($);
+
+sub run_test_helper ($$);
+
+sub get_canon_version (@) {
+    sprintf "%d.%03d%03d", $_[0], $_[1], $_[2];
+}
+
+sub get_nginx_version () {
+    my $out = `nginx -V 2>&1`;
+    if (!defined $out || $? != 0) {
+        warn "Failed to get the version of the Nginx in PATH.\n";
+    }
+    if ($out =~ m{nginx/(\d+)\.(\d+)\.(\d+)}s) {
+        $NginxRawVersion = "$1.$2.$3";
+        return get_canon_version($1, $2, $3);
+    }
+    warn "Failed to parse the output of \"nginx -V\": $out\n";
+    return undef;
+}
+
 sub run_tests () {
+    $NginxVersion = get_nginx_version();
+
+    if (defined $NginxVersion) {
+        #warn "[INFO] Using nginx version $NginxVersion ($NginxRawVersion)\n";
+    }
+
     for my $block (shuffle blocks()) {
-        run_test($block);
+        #for (1..3) {
+            run_test($block);
+        #}
     }
 }
 
@@ -118,7 +166,7 @@ sub parse_request ($$) {
     }
     $first =~ s/^\s+|\s+$//g;
     my ($meth, $rel_url) = split /\s+/, $first, 2;
-    my $url = "http://localhost:$ServerPort" . $rel_url;
+    my $url = "http://localhost:$ServerPortForClient" . $rel_url;
 
     my $content = do { local $/; <$in> };
     if ($content) {
@@ -197,6 +245,7 @@ sub run_test ($) {
         }
 
         unless ($nginx_is_running) {
+            warn "*** Restarting the nginx server...\n";
             setup_server_root();
             write_config_file(\$config);
             if ( ! Module::Install::Can->can_run('nginx') ) {
@@ -216,12 +265,128 @@ sub run_test ($) {
         }
     }
 
+    my $skip_nginx = $block->skip_nginx;
+    my ($tests_to_skip, $should_skip, $skip_reason);
+    if (defined $skip_nginx) {
+        if ($skip_nginx =~ m{
+                ^ \s* (\d+) \s* : \s*
+                    ([<>]=?) \s* (\d+)\.(\d+)\.(\d+)
+                    (?: \s* : \s* (.*) )?
+                \s*$}x) {
+            $tests_to_skip = $1;
+            my ($op, $ver1, $ver2, $ver3) = ($2, $3, $4, $5);
+            $skip_reason = $6;
+            my $ver = get_canon_version($ver1, $ver2, $ver3);
+            if ((!defined $NginxVersion and $op =~ /^</)
+                    or eval "$NginxVersion $op $ver")
+            {
+                $should_skip = 1;
+            }
+        } else {
+            Test::More::BAIL_OUT("$name - Invalid --- skip_nginx spec: " .
+                $skip_nginx);
+            die;
+        }
+    }
+    if (!defined $skip_reason) {
+        $skip_reason = "various reasons";
+    }
+
+    my $todo_nginx = $block->todo_nginx;
+    my ($should_todo, $todo_reason);
+    if (defined $todo_nginx) {
+        if ($todo_nginx =~ m{
+                ^ \s*
+                    ([<>]=?) \s* (\d+)\.(\d+)\.(\d+)
+                    (?: \s* : \s* (.*) )?
+                \s*$}x) {
+            my ($op, $ver1, $ver2, $ver3) = ($1, $2, $3, $4);
+            $todo_reason = $5;
+            my $ver = get_canon_version($ver1, $ver2, $ver3);
+            if ((!defined $NginxVersion and $op =~ /^</)
+                    or eval "$NginxVersion $op $ver")
+            {
+                $should_todo = 1;
+            }
+        } else {
+            Test::More::BAIL_OUT("$name - Invalid --- todo_nginx spec: " .
+                $todo_nginx);
+            die;
+        }
+    }
+    if (!defined $todo_reason) {
+        $todo_reason = "various reasons";
+    }
+
+    my $i = 0;
+    while ($i++ < $RepeatEach) {
+        if ($should_skip) {
+            SKIP: {
+                skip "$name - $skip_reason", $tests_to_skip;
+
+                run_test_helper($block, $request);
+            }
+        } elsif ($should_todo) {
+            TODO: {
+                local $TODO = "$name - $todo_reason";
+
+                run_test_helper($block, $request);
+            }
+        } else {
+            run_test_helper($block, $request);
+        }
+    }
+}
+
+sub trim ($) {
+    (my $s = shift) =~ s/^\s+|\s+$//g;
+    $s =~ s/\n/ /gs;
+    $s =~ s/\s{2,}/ /gs;
+    $s;
+}
+
+sub show_all_chars ($) {
+    my $s = shift;
+    $s =~ s/\n/\\n/gs;
+    $s =~ s/\r/\\r/gs;
+    $s =~ s/\t/\\t/gs;
+    $s;
+}
+
+sub parse_headers ($) {
+    my $s = shift;
+    my %headers;
+    open my $in, '<', \$s;
+    while (<$in>) {
+        s/^\s+|\s+$//g;
+        my ($key, $val) = split /\s*:\s*/, $_, 2;
+        $headers{$key} = $val;
+    }
+    close $in;
+    return \%headers;
+}
+
+sub run_test_helper ($$) {
+    my ($block, $request) = @_;
+
+    my $name = $block->name;
+    #if (defined $TODO) {
+    #$name .= "# $TODO";
+    #}
+
     my $req_spec = parse_request($name, \$request);
     ## $req_spec
     my $method = $req_spec->{method};
     my $req = HTTP::Request->new($method);
     my $content = $req_spec->{content};
-    #$req->header('Content-Type' => $type);
+
+    if (defined ($block->request_headers)) {
+        my $headers = parse_headers($block->request_headers);
+        while (my ($key, $val) = each %$headers) {
+            $req->header($key => $val);
+        }
+    }
+
     #$req->header('Accept', '*/*');
     $req->url($req_spec->{url});
     if ($content) {
@@ -240,9 +405,14 @@ sub run_test ($) {
             my $start_delay = $block->start_chunk_delay || 0;
             my $middle_delay = $block->middle_chunk_delay || 0;
             $req->content(chunk_it($chunks, $start_delay, $middle_delay));
-            $req->header('Content-Type' => 'text/plain');
+            if (!defined $req->header('Content-Type')) {
+                $req->header('Content-Type' => 'text/plain');
+            }
         } else {
-            $req->header('Content-Type' => 'text/plain');
+            if (!defined $req->header('Content-Type')) {
+                $req->header('Content-Type' => 'text/plain');
+            }
+
             $req->header('Content-Length' => 0);
         }
     }
@@ -268,16 +438,43 @@ sub run_test ($) {
         is($res->code, 200, "$name - status code ok");
     }
 
+    if (defined $block->response_headers) {
+        my $headers = parse_headers($block->response_headers);
+        while (my ($key, $val) = each %$headers) {
+            my $expected_val = $res->header($key);
+            if (!defined $expected_val) {
+                $expected_val = '';
+            }
+            is $expected_val, $val,
+                "$name - header $key ok";
+        }
+    } elsif (defined $block->response_headers_like) {
+        my $headers = parse_headers($block->response_headers_like);
+        while (my ($key, $val) = each %$headers) {
+            my $expected_val = $res->header($key);
+            if (!defined $expected_val) {
+                $expected_val = '';
+            }
+            like $expected_val, qr/^$val$/,
+                "$name - header $key like ok";
+        }
+    }
+
     if (defined $block->response_body) {
         my $content = $res->content;
         if (defined $content) {
             $content =~ s/^TE: deflate,gzip;q=0\.3\r\n//gms;
         }
+
         $content =~ s/^Connection: TE, close\r\n//gms;
         my $expected = $block->response_body;
         $expected =~ s/\$ServerPort\b/$ServerPort/g;
+        $expected =~ s/\$ServerPortForClient\b/$ServerPortForClient/g;
         #warn show_all_chars($content);
-        is($content, $expected, "$name - response_body - response is expected");
+
+        is_string($content, $expected, "$name - response_body - response is expected");
+        #is($content, $expected, "$name - response_body - response is expected");
+
     } elsif (defined $block->response_body_like) {
         my $content = $res->content;
         if (defined $content) {
@@ -286,24 +483,10 @@ sub run_test ($) {
         $content =~ s/^Connection: TE, close\r\n//gms;
         my $expected_pat = $block->response_body_like;
         $expected_pat =~ s/\$ServerPort\b/$ServerPort/g;
+        $expected_pat =~ s/\$ServerPortForClient\b/$ServerPortForClient/g;
         my $summary = trim($content);
-        like($content, qr/$expected_pat/sm, "$name - response_body_like - response is expected ($summary)");
+        like($content, qr/$expected_pat/s, "$name - response_body_like - response is expected ($summary)");
     }
-}
-
-sub trim ($) {
-    (my $s = shift) =~ s/^\s+|\s+$//g;
-    $s =~ s/\n/ /gs;
-    $s =~ s/\s{2,}/ /gs;
-    $s;
-}
-
-sub show_all_chars ($) {
-    my $s = shift;
-    $s =~ s/\n/\\n/gs;
-    $s =~ s/\r/\\r/gs;
-    $s =~ s/\t/\\t/gs;
-    $s;
 }
 
 1;
@@ -311,7 +494,7 @@ __END__
 
 =head1 NAME
 
-Test::Nginx::LWP - Test scaffold for the echo Nginx module
+Test::Nginx::LWP - Test scaffold for the Nginx C modules
 
 =head1 AUTHOR
 

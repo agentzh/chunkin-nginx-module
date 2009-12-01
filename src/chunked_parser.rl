@@ -1,8 +1,9 @@
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
 #include "chunked_parser.h"
+#include "ngx_http_chunkin_util.h"
 
 %% machine chunked;
 %% write data;
@@ -31,32 +32,19 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
 
 ngx_int_t
 ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
-        ngx_http_chunkin_ctx_t *ctx, u_char *pos, u_char *last)
+        ngx_http_chunkin_ctx_t *ctx, u_char **pos_addr, u_char *last)
 {
     int                 cs   = ctx->parser_state;
     ngx_connection_t    *c   = r->connection;
-    u_char              *p   = pos;
+    u_char              *pos = *pos_addr;
+    u_char              *p   = *pos_addr;
     u_char              *pe  = last;
-    u_char              *eof = NULL;
     ngx_buf_t           *b;
+    ngx_flag_t          done = 0;
 
     %%{
-        action bad_chunked {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "bad chunked body (offset %O).\n", p - pos);
-        }
-
-        action finish {
-            ctx->parser_state = chunked_first_final;
-            return NGX_OK;
-        }
-
-        action bad_chunk_data {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "bad chunk data "
-                "(bytes already read %uz, bytes expected: %uz): "
-                "offset %O.\n", ctx->chunk_bytes_read,
-                ctx->chunk_size, p - pos);
+        action finalize {
+            done = 1;
         }
 
         action test_len {
@@ -67,11 +55,10 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
             ctx->chunk_bytes_read++;
 
             ctx->chunk->buf->last = p + 1;
-            ctx->chunk->buf->end = p + 1;
 
             ctx->chunks_total_size++;
 
-            dd("bytes read: %d", ctx->chunk->buf->last - ctx->chunk->buf->pos);
+            dd("bytes read: %d (char '%c', bytes read %d, chunk size %d)", ctx->chunk->buf->last - ctx->chunk->buf->pos, *p, ctx->chunk_bytes_read, ctx->chunk_size);
             ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
@@ -99,49 +86,34 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         }
 
         action start_reading_data {
-            if (ctx->next_chunk == NULL || *ctx->next_chunk == NULL) {
-                dd("Creating new chunk object (parser)");
-                b = ngx_calloc_buf(r->pool);
+            ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
-                if (b == NULL) {
-                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
-                }
-
-                ctx->chunk = ngx_alloc_chain_link(r->pool);
-                if (ctx->chunk == NULL) {
-                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
-                }
-                ctx->chunk->buf = b;
-                ctx->chunk->next = NULL;
-
-                if (ctx->chunks == NULL) {
-                    ctx->chunks = ctx->chunk;
-                } else {
-                    *ctx->next_chunk = ctx->chunk;
-                }
-
+            if (ctx->chunks) {
+                *ctx->next_chunk = ctx->chunk;
             } else {
-                ctx->chunk = *ctx->next_chunk;
-                b = ctx->chunk->buf;
+                ctx->chunks = ctx->chunk;
             }
-
-            ctx->chunks_count++;
 
             ctx->next_chunk = &ctx->chunk->next;
 
-            b->end = b->last = b->pos = b->start = p;
+            b = ctx->chunk->buf;
+
+            b->last = b->pos = p;
             b->memory = 1;
         }
 
         action verify_data {
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
-                        "ERROR: chunk size not meet: "
+                        "ERROR: chunk size not met: "
                         "%uz != %uz\n", ctx->chunk_bytes_read,
                         ctx->chunk_size);
+                *pos_addr = p;
                 ctx->parser_state = chunked_error;
                 return NGX_ERROR;
             }
+
+            ctx->last_complete_chunk = ctx->chunk;
         }
 
         CRLF = "\r\n";
@@ -149,21 +121,22 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         chunk_size = (xdigit+ - "0") >start_reading_size $read_size;
 
         chunk_data_octet = any
-                when test_len $err(bad_chunk_data);
+                when test_len;
 
-        chunk_data = chunk_data_octet*
+        chunk_data = (chunk_data_octet*)
                 >start_reading_data
                 $read_data_byte
-                %verify_data;
+                ;
 
         chunk = chunk_size " "* CRLF
-                        chunk_data CRLF;
+                        chunk_data CRLF @verify_data;
 
         last_chunk = "0" " "* CRLF;
 
-        main := chunk*
-                last_chunk
-                CRLF @err(bad_chunked) %err(finish);
+        parser = chunk* last_chunk CRLF
+               ;
+
+        main := parser @finalize;
 
     }%%
 
@@ -171,11 +144,20 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
     ctx->parser_state = cs;
 
-    if (cs >= chunked_first_final) {
+    *pos_addr = p;
+
+    if (p != pe) {
+        dd("ASSERTION FAILED: p != pe");
+    }
+
+    if (done || cs >= chunked_first_final) {
         return NGX_OK;
     }
 
     if (cs == chunked_error) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "bad chunked body (offset %O).\n", p - pos);
+
         return NGX_ERROR;
     }
 

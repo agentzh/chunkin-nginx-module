@@ -28,6 +28,9 @@ typedef struct {
     ngx_chain_t         *chunk;
 
     ngx_flag_t          just_after_preread;
+
+    ngx_chain_t         *free_bufs;
+    ngx_chain_t         *last_complete_chunk;
 } ngx_http_chunkin_ctx_t;
 
 extern ngx_module_t  ngx_http_chunkin_filter_module;

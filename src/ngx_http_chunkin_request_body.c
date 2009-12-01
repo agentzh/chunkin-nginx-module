@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
@@ -8,7 +8,7 @@
 #include "ngx_http_chunkin_request_body.h"
 
 enum {
-    MAX_CHUNKS_COUNT_PER_BUF = 512
+    MAX_CHUNKS_COUNT_PER_BUF = 1
 };
 
 static ngx_int_t ngx_http_test_expect(ngx_http_request_t *r);
@@ -30,7 +30,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     ngx_http_client_body_handler_pt post_handler)
 {
     size_t                      preread;
-    ssize_t                     size;
+    size_t                      size;
     ngx_http_request_body_t     *rb;
     ngx_http_core_loc_conf_t    *clcf;
     ngx_http_chunkin_ctx_t      *ctx;
@@ -87,7 +87,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
             dd("raw chunked body (len %d): %s", r->header_in->last - r->header_in->pos, r->header_in->pos);
 
         rc = ngx_http_chunkin_run_chunked_parser(r, ctx,
-                r->header_in->pos, r->header_in->last);
+                &r->header_in->pos, r->header_in->last);
 
         if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
             return rc;
@@ -122,7 +122,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
             dd("buf len: %d", rb->buf->last - rb->buf->pos);
 
-            r->header_in->pos = r->header_in->last;
+            /* r->header_in->pos = r->header_in->last; */
 
             r->request_length += preread;
 
@@ -136,7 +136,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
 
-        dd("we need to read more chunked body addition to 'prepread'...");
+        dd("we need to read more chunked body in addition to 'prepread'...");
 
         ctx->just_after_preread = 1;
 
@@ -148,6 +148,9 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     }
 
     size = clcf->client_body_buffer_size;
+    if (ctx->chunks_total_size > size) {
+        size = ctx->chunks_total_size;
+    }
 
     dd("chunks total size after preread: %d, buf size: %d",
             ctx->chunks_total_size, size);
@@ -193,7 +196,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
     ngx_http_core_loc_conf_t  *clcf;
     ngx_http_chunkin_ctx_t    *ctx;
     ngx_flag_t                 done;
-    ngx_chain_t               *cl, *saved_next_chunk;
+    ngx_chain_t               *cl, *pending_chunk;
+    u_char                    *p;
 
     c = r->connection;
     rb = r->request_body;
@@ -209,38 +213,18 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
     if (ctx->just_after_preread && ctx->chunks) {
         ctx->just_after_preread = 0;
 
-        if (ctx->chunk_bytes_read) {
-            if (ctx->chunk_bytes_read != ctx->chunk_size) {
-                dd("Creating new chunk object (pre)");
+        dd("Just after preread and ctx->chunks defined (bytes read: %d, chunk size: %d, last chars %c %c %c)", ctx->chunk_bytes_read, ctx->chunk_size, *(r->header_in->pos - 2), *(r->header_in->pos - 1), *r->header_in->pos);
 
-                b = ngx_calloc_buf(r->pool);
+        for (cl = ctx->chunks; cl; cl = cl->next) {
+            b = cl->buf;
 
-                if (b == NULL) {
-                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
-                }
+            dd("before ngx_copy...");
+            p = rb->buf->last;
+            rb->buf->last = ngx_copy(rb->buf->last, b->pos, b->last - b->pos);
+            dd("after ngx_copy...");
 
-                ctx->chunk = ngx_alloc_chain_link(r->pool);
-                if (ctx->chunk == NULL) {
-                    return NGX_HTTP_INTERNAL_SERVER_ERROR;
-                }
-
-                ctx->chunk->buf = b;
-                ctx->chunk->next = NULL;
-
-                *ctx->next_chunk = ctx->chunk;
-                ctx->chunks_count++;
-
-                ctx->next_chunk = &ctx->chunk->next;
-                b->memory = 1;
-            } else {
-                b = NULL;
-            }
-        } else {
-            b = ctx->chunk->buf;
-        }
-
-        if (b) {
-            b->end = b->last = b->pos = b->start = rb->buf->start;
+            b->pos = p;
+            b->last = rb->buf->last;
         }
     }
 
@@ -254,10 +238,9 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                     && clcf->client_max_body_size < ctx->raw_body_size)
             {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "client intended to send too large body: %O bytes",
+                          "chunkin: client intended to send too large body: %O bytes",
                           (off_t) ctx->raw_body_size);
 
-                (void) ngx_http_discard_request_body(r);
                 return NGX_HTTP_REQUEST_ENTITY_TOO_LARGE;
             }
 
@@ -265,7 +248,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                     || ctx->chunks_count >= MAX_CHUNKS_COUNT_PER_BUF)
             {
                 if (ctx->chunks_count >= MAX_CHUNKS_COUNT_PER_BUF) {
-                    dd("too many chounks already: %d", ctx->chunks_count);
+                    dd("too many chounks already: %d (buf last %c)", ctx->chunks_count, *(rb->buf->last - 2));
                 }
 
                 if (ctx->chunks
@@ -277,35 +260,43 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                             rb->buf->end - rb->buf->start,
                             ctx->chunks_count);
 
-                    saved_next_chunk = *ctx->next_chunk;
-                    *ctx->next_chunk = NULL;
-
                     rc = ngx_http_write_request_body(r, ctx->chunks, ctx->chunks_count);
                     if (rc != NGX_OK) {
                         return NGX_HTTP_INTERNAL_SERVER_ERROR;
                     }
 
-                    *ctx->next_chunk = saved_next_chunk;
-
-                    if (ctx->chunk_bytes_read == ctx->chunk_size) {
-                        dd("Found it!");
-                        ctx->next_chunk  = &ctx->chunks;
-                        ctx->chunk = NULL;
-                        ctx->chunks_count = 0;
+                    if (ctx->last_complete_chunk) {
+                        pending_chunk = ctx->last_complete_chunk->next;
+                        /* add ctx->chunks ~ ctx->last_complete_chunk
+                         * into ctx->free_bufs */
+                        ctx->last_complete_chunk->next = ctx->free_bufs;
+                        ctx->free_bufs = ctx->chunks;
+                        ctx->last_complete_chunk = NULL;
                     } else {
-                        ctx->next_chunk = &ctx->chunks->next;
-                        ctx->chunk = ctx->chunks;
-
-                        ctx->chunk->buf->start  = rb->buf->start;
-                        ctx->chunk->buf->pos    = rb->buf->start;
-                        ctx->chunk->buf->last   = rb->buf->start;
-                        ctx->chunk->buf->end    = rb->buf->start;
-
-                        ctx->chunks_count = 1;
+                        pending_chunk = ctx->chunks;
                     }
 
-                    ctx->chunks_written_size = ctx->chunks_total_size;
+                    if (pending_chunk) {
+                        ctx->next_chunk = &pending_chunk->next;
+                        ctx->chunks = pending_chunk;
+                        ctx->chunk = pending_chunk;
 
+                        ctx->chunk->buf->pos = rb->buf->start;
+                        ctx->chunk->buf->last = rb->buf->start;
+                        ctx->chunks_count = 1;
+
+                        ctx->chunks_written_size = ctx->chunks_total_size
+                            - ngx_buf_size(pending_chunk->buf);
+                    } else {
+                        ctx->next_chunk = NULL;
+
+                        ctx->chunks = NULL;
+                        ctx->chunk = NULL;
+
+                        ctx->chunks_count = 0;
+
+                        ctx->chunks_written_size = ctx->chunks_total_size;
+                    }
                 }
 
                 rb->buf->last = rb->buf->start;
@@ -318,6 +309,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                            "http chunked client request body recv %z", n);
 
             if (n == NGX_AGAIN) {
+                dd("NGX_AGAIN caught");
                 break;
             }
 
@@ -332,7 +324,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
             }
 
             rc = ngx_http_chunkin_run_chunked_parser(r, ctx,
-                    rb->buf->last, rb->buf->last + n);
+                    &rb->buf->last, rb->buf->last + n);
 
             if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
                 return rc;
@@ -343,13 +335,15 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                 return NGX_HTTP_BAD_REQUEST;
             }
 
-            rb->buf->last += n;
+            /* rb->buf->last += n; */
 
             r->request_length += n;
 
             ctx->raw_body_size += n;
 
             if (rc == NGX_OK) {
+                dd("successfully done the parsing");
+
                 done = 1;
                 break;
             }
@@ -382,8 +376,6 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
         ngx_del_timer(c->read);
     }
 
-    *ctx->next_chunk = NULL;
-
     if (rb->temp_file || r->request_body_in_file_only) {
         size = ctx->chunks_total_size - ctx->chunks_written_size;
         dd("save the last part to disk...(%d bytes left)", size);
@@ -393,7 +385,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
         n = 0;
         for (cl = ctx->chunks; cl != NULL; cl = cl->next) {
-            dd("chunks %d found buf %c", n, *cl->buf->start);
+            /* dd("chunks %d found buf %c", n, *cl->buf->start); */
             n++;
         }
         dd("for total %d chunks found", n);
@@ -469,6 +461,12 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
     dd("last minute, chunks count: %d, chunks_total_size: %d",
             ctx->chunks_count, ctx->chunks_total_size);
+
+    size = 0;
+    for (cl = rb->bufs; cl; cl = cl->next) {
+        size += ngx_buf_size(cl->buf);
+    }
+    dd("data size: %d", size);
 
     rc = ngx_http_chunkin_set_content_length_header(r, ctx->chunks_total_size);
 
@@ -574,7 +572,7 @@ ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body,
         i = 0;
         for (cl = body; cl; cl = cl->next) {
             if (i >= MAX_CHUNKS_COUNT_PER_BUF) {
-                dd("wrote %d links first...", i+1);
+                /* dd("wrote %d links first...", i+1); */
 
                 saved_next = cl->next;
                 cl->next = NULL;

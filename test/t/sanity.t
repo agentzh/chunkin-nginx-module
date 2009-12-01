@@ -3,7 +3,7 @@
 use lib 'lib';
 use Test::Nginx::LWP;
 
-plan tests => 2 * blocks();
+plan tests => $Test::Nginx::LWP::RepeatEach * 2 * blocks();
 
 no_diff;
 
@@ -99,7 +99,7 @@ POST /main
 --- response_body eval
 "headers:
 POST /main HTTP/1.1\r
-Host: localhost:\$ServerPort\r
+Host: localhost:\$ServerPortForClient\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Transfer-Encoding: chunked\r
