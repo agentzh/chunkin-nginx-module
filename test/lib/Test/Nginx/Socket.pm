@@ -1,25 +1,27 @@
-package Test::Nginx::LWP;
+package Test::Nginx::Socket;
 
 use lib 'lib';
 use lib 'inc';
 use Test::Base -Base;
+use Data::Dumper;
 
 our $NoNginxManager = 0;
 our $RepeatEach = 1;
+our $Timeout = 2;
 
-use Time::HiRes qw(sleep);
+use Time::HiRes qw(sleep time);
 use Test::LongString;
 
-#use Smart::Comments::JSON '##';
-use LWP::UserAgent; # XXX should use a socket level lib here
+#use Smart::Comments::JSON '###';
+use Fcntl qw(F_GETFL F_SETFL O_NONBLOCK);
+use POSIX qw(EAGAIN);
+use IO::Socket;
+
+use HTTP::Response;
 use Module::Install::Can;
 use List::Util qw( shuffle );
 use File::Spec ();
 use Cwd qw( cwd );
-
-our $UserAgent = LWP::UserAgent->new;
-$UserAgent->agent(__PACKAGE__);
-#$UserAgent->default_headers(HTTP::Headers->new);
 
 our $Workers                = 1;
 our $WorkerConnections      = 1024;
@@ -27,8 +29,8 @@ our $LogLevel               = 'debug';
 #our $MasterProcessEnabled   = 'on';
 #our $DaemonEnabled          = 'on';
 our $ServerPort             = 1984;
+#our $ServerPortForClient    = 1200;
 our $ServerPortForClient    = 1984;
-#our $ServerPortForClient    = 1984;
 
 our $NginxVersion;
 our $NginxRawVersion;
@@ -58,6 +60,8 @@ sub plan (@) {
 =end cmt
 
 =cut
+
+sub send_request ($);
 
 sub trim ($);
 
@@ -131,7 +135,7 @@ http {
     access_log $AccLogFile;
 
     default_type text/plain;
-    keepalive_timeout  65;
+    keepalive_timeout  0;
     server {
         listen          $ServerPort;
         server_name     localhost;
@@ -166,20 +170,24 @@ sub parse_request ($$) {
         Test::More::BAIL_OUT("$name - Request line should be non-empty");
         die;
     }
-    $first =~ s/^\s+|\s+$//g;
+    $first =~ s/^\s+|\s+$//gs;
     my ($meth, $rel_url) = split /\s+/, $first, 2;
-    my $url = "http://localhost:$ServerPortForClient" . $rel_url;
+    if (!defined $rel_url) {
+        $rel_url = "/";
+    }
+    #my $url = "http://localhost:$ServerPortForClient" . $rel_url;
 
     my $content = do { local $/; <$in> };
-    if ($content) {
-        $content =~ s/^\s+|\s+$//s;
+    if (!defined $content) {
+        $content = "";
     }
+    #warn Dumper($content);
 
     close $in;
 
     return {
         method  => $meth,
-        url     => $url,
+        url     => $rel_url,
         content => $content,
     };
 }
@@ -372,67 +380,64 @@ sub run_test_helper ($$) {
     my ($block, $request) = @_;
 
     my $name = $block->name;
-    #if (defined $TODO) {
-    #$name .= "# $TODO";
-    #}
 
-    my $req_spec = parse_request($name, \$request);
-    ## $req_spec
-    my $method = $req_spec->{method};
-    my $req = HTTP::Request->new($method);
-    my $content = $req_spec->{content};
-
-    if (defined ($block->request_headers)) {
-        my $headers = parse_headers($block->request_headers);
-        while (my ($key, $val) = each %$headers) {
-            $req->header($key => $val);
-        }
-    }
-
-    #$req->header('Accept', '*/*');
-    $req->url($req_spec->{url});
-    if ($content) {
-        if ($method eq 'GET' or $method eq 'HEAD') {
-            croak "HTTP 1.0/1.1 $method request should not have content: $content";
-        }
-        $req->content($content);
-    } elsif ($method eq 'POST' or $method eq 'PUT') {
-        my $chunks = $block->chunked_body;
-        if (defined $chunks) {
-            if (!ref $chunks or ref $chunks ne 'ARRAY') {
-
-                Test::More::BAIL_OUT("$name - --- chunked_body should takes a Perl array ref as its value");
-            }
-
-            my $start_delay = $block->start_chunk_delay || 0;
-            my $middle_delay = $block->middle_chunk_delay || 0;
-            $req->content(chunk_it($chunks, $start_delay, $middle_delay));
-            if (!defined $req->header('Content-Type')) {
-                $req->header('Content-Type' => 'text/plain');
-            }
-        } else {
-            if (!defined $req->header('Content-Type')) {
-                $req->header('Content-Type' => 'text/plain');
-            }
-
-            $req->header('Content-Length' => 0);
-        }
-    }
-
+    my $more_headers = '';
     if ($block->more_headers) {
         my @headers = split /\n+/, $block->more_headers;
         for my $header (@headers) {
             next if $header =~ /^\s*\#/;
             my ($key, $val) = split /:\s*/, $header, 2;
             #warn "[$key, $val]\n";
-            $req->header($key => $val);
+            $more_headers .= "$key: $val\r\n";
         }
     }
-    #warn "DONE!!!!!!!!!!!!!!!!!!!!";
 
-    my $res = $UserAgent->request($req);
+    my $parsed_req = parse_request($name, \$request);
+    ### $parsed_req
+    my $req = "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
+Host: localhost\r
+Connection: close\r
+$more_headers\r
+$parsed_req->{content}";
 
-    #warn "res returned!!!";
+    #warn "request: $req\n";
+
+    my $raw_resp = send_request($req);
+
+    my $res = HTTP::Response->parse($raw_resp);
+    my $enc = $res->header('Transfer-Encoding');
+
+    if (defined $enc && $enc eq 'chunked') {
+        #warn "Found chunked!";
+        my $raw = $res->content;
+        if (!defined $raw) {
+            $raw = '';
+        }
+
+        my $decoded = '';
+        while (1) {
+            if ($raw =~ /\G0\r\n\r\n$/gcs) {
+                last;
+            }
+            if ($raw =~ m{ \G ( [A-Fa-f0-9]+ ) \s* \r\n }gcsx) {
+                my $rest = hex($1);
+                #warn "chunk size: $rest\n";
+                if ($raw =~ /\G(.{$rest})\r\n/gcs) {
+                    $decoded .= $1;
+                } else {
+                    fail("$name - invalid chunked data received.");
+                    return;
+                }
+            } elsif ($raw =~ /\G.+/gcs) {
+                fail "$name - invalid chunked data received: $&";
+                return;
+            } else {
+                fail "$name - no last chunk found";
+                return;
+            }
+        }
+        $res->content($decoded);
+    }
 
     if (defined $block->error_code) {
         is($res->code, $block->error_code, "$name - status code ok");
@@ -466,9 +471,9 @@ sub run_test_helper ($$) {
         my $content = $res->content;
         if (defined $content) {
             $content =~ s/^TE: deflate,gzip;q=0\.3\r\n//gms;
+            $content =~ s/^Connection: TE, close\r\n//gms;
         }
 
-        $content =~ s/^Connection: TE, close\r\n//gms;
         my $expected = $block->response_body;
         $expected =~ s/\$ServerPort\b/$ServerPort/g;
         $expected =~ s/\$ServerPortForClient\b/$ServerPortForClient/g;
@@ -491,12 +496,84 @@ sub run_test_helper ($$) {
     }
 }
 
+sub send_request ($) {
+    my $write_buf = shift;
+
+    my $sock = IO::Socket::INET->new(
+        PeerAddr => 'localhost',
+        PeerPort => $ServerPortForClient,
+        Proto    => 'tcp'
+    ) or die "Can't connect to localhost:$ServerPortForClient: $!\n";
+
+    my $flags = fcntl $sock, F_GETFL, 0
+        or die "Failed to get flags: $!\n";
+
+    fcntl $sock, F_SETFL, $flags | O_NONBLOCK
+        or die "Failed to set flags: $!\n";
+
+    my $resp = '';
+    my $write_offset = 0;
+    my $buf_size = 1024;
+
+    my $now = time;
+    while (1) {
+        if (time - $now >= $Timeout) {
+            warn "timed out\n";
+            return $resp;
+        }
+        #warn "main loop...";
+        my $read_buf;
+        my $bytes = sysread($sock, $read_buf, $buf_size);
+
+        if (!defined $bytes) {
+            if ($! == EAGAIN) {
+                #warn "read again...";
+                goto write_sock;
+            }
+            return "500 read failed: $!";
+        }
+        if ($bytes == 0) {
+            close $sock;
+            #warn "returning response: $resp\n";
+            return $resp;
+        }
+        $resp .= $read_buf;
+        #warn "read $bytes ($read_buf) bytes.\n";
+
+write_sock:
+        my $rest = length($write_buf) - $write_offset;
+        #warn "offset: $write_offset, rest: $rest, length ", length($write_buf), "\n";
+        #die;
+
+        if ($rest > 0) {
+            $bytes = syswrite($sock, $write_buf, $rest, $write_offset);
+
+            if (!defined $bytes) {
+                if ($! == EAGAIN) {
+                    #warn "write again...";
+                    next;
+                }
+                my $errmsg = "write failed: $!";
+                warn "$errmsg\n";
+                if (!$resp) {
+                    return "$errmsg";
+                }
+                return $resp;
+            }
+
+            #warn "wrote $bytes bytes.\n";
+            $write_offset += $bytes;
+        }
+    }
+    return $resp;
+}
+
 1;
 __END__
 
 =head1 NAME
 
-Test::Nginx::LWP - Test scaffold for the Nginx C modules
+Test::Nginx::Socket - Test scaffold for the Nginx C modules
 
 =head1 AUTHOR
 

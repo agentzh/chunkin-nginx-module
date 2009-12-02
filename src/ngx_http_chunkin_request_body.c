@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
@@ -39,14 +39,8 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     /* r->request_body_in_single_buf = 1; */
     /* r->request_body_in_file_only = 1; */
 
-#if defined(nginx_version) && nginx_version >= 8011
-
-    r->main->count++;
-
-#endif
-
     if (r->request_body || r->discard_body) {
-        post_handler(r);
+        /* post_handler(r); */
         return NGX_OK;
     }
 
@@ -106,6 +100,10 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
             if (ctx->chunks == NULL) {
                 dd("empty chunks found.");
+
+                rb->bufs = NULL;
+
+                /* post_handler(r); */
                 return NGX_OK;
             }
 
@@ -127,6 +125,8 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
             r->request_length += preread;
 
             ctx->raw_body_size += preread;
+
+            /* post_handler(r); */
 
             return NGX_OK;
         }
@@ -163,7 +163,17 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
     r->read_event_handler = ngx_http_chunkin_read_chunked_request_body_handler;
 
-    return ngx_http_chunkin_do_read_chunked_request_body(r);
+    rc = ngx_http_chunkin_do_read_chunked_request_body(r);
+
+#if defined(nginx_version) && nginx_version >= 8011
+
+    if (rc == NGX_AGAIN || rc == NGX_DONE) {
+        r->main->count++;
+    }
+
+#endif
+
+    return rc;
 }
 
 static void

@@ -6,16 +6,21 @@
 #include "chunked_parser.h"
 #include "ngx_http_chunkin_util.h"
 
-#line 9 "src/chunked_parser.rl"
+enum {
+    PRE_TEXT_LEN = 15,
+    POST_TEXT_LEN = 15
+};
 
-#line 12 "src/chunked_parser.c"
+#line 14 "src/chunked_parser.rl"
+
+#line 17 "src/chunked_parser.c"
 static const int chunked_start = 1;
 static const int chunked_first_final = 28;
 static const int chunked_error = 0;
 
 static const int chunked_en_main = 1;
 
-#line 10 "src/chunked_parser.rl"
+#line 15 "src/chunked_parser.rl"
 
 ngx_int_t
 ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
@@ -24,11 +29,11 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
     int cs;
 
     
-#line 28 "src/chunked_parser.c"
+#line 33 "src/chunked_parser.c"
 	{
 	cs = chunked_start;
 	}
-#line 18 "src/chunked_parser.rl"
+#line 23 "src/chunked_parser.rl"
 
     ctx->chunks = NULL;
     ctx->next_chunk = NULL;
@@ -55,12 +60,13 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     u_char              *pe  = last;
     ngx_buf_t           *b;
     ngx_flag_t          done = 0;
+    ngx_str_t           pre, post;
 
-    #line 141 "src/chunked_parser.rl"
+    #line 159 "src/chunked_parser.rl"
 
 
     
-#line 64 "src/chunked_parser.c"
+#line 70 "src/chunked_parser.c"
 	{
 	short _widec;
 	if ( p == pe )
@@ -68,7 +74,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 	switch ( cs )
 	{
 tr15:
-#line 105 "src/chunked_parser.rl"
+#line 111 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -80,14 +86,26 @@ tr15:
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
 	goto st1;
 st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-#line 91 "src/chunked_parser.c"
+#line 109 "src/chunked_parser.c"
 	if ( (*p) == 48 )
 		goto tr0;
 	if ( (*p) < 65 ) {
@@ -103,13 +121,13 @@ st0:
 cs = 0;
 	goto _out;
 tr0:
-#line 67 "src/chunked_parser.rl"
+#line 73 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
         }
-#line 73 "src/chunked_parser.rl"
+#line 79 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -129,7 +147,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 133 "src/chunked_parser.c"
+#line 151 "src/chunked_parser.c"
 	switch( (*p) ) {
 		case 13: goto st3;
 		case 32: goto st6;
@@ -165,7 +183,7 @@ case 5:
 		goto tr8;
 	goto st0;
 tr8:
-#line 46 "src/chunked_parser.rl"
+#line 52 "src/chunked_parser.rl"
 	{
             done = 1;
         }
@@ -174,7 +192,7 @@ st28:
 	if ( ++p == pe )
 		goto _test_eof28;
 case 28:
-#line 178 "src/chunked_parser.c"
+#line 196 "src/chunked_parser.c"
 	goto st0;
 st6:
 	if ( ++p == pe )
@@ -186,13 +204,13 @@ case 6:
 	}
 	goto st0;
 tr2:
-#line 67 "src/chunked_parser.rl"
+#line 73 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
         }
-#line 73 "src/chunked_parser.rl"
+#line 79 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -209,7 +227,7 @@ tr2:
         }
 	goto st7;
 tr5:
-#line 73 "src/chunked_parser.rl"
+#line 79 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -229,7 +247,7 @@ st7:
 	if ( ++p == pe )
 		goto _test_eof7;
 case 7:
-#line 233 "src/chunked_parser.c"
+#line 251 "src/chunked_parser.c"
 	switch( (*p) ) {
 		case 13: goto st8;
 		case 32: goto st24;
@@ -257,7 +275,7 @@ case 9:
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -269,7 +287,7 @@ case 9:
 		goto tr13;
 	goto st0;
 tr12:
-#line 88 "src/chunked_parser.rl"
+#line 94 "src/chunked_parser.rl"
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
@@ -291,12 +309,12 @@ st10:
 	if ( ++p == pe )
 		goto _test_eof10;
 case 10:
-#line 295 "src/chunked_parser.c"
+#line 313 "src/chunked_parser.c"
 	if ( (*p) == 10 )
 		goto tr15;
 	goto st0;
 tr13:
-#line 88 "src/chunked_parser.rl"
+#line 94 "src/chunked_parser.rl"
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
@@ -313,7 +331,7 @@ tr13:
             b->last = b->pos = p;
             b->memory = 1;
         }
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -328,7 +346,7 @@ tr13:
         }
 	goto st11;
 tr17:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -346,11 +364,11 @@ st11:
 	if ( ++p == pe )
 		goto _test_eof11;
 case 11:
-#line 350 "src/chunked_parser.c"
+#line 368 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -362,7 +380,7 @@ case 11:
 		goto tr17;
 	goto st0;
 tr14:
-#line 88 "src/chunked_parser.rl"
+#line 94 "src/chunked_parser.rl"
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
@@ -379,7 +397,7 @@ tr14:
             b->last = b->pos = p;
             b->memory = 1;
         }
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -394,7 +412,7 @@ tr14:
         }
 	goto st12;
 tr18:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -412,11 +430,11 @@ st12:
 	if ( ++p == pe )
 		goto _test_eof12;
 case 12:
-#line 416 "src/chunked_parser.c"
+#line 434 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -430,7 +448,7 @@ case 12:
 		goto tr17;
 	goto st0;
 tr19:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -443,7 +461,7 @@ tr19:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-#line 105 "src/chunked_parser.rl"
+#line 111 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -455,18 +473,30 @@ tr19:
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
 	goto st13;
 st13:
 	if ( ++p == pe )
 		goto _test_eof13;
 case 13:
-#line 466 "src/chunked_parser.c"
+#line 496 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -507,7 +537,7 @@ case 13:
 		goto tr21;
 	goto st0;
 tr20:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -520,13 +550,13 @@ tr20:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-#line 67 "src/chunked_parser.rl"
+#line 73 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
         }
-#line 73 "src/chunked_parser.rl"
+#line 79 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -543,7 +573,7 @@ tr20:
         }
 	goto st14;
 tr36:
-#line 88 "src/chunked_parser.rl"
+#line 94 "src/chunked_parser.rl"
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
@@ -560,7 +590,7 @@ tr36:
             b->last = b->pos = p;
             b->memory = 1;
         }
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -573,13 +603,13 @@ tr36:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-#line 67 "src/chunked_parser.rl"
+#line 73 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
         }
-#line 73 "src/chunked_parser.rl"
+#line 79 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -599,11 +629,11 @@ st14:
 	if ( ++p == pe )
 		goto _test_eof14;
 case 14:
-#line 603 "src/chunked_parser.c"
+#line 633 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -651,7 +681,7 @@ case 15:
 		goto tr26;
 	goto st0;
 tr26:
-#line 105 "src/chunked_parser.rl"
+#line 111 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -663,14 +693,26 @@ tr26:
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
 	goto st16;
 st16:
 	if ( ++p == pe )
 		goto _test_eof16;
 case 16:
-#line 674 "src/chunked_parser.c"
+#line 716 "src/chunked_parser.c"
 	switch( (*p) ) {
 		case 13: goto st5;
 		case 48: goto tr0;
@@ -685,7 +727,7 @@ case 16:
 		goto tr2;
 	goto st0;
 tr23:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -703,11 +745,11 @@ st17:
 	if ( ++p == pe )
 		goto _test_eof17;
 case 17:
-#line 707 "src/chunked_parser.c"
+#line 749 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -721,7 +763,7 @@ case 17:
 		goto tr17;
 	goto st0;
 tr27:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -734,7 +776,7 @@ tr27:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-#line 105 "src/chunked_parser.rl"
+#line 111 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -746,18 +788,30 @@ tr27:
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
 	goto st18;
 st18:
 	if ( ++p == pe )
 		goto _test_eof18;
 case 18:
-#line 757 "src/chunked_parser.c"
+#line 811 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -805,7 +859,7 @@ case 19:
 		goto tr30;
 	goto st0;
 tr30:
-#line 105 "src/chunked_parser.rl"
+#line 111 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -817,9 +871,21 @@ tr30:
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
-#line 46 "src/chunked_parser.rl"
+#line 52 "src/chunked_parser.rl"
 	{
             done = 1;
         }
@@ -828,7 +894,7 @@ st29:
 	if ( ++p == pe )
 		goto _test_eof29;
 case 29:
-#line 832 "src/chunked_parser.c"
+#line 898 "src/chunked_parser.c"
 	if ( (*p) == 48 )
 		goto tr0;
 	if ( (*p) < 65 ) {
@@ -841,7 +907,7 @@ case 29:
 		goto tr2;
 	goto st0;
 tr29:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -859,11 +925,11 @@ st20:
 	if ( ++p == pe )
 		goto _test_eof20;
 case 20:
-#line 863 "src/chunked_parser.c"
+#line 929 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -877,7 +943,7 @@ case 20:
 		goto tr17;
 	goto st0;
 tr31:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -890,7 +956,7 @@ tr31:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-#line 105 "src/chunked_parser.rl"
+#line 111 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -902,9 +968,21 @@ tr31:
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
-#line 46 "src/chunked_parser.rl"
+#line 52 "src/chunked_parser.rl"
 	{
             done = 1;
         }
@@ -913,11 +991,11 @@ st30:
 	if ( ++p == pe )
 		goto _test_eof30;
 case 30:
-#line 917 "src/chunked_parser.c"
+#line 995 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -958,7 +1036,7 @@ case 30:
 		goto tr21;
 	goto st0;
 tr21:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -971,13 +1049,13 @@ tr21:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-#line 67 "src/chunked_parser.rl"
+#line 73 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
         }
-#line 73 "src/chunked_parser.rl"
+#line 79 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -994,7 +1072,7 @@ tr21:
         }
 	goto st21;
 tr25:
-#line 73 "src/chunked_parser.rl"
+#line 79 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -1009,7 +1087,7 @@ tr25:
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: chunk size: %uz\n", ctx->chunk_size);
         }
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -1024,7 +1102,7 @@ tr25:
         }
 	goto st21;
 tr37:
-#line 88 "src/chunked_parser.rl"
+#line 94 "src/chunked_parser.rl"
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
@@ -1041,7 +1119,7 @@ tr37:
             b->last = b->pos = p;
             b->memory = 1;
         }
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -1054,13 +1132,13 @@ tr37:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-#line 67 "src/chunked_parser.rl"
+#line 73 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
         }
-#line 73 "src/chunked_parser.rl"
+#line 79 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -1080,11 +1158,11 @@ st21:
 	if ( ++p == pe )
 		goto _test_eof21;
 case 21:
-#line 1084 "src/chunked_parser.c"
+#line 1162 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -1132,7 +1210,7 @@ case 22:
 		goto tr35;
 	goto st0;
 tr35:
-#line 105 "src/chunked_parser.rl"
+#line 111 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -1144,11 +1222,23 @@ tr35:
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
 	goto st23;
 tr38:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -1161,7 +1251,7 @@ tr38:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-#line 105 "src/chunked_parser.rl"
+#line 111 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -1173,18 +1263,30 @@ tr38:
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
 	goto st23;
 st23:
 	if ( ++p == pe )
 		goto _test_eof23;
 case 23:
-#line 1184 "src/chunked_parser.c"
+#line 1286 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -1234,7 +1336,7 @@ case 24:
 	}
 	goto st0;
 tr33:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -1252,11 +1354,11 @@ st25:
 	if ( ++p == pe )
 		goto _test_eof25;
 case 25:
-#line 1256 "src/chunked_parser.c"
+#line 1358 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -1270,7 +1372,7 @@ case 25:
 		goto tr17;
 	goto st0;
 tr34:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -1288,11 +1390,11 @@ st26:
 	if ( ++p == pe )
 		goto _test_eof26;
 case 26:
-#line 1292 "src/chunked_parser.c"
+#line 1394 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -1306,7 +1408,7 @@ case 26:
 		goto tr17;
 	goto st0;
 tr24:
-#line 54 "src/chunked_parser.rl"
+#line 60 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -1324,11 +1426,11 @@ st27:
 	if ( ++p == pe )
 		goto _test_eof27;
 case 27:
-#line 1328 "src/chunked_parser.c"
+#line 1430 "src/chunked_parser.c"
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 50 "src/chunked_parser.rl"
+#line 56 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -1376,7 +1478,7 @@ case 27:
 	_test_eof: {}
 	_out: {}
 	}
-#line 144 "src/chunked_parser.rl"
+#line 162 "src/chunked_parser.rl"
 
     ctx->parser_state = cs;
 
@@ -1386,13 +1488,30 @@ case 27:
         dd("ASSERTION FAILED: p != pe");
     }
 
-    if (done || cs >= chunked_first_final) {
+    if (done) {
         return NGX_OK;
     }
 
     if (cs == chunked_error) {
+        for (post.data = p, post.len = 0;
+                post.data + post.len != pe; post.len++)
+        {
+            if (post.len >= POST_TEXT_LEN) {
+                break;
+            }
+        }
+
+        for (pre.data = p, pre.len = 0;
+                pre.data != pos; pre.data--, pre.len++)
+        {
+            if (pre.len >= PRE_TEXT_LEN) {
+                break;
+            }
+        }
+
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "bad chunked body (offset %O).\n", p - pos);
+                "bad chunked body (offset %O, near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
+                (off_t) (p - pos), &pre, &post);
 
         return NGX_ERROR;
     }

@@ -123,11 +123,13 @@ ngx_http_chunkin_header_filter(ngx_http_request_t *r)
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
 
+    /*
     dd("chunkin enabled? %d", conf->enabled);
     dd("length required status? %d",
             r->headers_out.status == NGX_HTTP_LENGTH_REQUIRED);
     dd("is chunked? %d",
             ngx_http_chunkin_is_chunked_encoding(r));
+            */
 
     if (r != r->main) {
         dd("We ignore subrequests.");
@@ -281,6 +283,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
 static void
 ngx_http_chunkin_post_read(ngx_http_request_t *r)
 {
+    /* ngx_http_chunkin_ctx_t          *ctx; */
+
     dd("post read");
 
     dd_check_read_event_handler(r);
@@ -288,6 +292,22 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
 
     r->read_event_handler = ngx_http_block_reading;
     r->write_event_handler = ngx_http_core_run_phases;
+
+    /*
+    ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
+
+    if (ctx == NULL) {
+        ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_chunkin_ctx_t));
+        if (ctx == NULL) {
+            ngx_http_core_run_phases(r);
+            return;
+        }
+    }
+
+    dd("set ignore_body in post read");
+
+    ctx->ignore_body = 1;
+    */
 
     ngx_http_core_run_phases(r);
 }

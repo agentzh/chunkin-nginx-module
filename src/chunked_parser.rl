@@ -5,6 +5,11 @@
 #include "chunked_parser.h"
 #include "ngx_http_chunkin_util.h"
 
+enum {
+    PRE_TEXT_LEN = 15,
+    POST_TEXT_LEN = 15
+};
+
 %% machine chunked;
 %% write data;
 
@@ -41,6 +46,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     u_char              *pe  = last;
     ngx_buf_t           *b;
     ngx_flag_t          done = 0;
+    ngx_str_t           pre, post;
 
     %%{
         action finalize {
@@ -113,7 +119,19 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                 return NGX_ERROR;
             }
 
-            ctx->last_complete_chunk = ctx->chunk;
+            if (ctx->chunk_size == 0) {
+                /* remove the current chunk */
+                ctx->chunk->next = ctx->free_bufs;
+                ctx->free_bufs = ctx->chunk;
+                ctx->chunk = ctx->last_complete_chunk;
+                if (ctx->last_complete_chunk) {
+                    ctx->last_complete_chunk->next = NULL;
+                } else {
+                    ctx->chunks = NULL;
+                }
+            } else {
+                ctx->last_complete_chunk = ctx->chunk;
+            }
         }
 
         CRLF = "\r\n";
@@ -150,13 +168,30 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         dd("ASSERTION FAILED: p != pe");
     }
 
-    if (done || cs >= chunked_first_final) {
+    if (done) {
         return NGX_OK;
     }
 
     if (cs == chunked_error) {
+        for (post.data = p, post.len = 0;
+                post.data + post.len != pe; post.len++)
+        {
+            if (post.len >= POST_TEXT_LEN) {
+                break;
+            }
+        }
+
+        for (pre.data = p, pre.len = 0;
+                pre.data != pos; pre.data--, pre.len++)
+        {
+            if (pre.len >= PRE_TEXT_LEN) {
+                break;
+            }
+        }
+
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "bad chunked body (offset %O).\n", p - pos);
+                "bad chunked body (offset %O, near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
+                (off_t) (p - pos), &pre, &post);
 
         return NGX_ERROR;
     }
