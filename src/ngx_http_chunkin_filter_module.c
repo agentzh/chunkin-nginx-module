@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 #include "ddebug.h"
 
 #include <ngx_config.h>
@@ -196,6 +196,7 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
         /* unfortunately internal redirect will clear our ctx. */
         rc = ngx_http_internal_redirect(r, &r->uri, &r->args);
+
         return rc;
     }
 
@@ -256,6 +257,13 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
         return rc;
     }
+
+    if (r->headers_in.connection_type == NGX_HTTP_CONNECTION_KEEP_ALIVE) {
+        dd("re-enable r->keepalive...");
+        r->keepalive = 1;
+    }
+
+
 
     dd_check_read_event_handler(r);
     dd_check_write_event_handler(r);

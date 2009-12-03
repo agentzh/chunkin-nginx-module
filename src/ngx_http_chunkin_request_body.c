@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
@@ -98,6 +98,8 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
             dd("we have the whole chunked body in 'prepread'...");
 
+            dd("keepalive? %s", r->keepalive ? "yes" : "no");
+
             if (ctx->chunks == NULL) {
                 dd("empty chunks found.");
 
@@ -120,6 +122,10 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
             dd("buf len: %d", rb->buf->last - rb->buf->pos);
 
+            dd("buf left (len %d): %s",
+                    (int) (r->header_in->last - r->header_in->pos),
+                    r->header_in->pos);
+
             /* r->header_in->pos = r->header_in->last; */
 
             r->request_length += preread;
@@ -136,11 +142,24 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
 
+        size = r->header_in->last - r->header_in->pos;
+        if (size) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                  "internal assertion failed: %O bytes "
+                  "left in the r->header_in buffer but "
+                  "the parser returns NGX_AGAIN",
+                  (off_t) size);
+
+            return NGX_HTTP_INTERNAL_SERVER_ERROR;
+        }
+
         dd("we need to read more chunked body in addition to 'prepread'...");
 
         ctx->just_after_preread = 1;
 
-        r->header_in->pos = r->header_in->last;
+        ctx->saved_header_in_pos = r->header_in->pos;
+
+        /* r->header_in->pos = r->header_in->last; */
 
         r->request_length += preread;
 
@@ -333,6 +352,9 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                 return NGX_HTTP_BAD_REQUEST;
             }
 
+            /* save the original pos */
+            p = rb->buf->last;
+
             rc = ngx_http_chunkin_run_chunked_parser(r, ctx,
                     &rb->buf->last, rb->buf->last + n);
 
@@ -353,6 +375,26 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
             if (rc == NGX_OK) {
                 dd("successfully done the parsing");
+
+                dd("keepalive? %s", r->keepalive ? "yes" : "no");
+
+                if (r->keepalive) {
+                    dd("cleaning the buffers for pipelined reqeusts (if any)");
+                    size = p + n - rb->buf->last;
+                    if (size) {
+                        dd("found remaining data for pipelined requests");
+                        if (size > (size_t) (r->header_in->end - ctx->saved_header_in_pos))
+                        {
+                            /* XXX enlarge the r->header_in buffer... */
+                            r->keepalive = 0;
+                        } else {
+                            r->header_in->pos = ctx->saved_header_in_pos;
+                            r->header_in->last = ngx_copy(r->header_in->pos,
+                                    rb->buf->last, size);
+
+                        }
+                    }
+                }
 
                 done = 1;
                 break;

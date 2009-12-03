@@ -135,7 +135,7 @@ http {
     access_log $AccLogFile;
 
     default_type text/plain;
-    keepalive_timeout  0;
+    keepalive_timeout  2;
     server {
         listen          $ServerPort;
         server_name     localhost;
@@ -221,10 +221,11 @@ sub run_test ($) {
     my $block = shift;
     my $name = $block->name;
     my $request = $block->request;
-    if (!defined $request) {
+    if (!defined $request
+            && !defined $block->pipelined_requests) {
         #$request = $PrevRequest;
         #$PrevRequest = $request;
-        Test::More::BAIL_OUT("$name - No '--- request' section specified");
+        Test::More::BAIL_OUT("$name - No '--- request' section nor ---pipelined_requests specified");
         die;
     }
 
@@ -392,17 +393,46 @@ sub run_test_helper ($$) {
         }
     }
 
-    my $parsed_req = parse_request($name, \$request);
-    ### $parsed_req
-    my $req = "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
+    my $req;
+    if ($block->pipelined_requests) {
+        my $reqs = $block->pipelined_requests;
+        if (!ref $reqs || ref $reqs ne 'ARRAY') {
+            Test::More::BAIL_OUT("$name - invalid entries in --- pipelined_requests");
+        }
+        my $i = 0;
+        for my $request (@$reqs) {
+            my $conn_type;
+            if ($i++ == @$reqs - 1) {
+                $conn_type = 'close';
+            } else {
+                $conn_type = 'keep-alive';
+            }
+            my $parsed_req = parse_request($name, \$request);
+            $req .= "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
 Host: localhost\r
-Connection: close\r
+Connection: $conn_type\r
 $more_headers\r
 $parsed_req->{content}";
+        }
+    } else {
+        my $parsed_req = parse_request($name, \$request);
+        ### $parsed_req
+        $req = "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
+Host: localhost\r
+Connection: Close\r
+$more_headers\r
+$parsed_req->{content}";
+    }
 
-    #warn "request: $req\n";
+    if (!$req) {
+        Test::More::BAIL_OUT("$name - request empty");
+    }
+
+    warn "request: $req\n";
 
     my $raw_resp = send_request($req);
+
+    warn "raw resonse: $raw_resp\n";
 
     my $res = HTTP::Response->parse($raw_resp);
     my $enc = $res->header('Transfer-Encoding');
