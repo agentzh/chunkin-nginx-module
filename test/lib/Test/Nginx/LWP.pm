@@ -228,7 +228,62 @@ sub run_test ($) {
         die;
     }
 
-    if (!$NoNginxManager) {
+    my $skip_nginx = $block->skip_nginx;
+    my ($tests_to_skip, $should_skip, $skip_reason);
+    if (defined $skip_nginx) {
+        if ($skip_nginx =~ m{
+                ^ \s* (\d+) \s* : \s*
+                    ([<>]=?) \s* (\d+)\.(\d+)\.(\d+)
+                    (?: \s* : \s* (.*) )?
+                \s*$}x) {
+            $tests_to_skip = $1;
+            my ($op, $ver1, $ver2, $ver3) = ($2, $3, $4, $5);
+            $skip_reason = $6;
+            #warn "$ver1 $ver2 $ver3";
+            my $ver = get_canon_version($ver1, $ver2, $ver3);
+            if ((!defined $NginxVersion and $op =~ /^</)
+                    or eval "$NginxVersion $op $ver")
+            {
+                $should_skip = 1;
+            }
+        } else {
+            Test::More::BAIL_OUT("$name - Invalid --- skip_nginx spec: " .
+                $skip_nginx);
+            die;
+        }
+    }
+    if (!defined $skip_reason) {
+        $skip_reason = "various reasons";
+    }
+
+    my $todo_nginx = $block->todo_nginx;
+    my ($should_todo, $todo_reason);
+    if (defined $todo_nginx) {
+        if ($todo_nginx =~ m{
+                ^ \s*
+                    ([<>]=?) \s* (\d+)\.(\d+)\.(\d+)
+                    (?: \s* : \s* (.*) )?
+                \s*$}x) {
+            my ($op, $ver1, $ver2, $ver3) = ($1, $2, $3, $4);
+            $todo_reason = $5;
+            my $ver = get_canon_version($ver1, $ver2, $ver3);
+            if ((!defined $NginxVersion and $op =~ /^</)
+                    or eval "$NginxVersion $op $ver")
+            {
+                $should_todo = 1;
+            }
+        } else {
+            Test::More::BAIL_OUT("$name - Invalid --- todo_nginx spec: " .
+                $todo_nginx);
+            die;
+        }
+    }
+
+    if (!defined $todo_reason) {
+        $todo_reason = "various reasons";
+    }
+
+    if (!$NoNginxManager && !$should_skip) {
         my $nginx_is_running = 1;
         if (-f $PidFile) {
             my $pid = get_pid_from_pidfile($name);
@@ -272,59 +327,6 @@ sub run_test ($) {
             }
             sleep 0.1;
         }
-    }
-
-    my $skip_nginx = $block->skip_nginx;
-    my ($tests_to_skip, $should_skip, $skip_reason);
-    if (defined $skip_nginx) {
-        if ($skip_nginx =~ m{
-                ^ \s* (\d+) \s* : \s*
-                    ([<>]=?) \s* (\d+)\.(\d+)\.(\d+)
-                    (?: \s* : \s* (.*) )?
-                \s*$}x) {
-            $tests_to_skip = $1;
-            my ($op, $ver1, $ver2, $ver3) = ($2, $3, $4, $5);
-            $skip_reason = $6;
-            my $ver = get_canon_version($ver1, $ver2, $ver3);
-            if ((!defined $NginxVersion and $op =~ /^</)
-                    or eval "$NginxVersion $op $ver")
-            {
-                $should_skip = 1;
-            }
-        } else {
-            Test::More::BAIL_OUT("$name - Invalid --- skip_nginx spec: " .
-                $skip_nginx);
-            die;
-        }
-    }
-    if (!defined $skip_reason) {
-        $skip_reason = "various reasons";
-    }
-
-    my $todo_nginx = $block->todo_nginx;
-    my ($should_todo, $todo_reason);
-    if (defined $todo_nginx) {
-        if ($todo_nginx =~ m{
-                ^ \s*
-                    ([<>]=?) \s* (\d+)\.(\d+)\.(\d+)
-                    (?: \s* : \s* (.*) )?
-                \s*$}x) {
-            my ($op, $ver1, $ver2, $ver3) = ($1, $2, $3, $4);
-            $todo_reason = $5;
-            my $ver = get_canon_version($ver1, $ver2, $ver3);
-            if ((!defined $NginxVersion and $op =~ /^</)
-                    or eval "$NginxVersion $op $ver")
-            {
-                $should_todo = 1;
-            }
-        } else {
-            Test::More::BAIL_OUT("$name - Invalid --- todo_nginx spec: " .
-                $todo_nginx);
-            die;
-        }
-    }
-    if (!defined $todo_reason) {
-        $todo_reason = "various reasons";
     }
 
     my $i = 0;
