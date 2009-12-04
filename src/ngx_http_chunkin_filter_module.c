@@ -192,6 +192,9 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     last = 0;
 
     for (cl = in; cl; cl = cl->next) {
+        /* mark the buf as consumed */
+        cl->buf->pos = cl->buf->last;
+
         if (cl->buf->last_buf) {
             last = 1;
         }

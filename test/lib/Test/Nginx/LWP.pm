@@ -11,6 +11,7 @@ use Time::HiRes qw(sleep);
 use Test::LongString;
 
 #use Smart::Comments::JSON '##';
+use POSIX qw( SIGQUIT SIGKILL SIGTERM );
 use LWP::UserAgent; # XXX should use a socket level lib here
 use Module::Install::Can;
 use List::Util qw( shuffle );
@@ -233,10 +234,16 @@ sub run_test ($) {
             my $pid = get_pid_from_pidfile($name);
             if (system("ps $pid > /dev/null") == 0) {
                 write_config_file(\$config);
-                if (kill(1, $pid) == 0) { # send HUP signal
-                    Test::More::BAIL_OUT("$name - Failed to send signal to the nginx process with PID $pid using signal HUP");
+                if (kill(SIGQUIT, $pid) == 0) { # send quit signal
+                    #warn("$name - Failed to send quit signal to the nginx process with PID $pid");
                 }
                 sleep 0.02;
+                if (system("ps $pid > /dev/null") == 0) {
+                    #warn "killing with force...\n";
+                    kill(SIGKILL, $pid);
+                    sleep 0.03;
+                }
+                undef $nginx_is_running;
             } else {
                 unlink $PidFile or
                     die "Failed to remove pid file $PidFile\n";
@@ -247,7 +254,7 @@ sub run_test ($) {
         }
 
         unless ($nginx_is_running) {
-            warn "*** Restarting the nginx server...\n";
+            #warn "*** Restarting the nginx server...\n";
             setup_server_root();
             write_config_file(\$config);
             if ( ! Module::Install::Can->can_run('nginx') ) {
