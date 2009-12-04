@@ -62,7 +62,7 @@ Description
     content length header in its very early phase. Well, as early as the
     "ngx_http_process_request_header" function. So this module takes a
     rather tricky approach. That is, use an output filter to intercept the
-    <code>411 Length Required</code> error page response issued by
+    "411 Length Required" error page response issued by
     ngx_http_process_request_header, fix things and finally issue an
     internal redirect to the current location, thus starting from those
     phases we all know and love, this time bypassing the horrible
