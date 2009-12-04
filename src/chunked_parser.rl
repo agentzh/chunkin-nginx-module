@@ -49,7 +49,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     ngx_str_t           pre, post;
 
     %%{
-        alphtype unsigned char;
+        alphtype short;
 
         action finalize {
             done = 1;
