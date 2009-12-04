@@ -435,11 +435,14 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
             ctx->chunks = NULL;
         }
 
+#if 0
         n = 0;
         for (cl = ctx->chunks; cl != NULL; cl = cl->next) {
             /* dd("chunks %d found buf %c", n, *cl->buf->start); */
             n++;
         }
+#endif
+
         dd("for total %d chunks found", n);
 
         /* save the last part */
@@ -502,6 +505,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
         rb->bufs = ctx->chunks;
     }
 
+#if 0
     if (rb->bufs) {
         int i;
         for (i = 0, cl = rb->bufs; cl; cl = cl->next, i++) {
@@ -510,15 +514,18 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
             }
         }
     }
+#endif
 
     dd("last minute, chunks count: %d, chunks_total_size: %d",
             ctx->chunks_count, ctx->chunks_total_size);
 
+#if 0
     size = 0;
     for (cl = rb->bufs; cl; cl = cl->next) {
         size += ngx_buf_size(cl->buf);
     }
     dd("data size: %d", size);
+#endif
 
     rc = ngx_http_chunkin_set_content_length_header(r, ctx->chunks_total_size);
 

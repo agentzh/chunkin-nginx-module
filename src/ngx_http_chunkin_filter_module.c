@@ -35,6 +35,14 @@ static ngx_command_t  ngx_http_chunkin_commands[] = {
       offsetof(ngx_http_chunkin_conf_t, enabled),
       NULL },
 
+    { ngx_string("chunkin_keepalive"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF
+          |NGX_HTTP_LIF_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_chunkin_conf_t, keepalive),
+      NULL },
+
       ngx_null_command
 };
 
@@ -79,6 +87,7 @@ ngx_http_chunkin_create_conf(ngx_conf_t *cf)
     }
 
     conf->enabled = NGX_CONF_UNSET;
+    conf->keepalive = NGX_CONF_UNSET;
 
     return conf;
 }
@@ -90,6 +99,7 @@ ngx_http_chunkin_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_chunkin_conf_t *conf = child;
 
     ngx_conf_merge_value(conf->enabled, prev->enabled, 0);
+    ngx_conf_merge_value(conf->keepalive, prev->keepalive, 0);
 
     return NGX_CONF_OK;
 }
@@ -226,9 +236,12 @@ ngx_http_chunkin_init(ngx_conf_t *cf)
 static ngx_int_t
 ngx_http_chunkin_handler(ngx_http_request_t *r)
 {
+    ngx_http_chunkin_conf_t     *conf;
     ngx_int_t                   rc;
 
-    if (r != r->main) {
+    conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
+
+    if (!conf->enabled || r != r->main) {
         return NGX_DECLINED;
     }
 
@@ -258,12 +271,12 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
         return rc;
     }
 
-    if (r->headers_in.connection_type == NGX_HTTP_CONNECTION_KEEP_ALIVE) {
+    if (conf->keepalive
+            && r->headers_in.connection_type ==
+                NGX_HTTP_CONNECTION_KEEP_ALIVE) {
         dd("re-enable r->keepalive...");
         r->keepalive = 1;
     }
-
-
 
     dd_check_read_event_handler(r);
     dd_check_write_event_handler(r);

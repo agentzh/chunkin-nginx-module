@@ -428,11 +428,11 @@ $parsed_req->{content}";
         Test::More::BAIL_OUT("$name - request empty");
     }
 
-    warn "request: $req\n";
+    #warn "request: $req\n";
 
     my $raw_resp = send_request($req);
 
-    warn "raw resonse: $raw_resp\n";
+    #warn "raw resonse: $raw_resp\n";
 
     my $res = HTTP::Response->parse($raw_resp);
     my $enc = $res->header('Transfer-Encoding');

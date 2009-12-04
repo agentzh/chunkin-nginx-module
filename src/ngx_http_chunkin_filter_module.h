@@ -7,6 +7,7 @@
 
 typedef struct {
     ngx_flag_t          enabled;
+    ngx_flag_t          keepalive;
 } ngx_http_chunkin_conf_t;
 
 typedef struct {
