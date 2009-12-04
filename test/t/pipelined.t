@@ -18,7 +18,7 @@ run_tests();
 
 __DATA__
 
-=== TEST 20: sanity
+=== TEST 1: sanity
 --- config
     chunkin on;
     location /main {
@@ -52,7 +52,8 @@ hello\r
 --- ONLY
 
 
-=== TEST 20: standard body read
+
+=== TEST 2: standard body read
 --- config
     chunkin on;
     location /main {
