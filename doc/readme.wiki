@@ -6,7 +6,7 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.07] released on Dec 4, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.08] released on Dec 6, 2009.
 
 = Synopsis =
 
@@ -50,7 +50,7 @@ This module is not supposed to be merged into the Nginx core because I've used [
 
 Nginx explicitly checks chunked <code>Transfer-Encoding</code> headers and absent content length header in its very
 early phase. Well, as early as the <code>ngx_http_process_request_header</code>
-function. So this module takes a rather tricky approach. That is, use an output filter to intercept the <code>411 Length Required</code> error page response issued by ngx_http_process_request_header,
+function. So this module takes a rather tricky approach. That is, use an output filter to intercept the <code>411 Length Required</code> error page response issued by <code>ngx_http_process_request_header</code>,
 fix things and finally issue an internal redirect to the current location,
 thus starting from those phases we all know and love, this time
 bypassing the horrible <code>ngx_http_process_request_header</code> function.
@@ -163,11 +163,15 @@ Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/c
 
 = ChangeLog =
 
+== v0.08 ==
+* fixed gcc compilation errors on x86_64, thanks J for report it.
+* used the latest Ragel 6.6 to generate the <code>chunked_parser.c</code> file in the source tree.
+
 == v0.07 ==
 
 * marked the disgarded 411 error page's output chain bufs as consumed by setting <code>buf->pos = buf->last</code>. (See [http://nginx.org/pipermail/nginx-devel/2009-December/000025.html this nginx-devel thread] for more details.)
 * added the [[#chunkin_keepalive|chunkin_keepalive]] directive which can enable HTTP 1.1 keep-alive and HTTP 1.1 pipelining, and defaults to <code>off</code>.
-* fixed the <code>alphtype</code> bug in the Ragel parser spec; which caused rejection of non-ascii octets in the chunked data.
+* fixed the <code>alphtype</code> bug in the Ragel parser spec; which caused rejection of non-ascii octets in the chunked data. Thanks J for his bug report.
 * added <code>Test::Nginx::Socket</code> to test our nginx module on the socket level. Thanks J for his bug report.
 * rewrote the bufs recycling part and preread-buf-to-rb-buf transition part, also refactored the Ragel parser spec, thus eliminating lots of serious bugs.
 * provided better diagnostics in the error log message for "bad chunked body" parsefails in the chunked parser. For example:

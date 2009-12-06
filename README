@@ -6,9 +6,9 @@ Name
     installation instructions.
 
 Version
-    This document describes chunkin-nginx-module v0.07
+    This document describes chunkin-nginx-module v0.08
     (<http://github.com/agentzh/chunkin-nginx-module/downloads>) released on
-    Dec 4, 2009.
+    Dec 6, 2009.
 
 Synopsis
       chunkin on;
@@ -63,7 +63,7 @@ Description
     "ngx_http_process_request_header" function. So this module takes a
     rather tricky approach. That is, use an output filter to intercept the
     "411 Length Required" error page response issued by
-    ngx_http_process_request_header, fix things and finally issue an
+    "ngx_http_process_request_header", fix things and finally issue an
     internal redirect to the current location, thus starting from those
     phases we all know and love, this time bypassing the horrible
     "ngx_http_process_request_header" function.
@@ -192,6 +192,12 @@ Source Repository
     (<http://github.com/agentzh/chunkin-nginx-module>).
 
 ChangeLog
+  v0.08
+    *   fixed gcc compilation errors on x86_64, thanks J for report it.
+
+    *   used the latest Ragel 6.6 to generate the "chunked_parser.c" file in
+        the source tree.
+
   v0.07
     *   marked the disgarded 411 error page's output chain bufs as consumed
         by setting "buf->pos = buf->last". (See this nginx-devel thread
@@ -202,7 +208,8 @@ ChangeLog
         keep-alive and HTTP 1.1 pipelining, and defaults to "off".
 
     *   fixed the "alphtype" bug in the Ragel parser spec; which caused
-        rejection of non-ascii octets in the chunked data.
+        rejection of non-ascii octets in the chunked data. Thanks J for his
+        bug report.
 
     *   added "Test::Nginx::Socket" to test our nginx module on the socket
         level. Thanks J for his bug report.
