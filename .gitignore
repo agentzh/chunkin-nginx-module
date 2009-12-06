@@ -24,6 +24,7 @@ test/t/servroot/
 releng
 reset
 *.t_
+.rsync
 genmobi.sh
 *.mobi
 misc/chunked
