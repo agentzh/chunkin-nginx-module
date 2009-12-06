@@ -1,3 +1,4 @@
+
 /* #line 1 "src/chunked_parser.rl" */
 #define DDEBUG 0
 
@@ -11,14 +12,16 @@ enum {
     POST_TEXT_LEN = 15
 };
 
+
 /* #line 14 "src/chunked_parser.rl" */
 
-/* #line 17 "src/chunked_parser.c" */
+/* #line 19 "src/chunked_parser.c" */
 static const int chunked_start = 1;
 static const int chunked_first_final = 28;
 static const int chunked_error = 0;
 
 static const int chunked_en_main = 1;
+
 
 /* #line 15 "src/chunked_parser.rl" */
 
@@ -29,10 +32,11 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
     int cs;
 
     
-/* #line 33 "src/chunked_parser.c" */
+/* #line 36 "src/chunked_parser.c" */
 	{
 	cs = chunked_start;
 	}
+
 /* #line 23 "src/chunked_parser.rl" */
 
     ctx->chunks = NULL;
@@ -62,11 +66,12 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     ngx_flag_t          done = 0;
     ngx_str_t           pre, post;
 
-    /* #line 161 "src/chunked_parser.rl" */
+    
+/* #line 161 "src/chunked_parser.rl" */
 
 
     
-/* #line 70 "src/chunked_parser.c" */
+/* #line 75 "src/chunked_parser.c" */
 	{
 	int _widec;
 	if ( p == pe )
@@ -105,7 +110,7 @@ st1:
 	if ( ++p == pe )
 		goto _test_eof1;
 case 1:
-/* #line 109 "src/chunked_parser.c" */
+/* #line 114 "src/chunked_parser.c" */
 	if ( (*p) == 48 )
 		goto tr0;
 	if ( (*p) < 65 ) {
@@ -147,7 +152,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-/* #line 151 "src/chunked_parser.c" */
+/* #line 156 "src/chunked_parser.c" */
 	switch( (*p) ) {
 		case 13: goto st3;
 		case 32: goto st6;
@@ -192,7 +197,7 @@ st28:
 	if ( ++p == pe )
 		goto _test_eof28;
 case 28:
-/* #line 196 "src/chunked_parser.c" */
+/* #line 201 "src/chunked_parser.c" */
 	goto st0;
 st6:
 	if ( ++p == pe )
@@ -247,7 +252,7 @@ st7:
 	if ( ++p == pe )
 		goto _test_eof7;
 case 7:
-/* #line 251 "src/chunked_parser.c" */
+/* #line 256 "src/chunked_parser.c" */
 	switch( (*p) ) {
 		case 13: goto st8;
 		case 32: goto st24;
@@ -309,7 +314,7 @@ st10:
 	if ( ++p == pe )
 		goto _test_eof10;
 case 10:
-/* #line 313 "src/chunked_parser.c" */
+/* #line 318 "src/chunked_parser.c" */
 	if ( (*p) == 10 )
 		goto tr15;
 	goto st0;
@@ -364,7 +369,7 @@ st11:
 	if ( ++p == pe )
 		goto _test_eof11;
 case 11:
-/* #line 368 "src/chunked_parser.c" */
+/* #line 373 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -430,7 +435,7 @@ st12:
 	if ( ++p == pe )
 		goto _test_eof12;
 case 12:
-/* #line 434 "src/chunked_parser.c" */
+/* #line 439 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -492,7 +497,7 @@ st13:
 	if ( ++p == pe )
 		goto _test_eof13;
 case 13:
-/* #line 496 "src/chunked_parser.c" */
+/* #line 501 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -629,7 +634,7 @@ st14:
 	if ( ++p == pe )
 		goto _test_eof14;
 case 14:
-/* #line 633 "src/chunked_parser.c" */
+/* #line 638 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -712,7 +717,7 @@ st16:
 	if ( ++p == pe )
 		goto _test_eof16;
 case 16:
-/* #line 716 "src/chunked_parser.c" */
+/* #line 721 "src/chunked_parser.c" */
 	switch( (*p) ) {
 		case 13: goto st5;
 		case 48: goto tr0;
@@ -745,7 +750,7 @@ st17:
 	if ( ++p == pe )
 		goto _test_eof17;
 case 17:
-/* #line 749 "src/chunked_parser.c" */
+/* #line 754 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -807,7 +812,7 @@ st18:
 	if ( ++p == pe )
 		goto _test_eof18;
 case 18:
-/* #line 811 "src/chunked_parser.c" */
+/* #line 816 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -894,7 +899,7 @@ st29:
 	if ( ++p == pe )
 		goto _test_eof29;
 case 29:
-/* #line 898 "src/chunked_parser.c" */
+/* #line 903 "src/chunked_parser.c" */
 	if ( (*p) == 48 )
 		goto tr0;
 	if ( (*p) < 65 ) {
@@ -925,7 +930,7 @@ st20:
 	if ( ++p == pe )
 		goto _test_eof20;
 case 20:
-/* #line 929 "src/chunked_parser.c" */
+/* #line 934 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -991,7 +996,7 @@ st30:
 	if ( ++p == pe )
 		goto _test_eof30;
 case 30:
-/* #line 995 "src/chunked_parser.c" */
+/* #line 1000 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -1158,7 +1163,7 @@ st21:
 	if ( ++p == pe )
 		goto _test_eof21;
 case 21:
-/* #line 1162 "src/chunked_parser.c" */
+/* #line 1167 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -1282,7 +1287,7 @@ st23:
 	if ( ++p == pe )
 		goto _test_eof23;
 case 23:
-/* #line 1286 "src/chunked_parser.c" */
+/* #line 1291 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -1354,7 +1359,7 @@ st25:
 	if ( ++p == pe )
 		goto _test_eof25;
 case 25:
-/* #line 1358 "src/chunked_parser.c" */
+/* #line 1363 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -1390,7 +1395,7 @@ st26:
 	if ( ++p == pe )
 		goto _test_eof26;
 case 26:
-/* #line 1394 "src/chunked_parser.c" */
+/* #line 1399 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -1426,7 +1431,7 @@ st27:
 	if ( ++p == pe )
 		goto _test_eof27;
 case 27:
-/* #line 1430 "src/chunked_parser.c" */
+/* #line 1435 "src/chunked_parser.c" */
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -1478,6 +1483,7 @@ case 27:
 	_test_eof: {}
 	_out: {}
 	}
+
 /* #line 164 "src/chunked_parser.rl" */
 
     ctx->parser_state = cs;

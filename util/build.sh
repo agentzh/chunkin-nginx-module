@@ -2,7 +2,7 @@
 
 # this file is mostly meant to be used by the author himself.
 
-ragel -G2 -L src/chunked_parser.rl
+ragel -G2 src/chunked_parser.rl
 
 if [ $? != 0 ]; then
     echo 'Failed to generate the chunked parser.' 1>&2
