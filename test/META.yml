@@ -1,0 +1,26 @@
+---
+abstract: 'Test scaffold for the Nginx C modules'
+author:
+  - 'agentzh C<< <agentzh@gmail.com> >>'
+build_requires:
+  ExtUtils::MakeMaker: 6.42
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
+distribution_type: module
+generated_by: 'Module::Install version 0.91'
+license: bsd
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Test-Nginx-LWP
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  Filter::Util::Call: 0
+  perl: 5.6.1
+resources:
+  license: http://opensource.org/licenses/bsd-license.php
+  repository: http://github.com/agentzh/chunkin-nginx-module
+version: undef
