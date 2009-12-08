@@ -267,7 +267,14 @@ sub run_test ($) {
         #Test::More::BAIL_OUT("$name - Invalid config file");
         #}
         #my $cmd = "nginx -p $ServRoot -c $ConfFile > /dev/null";
-            my $cmd = "nginx -c $ConfFile > /dev/null";
+
+            my $cmd;
+            if ($NginxVersion >= 0.007053) {
+                $cmd = "nginx -p $ServRoot/ -c $ConfFile > /dev/null";
+            } else {
+                $cmd = "nginx -c $ConfFile > /dev/null";
+            }
+
             if (system($cmd) != 0) {
                 Test::More::BAIL_OUT("$name - Cannot start nginx using command \"$cmd\".");
                 die;
