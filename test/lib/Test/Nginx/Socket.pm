@@ -382,12 +382,16 @@ sub run_test_helper ($$) {
 
     my $name = $block->name;
 
+    my $is_chunked = 0;
     my $more_headers = '';
     if ($block->more_headers) {
         my @headers = split /\n+/, $block->more_headers;
         for my $header (@headers) {
             next if $header =~ /^\s*\#/;
             my ($key, $val) = split /:\s*/, $header, 2;
+            if (lc($key) eq 'transfer-encoding' and $val eq 'chunked') {
+                $is_chunked = 1;
+            }
             #warn "[$key, $val]\n";
             $more_headers .= "$key: $val\r\n";
         }
@@ -408,19 +412,34 @@ sub run_test_helper ($$) {
                 $conn_type = 'keep-alive';
             }
             my $parsed_req = parse_request($name, \$request);
+
+            my $len_header = '';
+            if (!$is_chunked && defined $parsed_req->{content} && $parsed_req->{content} ne '') {
+                $parsed_req->{content} =~ s/^\s+|\s+$//gs;
+
+                $len_header .= "Content-Length: " . length($parsed_req->{content}) . "\r\n";
+            }
+
             $req .= "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
 Host: localhost\r
 Connection: $conn_type\r
-$more_headers\r
+$more_headers$len_header\r
 $parsed_req->{content}";
         }
     } else {
         my $parsed_req = parse_request($name, \$request);
         ### $parsed_req
+
+        my $len_header = '';
+        if (!$is_chunked && defined $parsed_req->{content} && $parsed_req->{content} ne '') {
+            $parsed_req->{content} =~ s/^\s+|\s+$//gs;
+            $len_header .= "Content-Length: " . length($parsed_req->{content}) . "\r\n";
+        }
+
         $req = "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
 Host: localhost\r
 Connection: Close\r
-$more_headers\r
+$more_headers$len_header\r
 $parsed_req->{content}";
     }
 
@@ -432,7 +451,7 @@ $parsed_req->{content}";
 
     my $raw_resp = send_request($req);
 
-    #warn "raw resonse: $raw_resp\n";
+    #warn "raw resonse: [$raw_resp]\n";
 
     my $res = HTTP::Response->parse($raw_resp);
     my $enc = $res->header('Transfer-Encoding');
@@ -449,17 +468,18 @@ $parsed_req->{content}";
             if ($raw =~ /\G0\r\n\r\n$/gcs) {
                 last;
             }
-            if ($raw =~ m{ \G ( [A-Fa-f0-9]+ ) \s* \r\n }gcsx) {
+            if ($raw =~ m{ \G \ * ( [A-Fa-f0-9]+ ) \ * \r\n }gcsx) {
                 my $rest = hex($1);
                 #warn "chunk size: $rest\n";
                 if ($raw =~ /\G(.{$rest})\r\n/gcs) {
                     $decoded .= $1;
+                    #warn "decoded: [$1]\n";
                 } else {
                     fail("$name - invalid chunked data received.");
                     return;
                 }
             } elsif ($raw =~ /\G.+/gcs) {
-                fail "$name - invalid chunked data received: $&";
+                fail "$name - invalid chunked body received: $&";
                 return;
             } else {
                 fail "$name - no last chunk found";

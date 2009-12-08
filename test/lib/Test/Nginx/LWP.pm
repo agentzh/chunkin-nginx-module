@@ -127,6 +127,7 @@ daemon on;
 master_process on;
 error_log $ErrLogFile $LogLevel;
 pid       $PidFile;
+#working_directory $ServRoot/;
 
 http {
     access_log $AccLogFile;
@@ -296,7 +297,7 @@ sub run_test ($) {
                 if (system("ps $pid > /dev/null") == 0) {
                     #warn "killing with force...\n";
                     kill(SIGKILL, $pid);
-                    sleep 0.03;
+                    sleep 0.01;
                 }
                 undef $nginx_is_running;
             } else {
@@ -320,7 +321,13 @@ sub run_test ($) {
         #Test::More::BAIL_OUT("$name - Invalid config file");
         #}
         #my $cmd = "nginx -p $ServRoot -c $ConfFile > /dev/null";
-            my $cmd = "nginx -c $ConfFile > /dev/null";
+            my $cmd;
+            if ($NginxVersion >= 0.007053) {
+                $cmd = "nginx -p $ServRoot/ -c $ConfFile > /dev/null";
+            } else {
+                $cmd = "nginx -c $ConfFile > /dev/null";
+            }
+
             if (system($cmd) != 0) {
                 Test::More::BAIL_OUT("$name - Cannot start nginx using command \"$cmd\".");
                 die;
