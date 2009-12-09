@@ -63,7 +63,7 @@ hello\r
 
 
 
-=== TEST 4: chunk size too big (but accepted by ragel DFA)
+=== TEST 4: chunk size too big
 --- config
     chunkin on;
     location /main {
@@ -78,11 +78,13 @@ hello\r
 0\r
 \r
 "
---- response_body eval: "hello\r"
+--- response_body_like: 400 Bad Request
+--- error_code: 400
 
 
 
-=== TEST 5: chunk size bigger but still accepted by ragel DFA
+
+=== TEST 5: chunk size even bigger
 --- config
     chunkin on;
     location /main {
@@ -97,7 +99,8 @@ hello\r
 0\r
 \r
 "
---- response_body eval: "hello\r\n"
+--- response_body_like: 400 Bad Request
+--- error_code: 400
 
 
 
