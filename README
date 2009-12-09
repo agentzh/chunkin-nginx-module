@@ -6,19 +6,24 @@ Name
     installation instructions.
 
 Version
-    This document describes chunkin-nginx-module v0.08
+    This document describes chunkin-nginx-module v0.09
     (<http://github.com/agentzh/chunkin-nginx-module/downloads>) released on
-    Dec 6, 2009.
+    Dec 9, 2009.
 
 Synopsis
       chunkin on;
-      location { ... }
+      location /foo {
+          # your fastcgi_pass/proxy_pass/set/if and
+          # any other config directives go here...
+      }
       ...
 
       chunkin on;
-      location {
+      location /bar {
         chunkin_keepalive on;
-        ...
+
+        # your fastcgi_pass/proxy_pass/set/if and
+        # any other config directives go here...
       }
 
 Description
@@ -192,8 +197,13 @@ Source Repository
     (<http://github.com/agentzh/chunkin-nginx-module>).
 
 ChangeLog
+  v0.09
+    *   fixed a serious bug in the chunked parser grammer: there would be
+        ambiguity when CRLF appears in the chunked data sections. Thanks J
+        for reporting it.
+
   v0.08
-    *   fixed gcc compilation errors on x86_64, thanks J for report it.
+    *   fixed gcc compilation errors on x86_64, thanks J for reporting it.
 
     *   used the latest Ragel 6.6 to generate the "chunked_parser.c" file in
         the source tree.
