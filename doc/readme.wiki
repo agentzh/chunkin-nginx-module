@@ -6,7 +6,7 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.10] released on Dec 9, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.11] released on Dec 9, 2009.
 
 = Synopsis =
 
@@ -167,6 +167,10 @@ Although a lot of effort has been put into testing and code tuning, there must b
 Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/chunkin-nginx-module].
 
 = ChangeLog =
+
+== v0.11 ==
+* added a random valid-chunked-request generator in t/random.t.
+* fixed a new connection leak issue caught by t/random.t.
 
 == v0.10 ==
 * fixed a serious bug in the chunked parser grammer: there would be ambiguity when CRLF appears in the chunked data sections. Thanks J for reporting it.
