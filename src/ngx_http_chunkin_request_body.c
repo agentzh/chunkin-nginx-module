@@ -186,9 +186,11 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
 #if defined(nginx_version) && nginx_version >= 8011
 
-    if (rc == NGX_AGAIN || rc == NGX_DONE) {
+    /*
+    if (rc == NGX_AGAIN) {
         r->main->count++;
     }
+    */
 
 #endif
 

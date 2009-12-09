@@ -20,11 +20,12 @@ __DATA__
     chunkin on;
     location /ar.do {
         client_max_body_size       1m;
+        client_body_buffer_size    512;
         echo_request_body;
     }
 --- more_headers
 Transfer-Encoding: chunked
---- request eval
+--- request_eval
 $::data = '';
 my $count = (int rand 32766) + 1;
 for (my $i = 0; $i < $count; $i++) {
@@ -44,7 +45,7 @@ open my $out, '>/tmp/out.txt' or die $!;
 print $out $s;
 close $out;
 $s
---- response_body eval
+--- response_body_eval
 $::data
 
 
@@ -54,6 +55,7 @@ $::data
     chunkin on;
     location /ar.do {
         client_max_body_size       1m;
+        client_body_buffer_size    1k;
         echo_request_body;
     }
 --- more_headers
