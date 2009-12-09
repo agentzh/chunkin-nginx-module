@@ -6,7 +6,7 @@ Name
     installation instructions.
 
 Version
-    This document describes chunkin-nginx-module v0.09
+    This document describes chunkin-nginx-module v0.10
     (<http://github.com/agentzh/chunkin-nginx-module/downloads>) released on
     Dec 9, 2009.
 
@@ -197,7 +197,7 @@ Source Repository
     (<http://github.com/agentzh/chunkin-nginx-module>).
 
 ChangeLog
-  v0.09
+  v0.10
     *   fixed a serious bug in the chunked parser grammer: there would be
         ambiguity when CRLF appears in the chunked data sections. Thanks J
         for reporting it.

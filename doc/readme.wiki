@@ -6,7 +6,7 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.09] released on Dec 9, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.10] released on Dec 9, 2009.
 
 = Synopsis =
 
@@ -168,7 +168,7 @@ Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/c
 
 = ChangeLog =
 
-== v0.09 ==
+== v0.10 ==
 * fixed a serious bug in the chunked parser grammer: there would be ambiguity when CRLF appears in the chunked data sections. Thanks J for reporting it.
 
 == v0.08 ==
