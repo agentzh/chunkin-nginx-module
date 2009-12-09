@@ -72,7 +72,7 @@ Transfer-Encoding: chunked
 
 
 
-=== TEST 4: CRLF in data
+=== TEST 4: leading CRLF in data
 --- config
     chunkin on;
     location /ar.do {
@@ -90,4 +90,46 @@ ab\r
 "
 --- response_body eval
 "\r\nab"
+
+
+
+=== TEST 5: trailing CRLF in data
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+4\r
+ab\r
+\r
+0\r
+\r
+"
+--- response_body eval
+"ab\r\n"
+
+
+
+=== TEST 6: embedded CRLF in data
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+6\r
+ab\r
+cd\r
+0\r
+\r
+"
+--- response_body eval
+"ab\r\ncd"
 

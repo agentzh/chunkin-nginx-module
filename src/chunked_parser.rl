@@ -147,8 +147,12 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                 $read_data_byte
                 ;
 
+        chunk_data_terminator = "\r" when ! test_len "\n"
+                              ;
+
         chunk = chunk_size " "* CRLF
-                        chunk_data CRLF @verify_data;
+                        chunk_data chunk_data_terminator
+                        @verify_data;
 
         last_chunk = "0"+ " "* CRLF;
 
