@@ -8,8 +8,8 @@
 #include "ngx_http_chunkin_util.h"
 
 enum {
-    PRE_TEXT_LEN = 15,
-    POST_TEXT_LEN = 15
+    PRE_TEXT_LEN = 25,
+    POST_TEXT_LEN = 25
 };
 
 
