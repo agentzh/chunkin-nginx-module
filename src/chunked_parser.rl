@@ -44,9 +44,11 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     u_char              *pos = *pos_addr;
     u_char              *p   = *pos_addr;
     u_char              *pe  = last;
+    u_char              *eof = NULL;
     ngx_buf_t           *b;
     ngx_flag_t          done = 0;
     ngx_str_t           pre, post;
+    char*               err_ctx = "";
 
     %%{
         alphtype short;
@@ -136,27 +138,30 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
             }
         }
 
-        CRLF = "\r\n";
+        CRLF = "\r\n" $err{ err_ctx = "CRLF"; };
 
         chunk_size = (xdigit+ - "0"+) >start_reading_size $read_size;
 
         chunk_data_octet = any when test_len;
 
         chunk_data = (chunk_data_octet+)
-                >start_reading_data
-                $read_data_byte
-                ;
+                     >start_reading_data
+                     $read_data_byte
+                     $err{ err_ctx = "chunk_data"; }
+                   ;
 
         chunk_data_terminator = "\r" when ! test_len "\n"
+                                $err{ err_ctx = "chunk_data_terminator"; }
                               ;
 
-        chunk = chunk_size " "* CRLF
+        chunk = chunk_size " "* CRLF $err{ err_ctx = "chunk_size"; }
                         chunk_data chunk_data_terminator
                         @verify_data;
 
-        last_chunk = "0"+ " "* CRLF;
+        last_chunk = "0"+ " "* CRLF $err{ err_ctx = "last_chunk"; };
 
         parser = chunk* last_chunk CRLF
+                 $err{ err_ctx = "parser"; }
                ;
 
         main := parser @finalize;
@@ -195,8 +200,16 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         }
 
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "bad chunked body (offset %O, near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
-                (off_t) (p - pos), &pre, &post);
+                "bad chunked body (buf offset %O, total offset %uz, "
+                "chunk size %uz, chunk bytes read %uz, "
+                "total bytes to disk %uz, ctx \"%s\", "
+                "raw body size %O), "
+                "near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
+                (off_t) (p - pos), ctx->chunks_total_size,
+                ctx->chunk_size, ctx->chunk_bytes_read,
+                ctx->chunks_written_size, err_ctx,
+                ctx->raw_body_size,
+                &pre, &post);
 
         return NGX_ERROR;
     }
