@@ -182,7 +182,7 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
 
-    if (ctx == NULL || !ctx->ignore_body) {
+    if (ctx == NULL || !ctx->ignore_body || r->request_body) {
         dd("ctx NULL? %s", ctx == NULL ? "yes" : "NO");
         return ngx_http_next_body_filter(r, in);
     }
@@ -289,6 +289,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
             ngx_http_chunkin_post_read);
     */
 
+    ngx_http_chunkin_clear_transfer_encoding(r);
+
     rc = ngx_http_chunkin_read_chunked_request_body(r,
             ngx_http_chunkin_post_read);
 
@@ -298,8 +300,6 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     }
 
     dd("read client request body returned %d", rc);
-
-    ngx_http_chunkin_clear_transfer_encoding(r);
 
     return rc;
 }
@@ -330,7 +330,6 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
 
     dd("set ignore_body in post read");
 
-    ctx->ignore_body = 1;
     */
 
     ngx_http_core_run_phases(r);

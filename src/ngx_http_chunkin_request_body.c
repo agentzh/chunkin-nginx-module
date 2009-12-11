@@ -70,6 +70,8 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
         ngx_http_set_ctx(r, ctx, ngx_http_chunkin_filter_module);
     }
 
+    ctx->ignore_body = 0;
+
     ctx->saved_header_in_pos = r->header_in->pos;
 
     preread = r->header_in->last - r->header_in->pos;
@@ -107,6 +109,8 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
                 dd("empty chunks found.");
 
                 rb->bufs = NULL;
+
+                rc = ngx_http_chunkin_set_content_length_header(r, 0);
 
                 /* post_handler(r); */
                 return NGX_OK;
