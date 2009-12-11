@@ -239,3 +239,43 @@ helloworld,hello\r
 "
 --- response_body: helloworld,hello
 
+
+=== TEST 5: bad chunk size
+--- config
+    chunkin on;
+    location /main {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /main
+zc\r
+hello\r
+0\r
+\r
+"
+--- response_body_like: 400 Bad Request
+--- error_code: 400
+
+
+=== TEST 5: bad chunk size in the 2nd chunk
+--- config
+    chunkin on;
+    location /main {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /main
+1\r
+a\r
+zc\r
+hello\r
+0\r
+\r
+"
+--- response_body_like: 400 Bad Request
+--- error_code: 400
+

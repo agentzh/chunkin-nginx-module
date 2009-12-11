@@ -69,6 +69,8 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
         ngx_http_set_ctx(r, ctx, ngx_http_chunkin_filter_module);
     }
 
+    ctx->saved_header_in_pos = r->header_in->pos;
+
     preread = r->header_in->last - r->header_in->pos;
 
     ngx_http_chunkin_init_chunked_parser(r, ctx);
@@ -78,10 +80,10 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
                        "http chunked client request body preread %uz",
                        preread);
 
-            dd("raw chunked body (len %d): %s", r->header_in->last - r->header_in->pos, r->header_in->pos);
+        dd("raw chunked body (len %d): %s", preread, r->header_in->pos);
 
         rc = ngx_http_chunkin_run_chunked_parser(r, ctx,
-                &r->header_in->pos, r->header_in->last);
+                &r->header_in->pos, r->header_in->last, "preread");
 
         if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
             return rc;
@@ -156,8 +158,6 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
         dd("we need to read more chunked body in addition to 'prepread'...");
 
         ctx->just_after_preread = 1;
-
-        ctx->saved_header_in_pos = r->header_in->pos;
 
         /* r->header_in->pos = r->header_in->last; */
 
@@ -358,7 +358,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
             p = rb->buf->last;
 
             rc = ngx_http_chunkin_run_chunked_parser(r, ctx,
-                    &rb->buf->last, rb->buf->last + n);
+                    &rb->buf->last, rb->buf->last + n, "main handler");
 
             if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
                 return rc;

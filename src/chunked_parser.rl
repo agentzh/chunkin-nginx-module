@@ -37,7 +37,7 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
 
 ngx_int_t
 ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
-        ngx_http_chunkin_ctx_t *ctx, u_char **pos_addr, u_char *last)
+        ngx_http_chunkin_ctx_t *ctx, u_char **pos_addr, u_char *last, char *caller_info)
 {
     int                 cs   = ctx->parser_state;
     ngx_connection_t    *c   = r->connection;
@@ -200,15 +200,19 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         }
 
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "bad chunked body (buf offset %O, total offset %uz, "
-                "chunk size %uz, chunk bytes read %uz, "
-                "total bytes to disk %uz, ctx \"%s\", "
-                "raw body size %O), "
+                "bad chunked body (buf size %O, buf offset %O, "
+                "total decoded %uz, "
+                "chunk size %uz, chunk data read %uz, "
+                "total to disk %uz, "
+                "raw body size %O, caller \"%s\", "
+                "keepalive %d, ctx \"%s\", "
                 "near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
-                (off_t) (p - pos), ctx->chunks_total_size,
+                (off_t) (pe - pos), (off_t) (p - pos),
+                ctx->chunks_total_size,
                 ctx->chunk_size, ctx->chunk_bytes_read,
-                ctx->chunks_written_size, err_ctx,
-                ctx->raw_body_size,
+                ctx->chunks_written_size,
+                (off_t) ctx->raw_body_size, caller_info,
+                (int) r->keepalive, err_ctx,
                 &pre, &post);
 
         return NGX_ERROR;

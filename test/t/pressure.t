@@ -64,7 +64,7 @@ POST /main
 
 
 
-=== TEST 4: exceeding max body limit
+=== TEST 4: exceeding max body limit (this test may fail randomly with the error "500 write failed: Connection reset by peer", which is considered OK).
 --- config
     chunkin on;
     location /main {
