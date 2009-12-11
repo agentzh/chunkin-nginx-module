@@ -133,3 +133,26 @@ cd\r
 --- response_body eval
 "ab\r\ncd"
 
+
+
+=== TEST 6: 413 in proxy
+--- config
+    chunkin on;
+    location /main {
+        proxy_pass $scheme://127.0.0.1:$server_port/proxy;
+    }
+    location /proxy {
+        return 411;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /main
+2\r
+ab\r
+0\r
+\r
+"
+--- response_body_like: 411 Length Required
+--- error_code: 411
+
