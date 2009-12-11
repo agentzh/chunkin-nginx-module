@@ -49,6 +49,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     ngx_flag_t          done = 0;
     ngx_str_t           pre, post;
     char*               err_ctx = "";
+    ngx_str_t           user_agent = ngx_string("");
 
     %%{
         alphtype short;
@@ -154,13 +155,18 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                                 $err{ err_ctx = "chunk_data_terminator"; }
                               ;
 
-        chunk = chunk_size " "* CRLF $err{ err_ctx = "chunk_size"; }
+        SP = 32;
+        HT = 9;
+
+        LWS = ( SP | HT )+;
+
+        chunk = chunk_size LWS* CRLF $err{ err_ctx = "chunk_size"; }
                         chunk_data chunk_data_terminator
                         @verify_data;
 
         last_chunk = "0"+ " "* CRLF $err{ err_ctx = "last_chunk"; };
 
-        parser = chunk* last_chunk CRLF
+        parser = CRLF* chunk* last_chunk CRLF
                  $err{ err_ctx = "parser"; }
                ;
 
@@ -199,13 +205,18 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
             }
         }
 
+        if (r->headers_in.user_agent) {
+            user_agent = r->headers_in.user_agent->value;
+        }
+
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                 "bad chunked body (buf size %O, buf offset %O, "
                 "total decoded %uz, chunks count %d, "
                 "chunk size %uz, chunk data read %uz, "
                 "total to disk %uz, "
                 "raw body size %O, caller \"%s\", "
-                "keepalive %d, ctx \"%s\", "
+                "keepalive %d, err ctx \"%s\", "
+                "ctx ref count %ud, user agent \"%V\", "
                 "near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
                 (off_t) (pe - pos), (off_t) (p - pos),
                 ctx->chunks_total_size, ctx->chunks_count,
@@ -213,6 +224,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                 ctx->chunks_written_size,
                 (off_t) ctx->raw_body_size, caller_info,
                 (int) r->keepalive, err_ctx,
+                ctx->count, &user_agent,
                 &pre, &post);
 
         return NGX_ERROR;

@@ -269,6 +269,7 @@ hello\r
     }
 --- more_headers
 Transfer-Encoding: chunked
+User-Agent: Java Browser
 --- request eval
 "POST /main
 1\r

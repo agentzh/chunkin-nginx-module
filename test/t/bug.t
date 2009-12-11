@@ -135,7 +135,7 @@ cd\r
 
 
 
-=== TEST 6: 413 in proxy
+=== TEST 7: 413 in proxy
 --- config
     chunkin on;
     location /main {
@@ -155,4 +155,88 @@ ab\r
 "
 --- response_body_like: 411 Length Required
 --- error_code: 411
+
+
+
+=== TEST 8: padding spaces
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+6  \r
+ab\r
+cd\r
+0\r
+\r
+"
+--- response_body eval
+"ab\r\ncd"
+
+
+
+=== TEST 9: padding spaces
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+6  \11\r
+ab\r
+cd\r
+0\r
+\r
+"
+--- response_body eval
+"ab\r\ncd"
+
+
+
+=== TEST 10: leading CRLF
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+\r
+6\r
+ab\r
+cd\r
+0\r
+\r
+"
+--- response_body eval
+"ab\r\ncd"
+
+
+=== TEST 10: zero-padding
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+0006\r
+ab\r
+cd\r
+0\r
+\r
+"
+--- response_body eval
+"ab\r\ncd"
 

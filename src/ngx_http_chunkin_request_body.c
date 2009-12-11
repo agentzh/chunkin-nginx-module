@@ -68,7 +68,12 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
         }
 
         ngx_http_set_ctx(r, ctx, ngx_http_chunkin_filter_module);
+    } else {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+              "chunkin: assertion failed: ctx does already exist.");
     }
+
+    ctx->count++;
 
     ctx->ignore_body = 0;
 

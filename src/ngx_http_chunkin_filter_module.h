@@ -34,6 +34,8 @@ typedef struct {
     ngx_chain_t         *last_complete_chunk;
 
     u_char              *saved_header_in_pos;
+
+    ngx_uint_t          count;
 } ngx_http_chunkin_ctx_t;
 
 extern ngx_module_t  ngx_http_chunkin_filter_module;
