@@ -240,3 +240,24 @@ cd\r
 --- response_body eval
 "ab\r\ncd"
 
+
+=== TEST 10: leading new lines
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+\n \11\r
+0006\r
+ab\r
+cd\r
+0\r
+\r
+"
+--- response_body eval
+"ab\r\ncd"
+

@@ -17,7 +17,7 @@ enum {
 
 #line 19 "src/chunked_parser.c"
 static const int chunked_start = 1;
-static const int chunked_first_final = 15;
+static const int chunked_first_final = 14;
 static const int chunked_error = 0;
 
 static const int chunked_en_main = 1;
@@ -86,29 +86,29 @@ st1:
 		goto _test_eof1;
 case 1:
 	switch( (*p) ) {
-		case 13: goto st2;
+		case 13: goto st1;
+		case 32: goto st1;
 		case 48: goto tr2;
 	}
-	if ( (*p) < 65 ) {
-		if ( 49 <= (*p) && (*p) <= 57 )
-			goto tr3;
-	} else if ( (*p) > 70 ) {
-		if ( 97 <= (*p) && (*p) <= 102 )
+	if ( (*p) < 49 ) {
+		if ( 9 <= (*p) && (*p) <= 10 )
+			goto st1;
+	} else if ( (*p) > 57 ) {
+		if ( (*p) > 70 ) {
+			if ( 97 <= (*p) && (*p) <= 102 )
+				goto tr3;
+		} else if ( (*p) >= 65 )
 			goto tr3;
 	} else
 		goto tr3;
-	goto tr0;
-tr0:
-#line 142 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
 	goto st0;
-tr5:
+tr4:
 #line 142 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 #line 167 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	goto st0;
-tr11:
+tr10:
 #line 142 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 #line 167 "src/chunked_parser.rl"
@@ -116,19 +116,19 @@ tr11:
 #line 170 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	goto st0;
-tr13:
+tr12:
 #line 142 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 #line 170 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	goto st0;
-tr15:
+tr14:
 #line 142 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 #line 163 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
 	goto st0;
-tr19:
+tr18:
 #line 142 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 #line 163 "src/chunked_parser.rl"
@@ -136,11 +136,11 @@ tr19:
 #line 151 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	goto st0;
-tr21:
+tr20:
 #line 151 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	goto st0;
-tr24:
+tr23:
 #line 155 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	goto st0;
@@ -148,13 +148,6 @@ tr24:
 st0:
 cs = 0;
 	goto _out;
-st2:
-	if ( ++p == pe )
-		goto _test_eof2;
-case 2:
-	if ( (*p) == 10 )
-		goto st1;
-	goto tr0;
 tr2:
 #line 78 "src/chunked_parser.rl"
 	{
@@ -177,8 +170,8 @@ tr2:
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: chunk size: %uz\n", ctx->chunk_size);
         }
-	goto st3;
-tr8:
+	goto st2;
+tr7:
 #line 84 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
@@ -194,68 +187,68 @@ tr8:
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: chunk size: %uz\n", ctx->chunk_size);
         }
-	goto st3;
+	goto st2;
+st2:
+	if ( ++p == pe )
+		goto _test_eof2;
+case 2:
+#line 196 "src/chunked_parser.c"
+	switch( (*p) ) {
+		case 13: goto st3;
+		case 32: goto st6;
+		case 48: goto tr7;
+	}
+	if ( (*p) < 65 ) {
+		if ( 49 <= (*p) && (*p) <= 57 )
+			goto tr8;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto tr8;
+	} else
+		goto tr8;
+	goto tr4;
 st3:
 	if ( ++p == pe )
 		goto _test_eof3;
 case 3:
-#line 203 "src/chunked_parser.c"
-	switch( (*p) ) {
-		case 13: goto st4;
-		case 32: goto st7;
-		case 48: goto tr8;
-	}
-	if ( (*p) < 65 ) {
-		if ( 49 <= (*p) && (*p) <= 57 )
-			goto tr9;
-	} else if ( (*p) > 70 ) {
-		if ( 97 <= (*p) && (*p) <= 102 )
-			goto tr9;
-	} else
-		goto tr9;
-	goto tr5;
+	if ( (*p) == 10 )
+		goto st4;
+	goto tr4;
 st4:
 	if ( ++p == pe )
 		goto _test_eof4;
 case 4:
-	if ( (*p) == 10 )
+	if ( (*p) == 13 )
 		goto st5;
-	goto tr5;
+	goto tr10;
 st5:
 	if ( ++p == pe )
 		goto _test_eof5;
 case 5:
-	if ( (*p) == 13 )
-		goto st6;
-	goto tr11;
-st6:
-	if ( ++p == pe )
-		goto _test_eof6;
-case 6:
 	if ( (*p) == 10 )
-		goto tr14;
-	goto tr13;
-tr14:
+		goto tr13;
+	goto tr12;
+tr13:
 #line 57 "src/chunked_parser.rl"
 	{
             done = 1;
         }
-	goto st15;
-st15:
+	goto st14;
+st14:
 	if ( ++p == pe )
-		goto _test_eof15;
-case 15:
-#line 249 "src/chunked_parser.c"
-	goto tr13;
-st7:
+		goto _test_eof14;
+case 14:
+#line 242 "src/chunked_parser.c"
+	goto tr12;
+st6:
 	if ( ++p == pe )
-		goto _test_eof7;
-case 7:
+		goto _test_eof6;
+case 6:
 	switch( (*p) ) {
-		case 13: goto st4;
-		case 32: goto st7;
+		case 13: goto st3;
+		case 32: goto st6;
 	}
-	goto tr5;
+	goto tr4;
 tr3:
 #line 78 "src/chunked_parser.rl"
 	{
@@ -278,8 +271,8 @@ tr3:
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: chunk size: %uz\n", ctx->chunk_size);
         }
-	goto st8;
-tr9:
+	goto st7;
+tr8:
 #line 84 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
@@ -295,47 +288,47 @@ tr9:
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: chunk size: %uz\n", ctx->chunk_size);
         }
-	goto st8;
+	goto st7;
+st7:
+	if ( ++p == pe )
+		goto _test_eof7;
+case 7:
+#line 297 "src/chunked_parser.c"
+	switch( (*p) ) {
+		case 9: goto st8;
+		case 13: goto st9;
+		case 32: goto st8;
+	}
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto tr8;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto tr8;
+	} else
+		goto tr8;
+	goto tr14;
 st8:
 	if ( ++p == pe )
 		goto _test_eof8;
 case 8:
-#line 304 "src/chunked_parser.c"
 	switch( (*p) ) {
-		case 9: goto st9;
-		case 13: goto st10;
-		case 32: goto st9;
+		case 9: goto st8;
+		case 13: goto st9;
+		case 32: goto st8;
 	}
-	if ( (*p) < 65 ) {
-		if ( 48 <= (*p) && (*p) <= 57 )
-			goto tr9;
-	} else if ( (*p) > 70 ) {
-		if ( 97 <= (*p) && (*p) <= 102 )
-			goto tr9;
-	} else
-		goto tr9;
-	goto tr15;
+	goto tr14;
 st9:
 	if ( ++p == pe )
 		goto _test_eof9;
 case 9:
-	switch( (*p) ) {
-		case 9: goto st9;
-		case 13: goto st10;
-		case 32: goto st9;
-	}
-	goto tr15;
+	if ( (*p) == 10 )
+		goto st10;
+	goto tr14;
 st10:
 	if ( ++p == pe )
 		goto _test_eof10;
 case 10:
-	if ( (*p) == 10 )
-		goto st11;
-	goto tr15;
-st11:
-	if ( ++p == pe )
-		goto _test_eof11;
-case 11:
 	_widec = (*p);
 	_widec = (int)(32768 + ((*p) - -32768));
 	if ( 
@@ -344,9 +337,9 @@ case 11:
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 65536;
 	if ( 98304 <= _widec && _widec <= 163839 )
-		goto tr20;
-	goto tr19;
-tr20:
+		goto tr19;
+	goto tr18;
+tr19:
 #line 99 "src/chunked_parser.rl"
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
@@ -377,8 +370,8 @@ tr20:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-	goto st12;
-tr23:
+	goto st11;
+tr22:
 #line 65 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
@@ -392,12 +385,12 @@ tr23:
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
         }
-	goto st12;
-st12:
+	goto st11;
+st11:
 	if ( ++p == pe )
-		goto _test_eof12;
-case 12:
-#line 401 "src/chunked_parser.c"
+		goto _test_eof11;
+case 11:
+#line 394 "src/chunked_parser.c"
 	_widec = (*p);
 	if ( (*p) < 13 ) {
 		if ( (*p) <= 12 ) {
@@ -426,18 +419,18 @@ case 12:
          ) _widec += 65536;
 	}
 	if ( _widec == 65549 )
-		goto st13;
+		goto st12;
 	if ( 98304 <= _widec && _widec <= 163839 )
-		goto tr23;
-	goto tr21;
-st13:
+		goto tr22;
+	goto tr20;
+st12:
 	if ( ++p == pe )
-		goto _test_eof13;
-case 13:
+		goto _test_eof12;
+case 12:
 	if ( (*p) == 10 )
-		goto tr25;
-	goto tr24;
-tr25:
+		goto tr24;
+	goto tr23;
+tr24:
 #line 116 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
@@ -464,12 +457,12 @@ tr25:
                 ctx->last_complete_chunk = ctx->chunk;
             }
         }
-	goto st14;
-st14:
+	goto st13;
+st13:
 	if ( ++p == pe )
-		goto _test_eof14;
-case 14:
-#line 473 "src/chunked_parser.c"
+		goto _test_eof13;
+case 13:
+#line 466 "src/chunked_parser.c"
 	if ( (*p) == 48 )
 		goto tr2;
 	if ( (*p) < 65 ) {
@@ -480,15 +473,15 @@ case 14:
 			goto tr3;
 	} else
 		goto tr3;
-	goto tr24;
+	goto tr23;
 	}
 	_test_eof1: cs = 1; goto _test_eof; 
 	_test_eof2: cs = 2; goto _test_eof; 
 	_test_eof3: cs = 3; goto _test_eof; 
 	_test_eof4: cs = 4; goto _test_eof; 
 	_test_eof5: cs = 5; goto _test_eof; 
+	_test_eof14: cs = 14; goto _test_eof; 
 	_test_eof6: cs = 6; goto _test_eof; 
-	_test_eof15: cs = 15; goto _test_eof; 
 	_test_eof7: cs = 7; goto _test_eof; 
 	_test_eof8: cs = 8; goto _test_eof; 
 	_test_eof9: cs = 9; goto _test_eof; 
@@ -496,57 +489,51 @@ case 14:
 	_test_eof11: cs = 11; goto _test_eof; 
 	_test_eof12: cs = 12; goto _test_eof; 
 	_test_eof13: cs = 13; goto _test_eof; 
-	_test_eof14: cs = 14; goto _test_eof; 
 
 	_test_eof: {}
 	if ( p == eof )
 	{
 	switch ( cs ) {
-	case 1: 
-	case 2: 
-#line 142 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-	break;
-	case 12: 
+	case 11: 
 #line 151 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
+	case 12: 
 	case 13: 
-	case 14: 
 #line 155 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	break;
+	case 7: 
 	case 8: 
 	case 9: 
+#line 142 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+#line 163 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_size"; }
+	break;
+	case 2: 
+	case 3: 
+	case 6: 
+#line 142 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+#line 167 "src/chunked_parser.rl"
+	{ err_ctx = "last_chunk"; }
+	break;
+	case 5: 
+#line 142 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+#line 170 "src/chunked_parser.rl"
+	{ err_ctx = "parser"; }
+	break;
 	case 10: 
 #line 142 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 #line 163 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
-	break;
-	case 3: 
-	case 4: 
-	case 7: 
-#line 142 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-#line 167 "src/chunked_parser.rl"
-	{ err_ctx = "last_chunk"; }
-	break;
-	case 6: 
-#line 142 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-#line 170 "src/chunked_parser.rl"
-	{ err_ctx = "parser"; }
-	break;
-	case 11: 
-#line 142 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-#line 163 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_size"; }
 #line 151 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
-	case 5: 
+	case 4: 
 #line 142 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 #line 167 "src/chunked_parser.rl"
@@ -554,7 +541,7 @@ case 14:
 #line 170 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
-#line 558 "src/chunked_parser.c"
+#line 545 "src/chunked_parser.c"
 	}
 	}
 
@@ -604,6 +591,7 @@ case 14:
                 "raw body size %O, caller \"%s\", "
                 "keepalive %d, err ctx \"%s\", "
                 "ctx ref count %ud, user agent \"%V\", "
+                "at char '%c' (%d), "
                 "near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
                 (off_t) (pe - pos), (off_t) (p - pos),
                 ctx->chunks_total_size, ctx->chunks_count,
@@ -612,6 +600,7 @@ case 14:
                 (off_t) ctx->raw_body_size, caller_info,
                 (int) r->keepalive, err_ctx,
                 ctx->count, &user_agent,
+                *p, *p,
                 &pre, &post);
 
         return NGX_ERROR;

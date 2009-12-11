@@ -166,7 +166,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
         last_chunk = "0"+ " "* CRLF $err{ err_ctx = "last_chunk"; };
 
-        parser = CRLF* chunk* last_chunk CRLF
+        parser = ([\r\n]|SP|HT)* chunk* last_chunk CRLF
                  $err{ err_ctx = "parser"; }
                ;
 
@@ -217,6 +217,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                 "raw body size %O, caller \"%s\", "
                 "keepalive %d, err ctx \"%s\", "
                 "ctx ref count %ud, user agent \"%V\", "
+                "at char '%c' (%d), "
                 "near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
                 (off_t) (pe - pos), (off_t) (p - pos),
                 ctx->chunks_total_size, ctx->chunks_count,
@@ -225,6 +226,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                 (off_t) ctx->raw_body_size, caller_info,
                 (int) r->keepalive, err_ctx,
                 ctx->count, &user_agent,
+                *p, *p,
                 &pre, &post);
 
         return NGX_ERROR;
