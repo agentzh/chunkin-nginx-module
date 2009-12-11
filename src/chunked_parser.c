@@ -568,14 +568,14 @@ case 13:
 
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                 "bad chunked body (buf size %O, buf offset %O, "
-                "total decoded %uz, "
+                "total decoded %uz, chunks count %d, "
                 "chunk size %uz, chunk data read %uz, "
                 "total to disk %uz, "
                 "raw body size %O, caller \"%s\", "
                 "keepalive %d, ctx \"%s\", "
                 "near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
                 (off_t) (pe - pos), (off_t) (p - pos),
-                ctx->chunks_total_size,
+                ctx->chunks_total_size, ctx->chunks_count,
                 ctx->chunk_size, ctx->chunk_bytes_read,
                 ctx->chunks_written_size,
                 (off_t) ctx->raw_body_size, caller_info,

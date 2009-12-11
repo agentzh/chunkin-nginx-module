@@ -22,6 +22,7 @@ static ngx_int_t ngx_http_chunkin_do_read_chunked_request_body(
 static ngx_int_t ngx_http_write_request_body(ngx_http_request_t *r,
         ngx_chain_t *body, int chain_count);
 
+
 /* this function's implementation is borrowed from nginx 0.8.20
  * and modified a bit to work with the chunked encoding.
  * Copyrighted (C) by Igor Sysoev */
@@ -197,6 +198,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     return rc;
 }
 
+
 static void
 ngx_http_chunkin_read_chunked_request_body_handler(ngx_http_request_t *r)
 {
@@ -214,6 +216,7 @@ ngx_http_chunkin_read_chunked_request_body_handler(ngx_http_request_t *r)
         ngx_http_finalize_request(r, rc);
     }
 }
+
 
 static ngx_int_t
 ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
@@ -263,7 +266,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
         for ( ;; ) {
             dd("client_max_body_size: %d, raw_body_size: %d",
                     (int)clcf->client_max_body_size,
-                    ctx->raw_body_size);
+                    (int)ctx->raw_body_size);
 
             if (clcf->client_max_body_size
                     && clcf->client_max_body_size < ctx->raw_body_size)

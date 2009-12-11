@@ -240,7 +240,8 @@ helloworld,hello\r
 --- response_body: helloworld,hello
 
 
-=== TEST 5: bad chunk size
+
+=== TEST 13: bad chunk size
 --- config
     chunkin on;
     location /main {
@@ -259,7 +260,8 @@ hello\r
 --- error_code: 400
 
 
-=== TEST 5: bad chunk size in the 2nd chunk
+
+=== TEST 14: bad chunk size in the 2nd chunk
 --- config
     chunkin on;
     location /main {
