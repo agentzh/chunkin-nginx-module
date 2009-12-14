@@ -205,6 +205,7 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
         r->discard_body = 0;
         r->error_page = 0;
+        r->err_status = 0;
 
         /* set new content length header */
         rc = ngx_http_chunkin_set_content_length_header(r,
@@ -216,18 +217,19 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
             return NGX_OK;
         }
 
-        r->headers_in.transfer_encoding->value.len = 0;
-        r->headers_in.transfer_encoding->value.data = (u_char*) "";
+        if (r->headers_in.transfer_encoding) {
+            r->headers_in.transfer_encoding->value.len = 0;
+            r->headers_in.transfer_encoding->value.data = (u_char*) "";
+        }
 
         rc = ngx_http_chunkin_process_request_header(r);
         if (rc != NGX_OK) {
             return NGX_OK;
         }
 
-        /* unfortunately internal redirect will clear our ctx. */
-        rc = ngx_http_chunkin_restart_request(r);
+        ctx->ignore_body = 0;
 
-        return rc;
+        return ngx_http_chunkin_restart_request(r);
     }
 
     dd("ignore body...");
@@ -256,6 +258,7 @@ ngx_http_chunkin_init(ngx_conf_t *cf)
 static ngx_int_t
 ngx_http_chunkin_handler(ngx_http_request_t *r)
 {
+    ngx_http_chunkin_ctx_t      *ctx;
     ngx_http_chunkin_conf_t     *conf;
     ngx_int_t                   rc;
 
@@ -265,22 +268,13 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
         return NGX_DECLINED;
     }
 
-    /* internal redirect clears our ctx created by our output
-     * header filter, so we have to check the header settings
-     * here again. */
+    ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
 
-    if (r->err_status != NGX_HTTP_LENGTH_REQUIRED
-                || r->headers_in.content_length_n != sizeof("0\r\n\r\n"))
-    {
+    if (ctx == NULL) {
         return NGX_DECLINED;
     }
 
-    r->err_status = 0;
-
     dd("reading chunked input eagerly...");
-
-    r->headers_in.transfer_encoding->value.len = 0;
-    r->headers_in.transfer_encoding->value.data = (u_char*) "";
 
     /* XXX this is a hack for now */
 
@@ -289,6 +283,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
                 NGX_HTTP_CONNECTION_KEEP_ALIVE) {
         dd("re-enable r->keepalive...");
         r->keepalive = 1;
+    } else {
+        r->keepalive = 0;
     }
 
     dd_check_read_event_handler(r);

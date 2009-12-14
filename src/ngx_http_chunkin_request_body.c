@@ -62,20 +62,10 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
     if (ctx == NULL) {
-        ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_chunkin_ctx_t));
-        if (ctx == NULL) {
-            return NGX_HTTP_INTERNAL_SERVER_ERROR;
-        }
-
-        ngx_http_set_ctx(r, ctx, ngx_http_chunkin_filter_module);
-    } else {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-              "chunkin: assertion failed: ctx does already exist.");
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
     ctx->count++;
-
-    ctx->ignore_body = 0;
 
     ctx->saved_header_in_pos = r->header_in->pos;
 
