@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
@@ -169,10 +169,12 @@ ngx_http_chunkin_restart_request(ngx_http_request_t *r)
 ngx_int_t
 ngx_http_chunkin_process_request_header(ngx_http_request_t *r)
 {
+    dd("entered process_request_header");
+
     if (r->headers_in.host == NULL && r->http_version > NGX_HTTP_VERSION_10) {
         ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
                    "client sent HTTP/1.1 request without \"Host\" header");
-        return NGX_ERROR;
+        return NGX_HTTP_BAD_REQUEST;
     }
 
     if (r->headers_in.content_length) {
@@ -183,21 +185,24 @@ ngx_http_chunkin_process_request_header(ngx_http_request_t *r)
         if (r->headers_in.content_length_n == NGX_ERROR) {
             ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
                           "client sent invalid \"Content-Length\" header");
-            return NGX_ERROR;
+            return NGX_HTTP_LENGTH_REQUIRED;
         }
     }
+
+    dd("method: %d (%d)", (int)r->method, (int)NGX_HTTP_PUT);
+    dd("content_length_n: %d (%d)", (int)r->headers_in.content_length_n, -1);
 
     if (r->method & NGX_HTTP_PUT && r->headers_in.content_length_n == -1) {
         ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
                   "client sent %V method without \"Content-Length\" header",
                   &r->method_name);
-        return NGX_ERROR;
+        return NGX_HTTP_LENGTH_REQUIRED;
     }
 
     if (r->method & NGX_HTTP_TRACE) {
         ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
                       "client sent TRACE method");
-        return NGX_ERROR;
+        return NGX_HTTP_NOT_ALLOWED;
     }
 
     if (r->headers_in.transfer_encoding
@@ -206,7 +211,7 @@ ngx_http_chunkin_process_request_header(ngx_http_request_t *r)
     {
         ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
                       "client sent \"Transfer-Encoding: chunked\" header");
-        return NGX_ERROR;
+        return NGX_HTTP_LENGTH_REQUIRED;
     }
 
     if (r->headers_in.connection_type == NGX_HTTP_CONNECTION_KEEP_ALIVE) {
@@ -221,7 +226,7 @@ ngx_http_chunkin_process_request_header(ngx_http_request_t *r)
 }
 
 
-void
+ngx_int_t
 ngx_http_chunkin_process_request(ngx_http_request_t *r)
 {
     ngx_connection_t  *c;
@@ -231,8 +236,8 @@ ngx_http_chunkin_process_request(ngx_http_request_t *r)
     if (r->plain_http) {
         ngx_log_error(NGX_LOG_INFO, c->log, 0,
                       "client sent plain HTTP request to HTTPS port");
-        ngx_http_finalize_request(r, NGX_HTTP_TO_HTTPS);
-        return;
+        /* ngx_http_finalize_request(r, NGX_HTTP_TO_HTTPS); */
+        return NGX_HTTP_TO_HTTPS;
     }
 
 #if (NGX_HTTP_SSL)
@@ -255,8 +260,8 @@ ngx_http_chunkin_process_request(ngx_http_request_t *r)
                 ngx_ssl_remove_cached_session(sscf->ssl.ctx,
                                        (SSL_get0_session(c->ssl->connection)));
 
-                ngx_http_finalize_request(r, NGX_HTTPS_CERT_ERROR);
-                return;
+                /* ngx_http_finalize_request(r, NGX_HTTPS_CERT_ERROR); */
+                return NGX_HTTPS_CERT_ERROR;
             }
 
             if (sscf->verify == 1) {
@@ -269,8 +274,8 @@ ngx_http_chunkin_process_request(ngx_http_request_t *r)
                     ngx_ssl_remove_cached_session(sscf->ssl.ctx,
                                        (SSL_get0_session(c->ssl->connection)));
 
-                    ngx_http_finalize_request(r, NGX_HTTPS_NO_CERT);
-                    return;
+                    /* ngx_http_finalize_request(r, NGX_HTTPS_NO_CERT); */
+                    return NGX_HTTPS_NO_CERT;
                 }
 
                 X509_free(cert);
@@ -290,5 +295,7 @@ ngx_http_chunkin_process_request(ngx_http_request_t *r)
     (void) ngx_atomic_fetch_add(ngx_stat_writing, 1);
     r->stat_writing = 1;
 #endif
+
+    return NGX_OK;
 }
 

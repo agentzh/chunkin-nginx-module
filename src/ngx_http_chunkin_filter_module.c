@@ -211,6 +211,8 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     if (last) {
         dd("ignore last body...");
 
+        ctx->ignore_body = 0;
+
         r->discard_body = 0;
         r->error_page = 0;
         r->err_status = 0;
@@ -230,12 +232,23 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
             r->headers_in.transfer_encoding->value.data = (u_char*) "";
         }
 
+        /*
+        r->method = NGX_HTTP_PUT;
+        r->headers_in.content_length = NULL;
+        r->headers_in.content_length_n = -1;
+        */
+
         rc = ngx_http_chunkin_process_request_header(r);
         if (rc != NGX_OK) {
-            return NGX_OK;
+            return rc;
         }
 
-        ctx->ignore_body = 0;
+        /* r->plain_http = 1; */
+
+        rc = ngx_http_chunkin_process_request(r);
+        if (rc != NGX_OK) {
+            return rc;
+        }
 
         return ngx_http_chunkin_restart_request(r);
     }
