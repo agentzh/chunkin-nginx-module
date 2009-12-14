@@ -13,6 +13,7 @@ enum {
 %% machine chunked;
 %% write data;
 
+
 ngx_int_t
 ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
         ngx_http_chunkin_ctx_t *ctx)
@@ -34,6 +35,7 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
 
     return NGX_OK;
 }
+
 
 ngx_int_t
 ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
