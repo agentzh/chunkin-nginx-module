@@ -136,6 +136,9 @@ ngx_http_chunkin_get_buf(ngx_pool_t *pool, ngx_http_chunkin_ctx_t *ctx)
 }
 
 
+/* modified from the ngx_http_internal_redirect function
+ * in ngx_http_core_module.c of nginx 0.8.29.
+ * copyrighted by Igor Sysoev. */
 ngx_int_t
 ngx_http_chunkin_restart_request(ngx_http_request_t *r)
 {
@@ -166,6 +169,9 @@ ngx_http_chunkin_restart_request(ngx_http_request_t *r)
 }
 
 
+/* mostly a clone of the ngx_http_process_request_header function
+ * in ngx_http_request.c of nginx 0.8.29.
+ * copyrighted by Igor Sysoev. */
 ngx_int_t
 ngx_http_chunkin_process_request_header(ngx_http_request_t *r)
 {
@@ -226,6 +232,9 @@ ngx_http_chunkin_process_request_header(ngx_http_request_t *r)
 }
 
 
+/* mostly a clone of the ngx_http_process_request function
+ * in ngx_http_request.c of nginx 0.8.29.
+ * copyrighted by Igor Sysoev. */
 ngx_int_t
 ngx_http_chunkin_process_request(ngx_http_request_t *r)
 {

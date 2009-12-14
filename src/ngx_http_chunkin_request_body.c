@@ -1,3 +1,5 @@
+/* Copyright (C) agentzh */
+
 #define DDEBUG 0
 
 #include "ddebug.h"
@@ -24,8 +26,8 @@ static ngx_int_t ngx_http_write_request_body(ngx_http_request_t *r,
 
 
 /* this function's implementation is borrowed from nginx 0.8.20
- * and modified a bit to work with the chunked encoding.
- * Copyrighted (C) by Igor Sysoev */
+ * and modified a lot to work with the chunked encoding.
+ * copyrighted (C) by Igor Sysoev */
 ngx_int_t
 ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     ngx_http_client_body_handler_pt post_handler)
@@ -198,6 +200,9 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 }
 
 
+/* mostly a lone of the ngx_http_read_client_request_body_handler
+ * function in ngx_http_request_body.c of nginx 0.8.29.
+ * copyrighted by Igor Sysoev. */
 static void
 ngx_http_chunkin_read_chunked_request_body_handler(ngx_http_request_t *r)
 {
@@ -220,6 +225,9 @@ ngx_http_chunkin_read_chunked_request_body_handler(ngx_http_request_t *r)
 }
 
 
+/* mostly based on the ngx_http_do_read_client_request_body
+ * function in ngx_http_request_body.c of nginx 0.8.29.
+ * copyrighted by Igor Sysoev. */
 static ngx_int_t
 ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 {

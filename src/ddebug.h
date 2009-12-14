@@ -1,3 +1,5 @@
+/* Copyright (C) agentzh */
+
 #ifndef DDEBUG_H
 #define DDEBUG_H
 
