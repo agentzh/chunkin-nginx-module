@@ -11,6 +11,11 @@ ngx_int_t ngx_http_chunkin_set_content_length_header(ngx_http_request_t *r, size
 ngx_chain_t * ngx_http_chunkin_get_buf(ngx_pool_t *pool,
         ngx_http_chunkin_ctx_t *ctx);
 
+ngx_int_t ngx_http_chunkin_restart_request(ngx_http_request_t *r);
+
+ngx_int_t ngx_http_chunkin_process_request_header(ngx_http_request_t *r);
+
+void ngx_http_chunkin_process_request(ngx_http_request_t *r);
 
 #endif /* NGX_HTTP_CHUNKIN_UTIL_H */
 

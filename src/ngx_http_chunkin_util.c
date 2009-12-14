@@ -132,3 +132,151 @@ ngx_http_chunkin_get_buf(ngx_pool_t *pool, ngx_http_chunkin_ctx_t *ctx)
     return cl;
 }
 
+ngx_int_t
+ngx_http_chunkin_restart_request(ngx_http_request_t *r)
+{
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "chunkin: restart request: \"%V?%V\"",
+                   &r->uri, &r->args);
+
+#if defined(nginx_version) && nginx_version >= 8011
+
+    r->main->count++;
+
+#endif
+
+    ngx_memzero(r->ctx, sizeof(void *) * ngx_http_max_module);
+
+    r->internal = 0;
+    /* r->phase_handler = 0; */
+
+    ngx_http_handler(r);
+
+    return NGX_DONE;
+}
+
+ngx_int_t
+ngx_http_chunkin_process_request_header(ngx_http_request_t *r)
+{
+    if (r->headers_in.host == NULL && r->http_version > NGX_HTTP_VERSION_10) {
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                   "client sent HTTP/1.1 request without \"Host\" header");
+        return NGX_ERROR;
+    }
+
+    if (r->headers_in.content_length) {
+        r->headers_in.content_length_n =
+                            ngx_atoof(r->headers_in.content_length->value.data,
+                                      r->headers_in.content_length->value.len);
+
+        if (r->headers_in.content_length_n == NGX_ERROR) {
+            ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                          "client sent invalid \"Content-Length\" header");
+            return NGX_ERROR;
+        }
+    }
+
+    if (r->method & NGX_HTTP_PUT && r->headers_in.content_length_n == -1) {
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                  "client sent %V method without \"Content-Length\" header",
+                  &r->method_name);
+        return NGX_ERROR;
+    }
+
+    if (r->method & NGX_HTTP_TRACE) {
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                      "client sent TRACE method");
+        return NGX_ERROR;
+    }
+
+    if (r->headers_in.transfer_encoding
+        && ngx_strcasestrn(r->headers_in.transfer_encoding->value.data,
+                           "chunked", 7 - 1))
+    {
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                      "client sent \"Transfer-Encoding: chunked\" header");
+        return NGX_ERROR;
+    }
+
+    if (r->headers_in.connection_type == NGX_HTTP_CONNECTION_KEEP_ALIVE) {
+        if (r->headers_in.keep_alive) {
+            r->headers_in.keep_alive_n =
+                            ngx_atotm(r->headers_in.keep_alive->value.data,
+                                      r->headers_in.keep_alive->value.len);
+        }
+    }
+
+    return NGX_OK;
+}
+
+void
+ngx_http_chunkin_process_request(ngx_http_request_t *r)
+{
+    ngx_connection_t  *c;
+
+    c = r->connection;
+
+    if (r->plain_http) {
+        ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                      "client sent plain HTTP request to HTTPS port");
+        ngx_http_finalize_request(r, NGX_HTTP_TO_HTTPS);
+        return;
+    }
+
+#if (NGX_HTTP_SSL)
+
+    if (c->ssl) {
+        long                      rc;
+        X509                     *cert;
+        ngx_http_ssl_srv_conf_t  *sscf;
+
+        sscf = ngx_http_get_module_srv_conf(r, ngx_http_ssl_module);
+
+        if (sscf->verify) {
+            rc = SSL_get_verify_result(c->ssl->connection);
+
+            if (rc != X509_V_OK) {
+                ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                              "client SSL certificate verify error: (%l:%s)",
+                              rc, X509_verify_cert_error_string(rc));
+
+                ngx_ssl_remove_cached_session(sscf->ssl.ctx,
+                                       (SSL_get0_session(c->ssl->connection)));
+
+                ngx_http_finalize_request(r, NGX_HTTPS_CERT_ERROR);
+                return;
+            }
+
+            if (sscf->verify == 1) {
+                cert = SSL_get_peer_certificate(c->ssl->connection);
+
+                if (cert == NULL) {
+                    ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                                  "client sent no required SSL certificate");
+
+                    ngx_ssl_remove_cached_session(sscf->ssl.ctx,
+                                       (SSL_get0_session(c->ssl->connection)));
+
+                    ngx_http_finalize_request(r, NGX_HTTPS_NO_CERT);
+                    return;
+                }
+
+                X509_free(cert);
+            }
+        }
+    }
+
+#endif
+
+    if (c->read->timer_set) {
+        ngx_del_timer(c->read);
+    }
+
+#if (NGX_STAT_STUB)
+    (void) ngx_atomic_fetch_add(ngx_stat_reading, -1);
+    r->stat_reading = 0;
+    (void) ngx_atomic_fetch_add(ngx_stat_writing, 1);
+    r->stat_writing = 1;
+#endif
+}
+

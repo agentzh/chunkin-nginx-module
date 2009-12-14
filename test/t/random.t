@@ -5,7 +5,7 @@ use Test::Nginx::Socket;
 
 our $data;
 
-$Test::Nginx::Socket::RepeatEach = 500;
+$Test::Nginx::Socket::RepeatEach = 50;
 
 plan tests => $Test::Nginx::Socket::RepeatEach * 2 * blocks();
 

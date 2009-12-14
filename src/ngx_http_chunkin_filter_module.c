@@ -203,12 +203,29 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     if (last) {
         dd("ignore last body...");
 
-        r->uri_changes++;
         r->discard_body = 0;
         r->error_page = 0;
 
+        /* set new content length header */
+        rc = ngx_http_chunkin_set_content_length_header(r,
+                sizeof("0\r\n\r\n"));
+        if (rc != NGX_OK) {
+            ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                          "chunkin: failed to set content length.");
+
+            return NGX_OK;
+        }
+
+        r->headers_in.transfer_encoding->value.len = 0;
+        r->headers_in.transfer_encoding->value.data = (u_char*) "";
+
+        rc = ngx_http_chunkin_process_request_header(r);
+        if (rc != NGX_OK) {
+            return NGX_OK;
+        }
+
         /* unfortunately internal redirect will clear our ctx. */
-        rc = ngx_http_internal_redirect(r, &r->uri, &r->args);
+        rc = ngx_http_chunkin_restart_request(r);
 
         return rc;
     }
@@ -253,7 +270,7 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
      * here again. */
 
     if (r->err_status != NGX_HTTP_LENGTH_REQUIRED
-            || ! ngx_http_chunkin_is_chunked_encoding(r))
+                || r->headers_in.content_length_n != sizeof("0\r\n\r\n"))
     {
         return NGX_DECLINED;
     }
@@ -266,13 +283,6 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     r->headers_in.transfer_encoding->value.data = (u_char*) "";
 
     /* XXX this is a hack for now */
-
-    /* set new content length header */
-    rc = ngx_http_chunkin_set_content_length_header(r, 0);
-
-    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
-        return rc;
-    }
 
     if (conf->keepalive
             && r->headers_in.connection_type ==
