@@ -6,7 +6,7 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.11] released on Dec 9, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.12] released on Dec 14, 2009.
 
 = Synopsis =
 
@@ -167,6 +167,12 @@ Although a lot of effort has been put into testing and code tuning, there must b
 Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/chunkin-nginx-module].
 
 = ChangeLog =
+
+== v0.12 ==
+* now we no longer skip those operations between the (interrupted) ngx_http_process_request_header and the server rewrite phase. this fixed the security issues regarding the [[NginxHttpCoreModule#internal|internal]] directive as well as SSL sessions.
+* try to ignore CR/LF/SP/HT at the begining of the chunked body.
+* now we allow HT as padding spaces and ignore leading CRLFs.
+* improved diagnostic info in the error.log messages when parsefail occurs.
 
 == v0.11 ==
 * added a random valid-chunked-request generator in t/random.t.
