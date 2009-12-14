@@ -213,8 +213,6 @@ ngx_http_chunkin_read_chunked_request_body_handler(ngx_http_request_t *r)
 {
     ngx_int_t  rc;
 
-    dd("!!! send header pre");
-
     if (r->connection->read->timedout) {
         r->connection->timedout = 1;
 
