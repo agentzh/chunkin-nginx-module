@@ -26,6 +26,7 @@ static ngx_int_t ngx_http_chunkin_init(ngx_conf_t *cf);
 
 static void ngx_http_chunkin_post_read(ngx_http_request_t *r);
 
+
 static ngx_command_t  ngx_http_chunkin_commands[] = {
 
     { ngx_string("chunkin"),
@@ -45,6 +46,7 @@ static ngx_command_t  ngx_http_chunkin_commands[] = {
 
       ngx_null_command
 };
+
 
 static ngx_http_module_t  ngx_http_chunkin_filter_module_ctx = {
     NULL,                                 /* preconfiguration */
@@ -76,6 +78,7 @@ ngx_module_t  ngx_http_chunkin_filter_module = {
     NGX_MODULE_V1_PADDING
 };
 
+
 static void *
 ngx_http_chunkin_create_conf(ngx_conf_t *cf)
 {
@@ -92,6 +95,7 @@ ngx_http_chunkin_create_conf(ngx_conf_t *cf)
     return conf;
 }
 
+
 static char *
 ngx_http_chunkin_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 {
@@ -103,6 +107,7 @@ ngx_http_chunkin_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 
     return NGX_CONF_OK;
 }
+
 
 static ngx_int_t
 ngx_http_chunkin_filter_init(ngx_conf_t *cf)
@@ -116,6 +121,7 @@ ngx_http_chunkin_filter_init(ngx_conf_t *cf)
     return NGX_OK;
 }
 
+
 static ngx_flag_t
 ngx_http_chunkin_is_chunked_encoding(ngx_http_request_t *r)
 {
@@ -124,6 +130,7 @@ ngx_http_chunkin_is_chunked_encoding(ngx_http_request_t *r)
         ngx_strcasestrn(r->headers_in.transfer_encoding->value.data,
                 "chunked", 7 - 1);
 }
+
 
 static ngx_int_t
 ngx_http_chunkin_header_filter(ngx_http_request_t *r)
@@ -171,6 +178,7 @@ ngx_http_chunkin_header_filter(ngx_http_request_t *r)
 
     return NGX_OK;
 }
+
 
 static ngx_int_t
 ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
@@ -237,6 +245,7 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     return NGX_OK;
 }
 
+
 static ngx_int_t
 ngx_http_chunkin_init(ngx_conf_t *cf)
 {
@@ -254,6 +263,7 @@ ngx_http_chunkin_init(ngx_conf_t *cf)
 
     return ngx_http_chunkin_filter_init(cf);
 }
+
 
 static ngx_int_t
 ngx_http_chunkin_handler(ngx_http_request_t *r)
@@ -309,6 +319,7 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
 
     return rc;
 }
+
 
 static void
 ngx_http_chunkin_post_read(ngx_http_request_t *r)
