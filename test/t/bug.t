@@ -221,7 +221,8 @@ cd\r
 "ab\r\ncd"
 
 
-=== TEST 10: zero-padding
+
+=== TEST 11: zero-padding
 --- config
     chunkin on;
     location /ar.do {
@@ -241,7 +242,8 @@ cd\r
 "ab\r\ncd"
 
 
-=== TEST 10: leading new lines
+
+=== TEST 12: leading new lines
 --- config
     chunkin on;
     location /ar.do {

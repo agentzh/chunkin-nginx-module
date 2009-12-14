@@ -63,7 +63,7 @@ sub plan (@) {
 
 =cut
 
-sub send_request ($);
+sub send_request ($$);
 
 sub trim ($);
 
@@ -431,7 +431,10 @@ sub run_test_helper ($) {
             my $parsed_req = parse_request($name, \$request);
 
             my $len_header = '';
-            if (!$is_chunked && defined $parsed_req->{content} && $parsed_req->{content} ne '') {
+            if (!$is_chunked && defined $parsed_req->{content} 
+                    && $parsed_req->{content} ne ''
+                    && $more_headers !~ /\bContent-Length:/)
+            {
                 $parsed_req->{content} =~ s/^\s+|\s+$//gs;
 
                 $len_header .= "Content-Length: " . length($parsed_req->{content}) . "\r\n";
@@ -448,7 +451,10 @@ $parsed_req->{content}";
         ### $parsed_req
 
         my $len_header = '';
-        if (!$is_chunked && defined $parsed_req->{content} && $parsed_req->{content} ne '') {
+        if (!$is_chunked && defined $parsed_req->{content}
+                && $parsed_req->{content} ne ''
+                && $more_headers !~ /\bContent-Length:/)
+        {
             $parsed_req->{content} =~ s/^\s+|\s+$//gs;
             $len_header .= "Content-Length: " . length($parsed_req->{content}) . "\r\n";
         }
@@ -466,7 +472,12 @@ $parsed_req->{content}";
 
     #warn "request: $req\n";
 
-    my $raw_resp = send_request($req);
+    my $timeout = $block->timeout;
+    if (!defined $timeout) {
+        $timeout = $Timeout;
+    }
+
+    my $raw_resp = send_request($req, $timeout);
 
     #warn "raw resonse: [$raw_resp]\n";
 
@@ -508,9 +519,9 @@ $parsed_req->{content}";
     }
 
     if (defined $block->error_code) {
-        is($res->code, $block->error_code, "$name - status code ok");
+        is($res->code || '', $block->error_code, "$name - status code ok");
     } else {
-        is($res->code, 200, "$name - status code ok");
+        is($res->code || '', 200, "$name - status code ok");
     }
 
     if (defined $block->response_headers) {
@@ -574,8 +585,8 @@ $parsed_req->{content}";
     }
 }
 
-sub send_request ($) {
-    my $write_buf = shift;
+sub send_request ($$) {
+    my ($write_buf, $timeout) = @_;
 
     my $sock = IO::Socket::INET->new(
         PeerAddr => 'localhost',
@@ -595,7 +606,7 @@ sub send_request ($) {
 
     my $now = time;
     while (1) {
-        if (time - $now >= $Timeout) {
+        if (time - $now >= $timeout) {
             warn "timed out\n";
             return $resp;
         }

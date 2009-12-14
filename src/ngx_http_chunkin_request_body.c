@@ -1,4 +1,4 @@
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
@@ -213,8 +213,13 @@ ngx_http_chunkin_read_chunked_request_body_handler(ngx_http_request_t *r)
 {
     ngx_int_t  rc;
 
+    dd("!!! send header pre");
+
     if (r->connection->read->timedout) {
         r->connection->timedout = 1;
+
+        (void) ngx_http_discard_request_body(r);
+
         ngx_http_finalize_request(r, NGX_HTTP_REQUEST_TIME_OUT);
         return;
     }
