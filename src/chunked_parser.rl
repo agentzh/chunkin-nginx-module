@@ -219,6 +219,13 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                 "chunk size %uz, chunk data read %uz, "
                 "total to disk %uz, "
                 "raw body size %O, caller \"%s\", "
+                "plain_http %d, "
+
+#if (NGX_HTTP_SSL)
+
+                "ssl %d, "
+#endif
+
                 "keepalive %d, err ctx \"%s\", "
                 "ctx ref count %ud, user agent \"%V\", "
                 "at char '%c' (%d), "
@@ -228,6 +235,14 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                 ctx->chunk_size, ctx->chunk_bytes_read,
                 ctx->chunks_written_size,
                 (off_t) ctx->raw_body_size, caller_info,
+                (int) r->plain_http,
+
+#if (NGX_HTTP_SSL)
+
+                r->connection->ssl ? 1 : 0,
+
+#endif
+
                 (int) r->keepalive, err_ctx,
                 ctx->count, &user_agent,
                 *p, *p,

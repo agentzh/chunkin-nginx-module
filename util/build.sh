@@ -20,6 +20,7 @@ if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$
     ./configure --prefix=/opt/nginx \
           --add-module=$root/../echo-nginx-module \
           --add-module=$root $opts \
+          --with-http_ssl_module \
           --with-debug
   #--without-http_ssi_module  # we cannot disable ssi because echo_location_async depends on it (i dunno why?!)
 
