@@ -74,7 +74,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     ngx_str_t           user_agent = ngx_string("");
 
     
-#line 179 "src/chunked_parser.rl"
+#line 181 "src/chunked_parser.rl"
 
 
     
@@ -107,45 +107,45 @@ case 1:
 		goto tr3;
 	goto st0;
 tr4:
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 171 "src/chunked_parser.rl"
+#line 173 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	goto st0;
 tr10:
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 171 "src/chunked_parser.rl"
+#line 173 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
-#line 174 "src/chunked_parser.rl"
+#line 176 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	goto st0;
 tr12:
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 174 "src/chunked_parser.rl"
+#line 176 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	goto st0;
 tr14:
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 167 "src/chunked_parser.rl"
+#line 169 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
 	goto st0;
 tr18:
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 167 "src/chunked_parser.rl"
+#line 169 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
-#line 155 "src/chunked_parser.rl"
+#line 157 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	goto st0;
 tr20:
-#line 155 "src/chunked_parser.rl"
+#line 157 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	goto st0;
 tr23:
-#line 159 "src/chunked_parser.rl"
+#line 161 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	goto st0;
 #line 152 "src/chunked_parser.c"
@@ -348,6 +348,8 @@ tr19:
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
+            ctx->chunks_count++;
+
             if (ctx->chunks) {
                 *ctx->next_chunk = ctx->chunk;
             } else {
@@ -394,7 +396,7 @@ st11:
 	if ( ++p == pe )
 		goto _test_eof11;
 case 11:
-#line 398 "src/chunked_parser.c"
+#line 400 "src/chunked_parser.c"
 	_widec = (*p);
 	if ( (*p) < 13 ) {
 		if ( (*p) <= 12 ) {
@@ -435,7 +437,7 @@ case 12:
 		goto tr24;
 	goto tr23;
 tr24:
-#line 120 "src/chunked_parser.rl"
+#line 122 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -466,7 +468,7 @@ st13:
 	if ( ++p == pe )
 		goto _test_eof13;
 case 13:
-#line 470 "src/chunked_parser.c"
+#line 472 "src/chunked_parser.c"
 	if ( (*p) == 48 )
 		goto tr2;
 	if ( (*p) < 65 ) {
@@ -499,60 +501,60 @@ case 13:
 	{
 	switch ( cs ) {
 	case 11: 
-#line 155 "src/chunked_parser.rl"
+#line 157 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
 	case 12: 
 	case 13: 
-#line 159 "src/chunked_parser.rl"
+#line 161 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	break;
 	case 7: 
 	case 8: 
 	case 9: 
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 167 "src/chunked_parser.rl"
+#line 169 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
 	break;
 	case 2: 
 	case 3: 
 	case 6: 
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 171 "src/chunked_parser.rl"
+#line 173 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	break;
 	case 5: 
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 174 "src/chunked_parser.rl"
+#line 176 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
 	case 10: 
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 167 "src/chunked_parser.rl"
+#line 169 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
-#line 155 "src/chunked_parser.rl"
+#line 157 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
 	case 4: 
-#line 146 "src/chunked_parser.rl"
+#line 148 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 171 "src/chunked_parser.rl"
+#line 173 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
-#line 174 "src/chunked_parser.rl"
+#line 176 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
-#line 549 "src/chunked_parser.c"
+#line 551 "src/chunked_parser.c"
 	}
 	}
 
 	_out: {}
 	}
 
-#line 182 "src/chunked_parser.rl"
+#line 184 "src/chunked_parser.rl"
 
     ctx->parser_state = cs;
 

@@ -103,6 +103,8 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         action start_reading_data {
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
+            ctx->chunks_count++;
+
             if (ctx->chunks) {
                 *ctx->next_chunk = ctx->chunk;
             } else {

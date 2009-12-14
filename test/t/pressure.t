@@ -120,7 +120,26 @@ POST /main
 
 
 
-=== TEST 7: normal POST with chunkin on
+=== TEST 7: next chunk reset bug (too many chunks)
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    8k;
+        client_max_body_size       8k;
+
+        echo_request_body;
+    }
+--- request
+POST /main
+--- chunked_body eval
+[split //,
+  ("a" x 700) . 'e']
+--- response_body eval
+"a" x 700 . 'e'
+
+
+
+=== TEST 8: normal POST with chunkin on
 --- config
     chunkin on;
     location /main {
