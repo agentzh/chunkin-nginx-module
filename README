@@ -6,7 +6,7 @@ Name
     installation instructions.
 
 Version
-    This document describes chunkin-nginx-module v0.12
+    This document describes chunkin-nginx-module v0.15
     (<http://github.com/agentzh/chunkin-nginx-module/downloads>) released on
     Dec 14, 2009.
 
@@ -197,7 +197,11 @@ Source Repository
     (<http://github.com/agentzh/chunkin-nginx-module>).
 
 ChangeLog
-  v0.12
+  v0.15
+    *   fixed a regression that ctx->chunks_count never incremented in
+        earlier versions.
+
+  v0.14
     *   now we no longer skip those operations between the (interrupted)
         ngx_http_process_request_header and the server rewrite phase. this
         fixed the security issues regarding the internal directive as well

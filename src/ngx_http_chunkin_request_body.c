@@ -1,6 +1,6 @@
 /* Copyright (C) agentzh */
 
-#define DDEBUG 1
+#define DDEBUG 0
 
 #include "ddebug.h"
 
@@ -174,7 +174,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     }
 
     dd("chunks total size after preread: %d, buf size: %d",
-            ctx->chunks_total_size, size);
+            (int)ctx->chunks_total_size, (int)size);
 
     rb->buf = ngx_create_temp_buf(r->pool, size);
 
