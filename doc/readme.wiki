@@ -6,7 +6,7 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.15] released on Dec 14, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.16] released on Dec 15, 2009.
 
 = Synopsis =
 
@@ -167,6 +167,9 @@ Although a lot of effort has been put into testing and code tuning, there must b
 Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/chunkin-nginx-module].
 
 = ChangeLog =
+
+== v0.16 ==
+* turned off ddebug in the previous release. thanks J for reporting it.
 
 == v0.15 ==
 * fixed a regression that ctx->chunks_count never incremented in earlier versions.

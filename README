@@ -6,9 +6,9 @@ Name
     installation instructions.
 
 Version
-    This document describes chunkin-nginx-module v0.15
+    This document describes chunkin-nginx-module v0.16
     (<http://github.com/agentzh/chunkin-nginx-module/downloads>) released on
-    Dec 14, 2009.
+    Dec 15, 2009.
 
 Synopsis
       chunkin on;
@@ -197,6 +197,10 @@ Source Repository
     (<http://github.com/agentzh/chunkin-nginx-module>).
 
 ChangeLog
+  v0.16
+    *   turned off ddebug in the previous release. thanks J for reporting
+        it.
+
   v0.15
     *   fixed a regression that ctx->chunks_count never incremented in
         earlier versions.
