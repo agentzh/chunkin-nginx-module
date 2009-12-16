@@ -1,6 +1,6 @@
 /* Copyright (C) agentzh */
 
-#define DDEBUG 0
+#define DDEBUG 1
 #include "ddebug.h"
 
 #include <ngx_config.h>
@@ -287,6 +287,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     ngx_http_chunkin_conf_t     *conf;
     ngx_int_t                   rc;
 
+    dd("entered chunkin handler...");
+
     conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
 
     if (!conf->enabled || r != r->main) {
@@ -331,6 +333,10 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     }
 
     dd("read client request body returned %d", rc);
+
+    if (rc == NGX_OK) {
+        return NGX_DECLINED;
+    }
 
     return rc;
 }

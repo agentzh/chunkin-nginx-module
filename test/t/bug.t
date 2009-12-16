@@ -286,3 +286,23 @@ cd\r
 --- response_body_like: 404 Not Found
 --- error_code: 404
 
+
+=== TEST 13: phase issue
+--- config
+    chunkin on;
+    location /ar.do {
+        deny all;
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+1\r
+a\r
+0\r
+\r
+"
+--- response_body_like: 403 Forbidden
+--- error_code: 403
+

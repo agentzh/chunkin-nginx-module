@@ -178,6 +178,9 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
     rb->buf = ngx_create_temp_buf(r->pool, size);
 
+    /* XXX just for debugging... */
+    ngx_memzero(rb->buf->start, rb->buf->end - rb->buf->start);
+
     if (rb->buf == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
@@ -254,7 +257,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-    if (ctx->just_after_preread && ctx->chunks) {
+    if (ctx->just_after_preread) {
         ctx->just_after_preread = 0;
 
         dd("Just after preread and ctx->chunks defined (bytes read: %d, chunk size: %d, last chars %c %c %c)", ctx->chunk_bytes_read, ctx->chunk_size, *(r->header_in->pos - 2), *(r->header_in->pos - 1), *r->header_in->pos);
@@ -295,18 +298,18 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                     dd("too many chounks already: %d (buf last %c)", ctx->chunks_count, *(rb->buf->last - 2));
                 }
 
-                if (ctx->chunks
-                        && ctx->chunks_total_size > ctx->chunks_written_size)
-                {
-                    dd("save exceeding part to disk (%d bytes), buf size: %d, "
-                            "chunks count: %d",
-                            ctx->chunks_total_size - ctx->chunks_written_size,
-                            rb->buf->end - rb->buf->start,
-                            ctx->chunks_count);
+                if (ctx->chunks) {
+                    if (ctx->chunks_total_size > ctx->chunks_written_size) {
+                        dd("save exceeding part to disk (%d bytes), buf size: %d, "
+                                "chunks count: %d",
+                                ctx->chunks_total_size - ctx->chunks_written_size,
+                                rb->buf->end - rb->buf->start,
+                                ctx->chunks_count);
 
-                    rc = ngx_http_write_request_body(r, ctx->chunks, ctx->chunks_count);
-                    if (rc != NGX_OK) {
-                        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+                        rc = ngx_http_write_request_body(r, ctx->chunks, ctx->chunks_count);
+                        if (rc != NGX_OK) {
+                            return NGX_HTTP_INTERNAL_SERVER_ERROR;
+                        }
                     }
 
                     if (ctx->last_complete_chunk) {
@@ -344,6 +347,9 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                 }
 
                 rb->buf->last = rb->buf->start;
+
+                /* XXX just for debugging... */
+                ngx_memzero(rb->buf->start, rb->buf->end - rb->buf->start);
             }
 
             size = rb->buf->end - rb->buf->last;
