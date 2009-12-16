@@ -1,6 +1,6 @@
 /* Copyright (C) agentzh */
 
-#define DDEBUG 0
+#define DDEBUG 1
 #include "ddebug.h"
 
 #include <ngx_config.h>
@@ -370,6 +370,7 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
 
     */
 
+    r->phase_handler++;
     ngx_http_core_run_phases(r);
 }
 

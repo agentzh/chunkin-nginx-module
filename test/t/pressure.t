@@ -112,6 +112,7 @@ POST /main
     }
 --- request
 POST /main
+--- middle_chunk_delay: 0.001
 --- chunked_body eval
 [split //,
   ("a" x 700) . 'e']
