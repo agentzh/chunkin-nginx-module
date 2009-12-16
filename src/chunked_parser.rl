@@ -56,7 +56,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     ngx_str_t           user_agent = ngx_string("");
 
     %%{
-        alphtype short;
+        alphtype unsigned char;
 
         action finalize {
             done = 1;
