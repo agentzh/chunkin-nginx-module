@@ -1,6 +1,6 @@
 /* Copyright (C) agentzh */
 
-#define DDEBUG 1
+#define DDEBUG 0
 #include "ddebug.h"
 
 #include <ngx_config.h>
