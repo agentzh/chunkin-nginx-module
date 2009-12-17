@@ -196,12 +196,6 @@ sub parse_headers ($) {
 sub run_test ($) {
     my $block = shift;
     my $name = $block->name;
-    if (!defined $block->request
-            && !defined $block->request_eval
-            && !defined $block->pipelined_requests) {
-        Test::More::BAIL_OUT("$name - No '--- request' section nor ---pipelined_requests nor --- request_eval specified");
-        die;
-    }
 
     my $config = $block->config;
     if (!defined $config) {

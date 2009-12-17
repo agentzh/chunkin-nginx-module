@@ -1,6 +1,6 @@
 /* Copyright (C) agentzh */
 
-#define DDEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 
@@ -80,7 +80,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
                        "http chunked client request body preread %uz",
                        preread);
 
-        dd("raw chunked body (len %d): %s", preread, r->header_in->pos);
+        dd("raw chunked body %.*s", preread, r->header_in->pos);
 
         rc = ngx_http_chunkin_run_chunked_parser(r, ctx,
                 &r->header_in->pos, r->header_in->last, "preread");
@@ -188,16 +188,6 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     r->read_event_handler = ngx_http_chunkin_read_chunked_request_body_handler;
 
     rc = ngx_http_chunkin_do_read_chunked_request_body(r);
-
-#if defined(nginx_version) && nginx_version >= 8011
-
-    /*
-    if (rc == NGX_AGAIN) {
-        r->main->count++;
-    }
-    */
-
-#endif
 
     return rc;
 }

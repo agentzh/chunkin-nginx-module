@@ -140,6 +140,13 @@ ngx_http_chunkin_header_filter(ngx_http_request_t *r)
     ngx_http_chunkin_ctx_t      *ctx;
     ngx_http_chunkin_conf_t     *conf;
 
+    if (r != r->main || r->request_body) {
+        dd("We ignore subrequests.");
+        return ngx_http_next_header_filter(r);
+    }
+
+    dd("header filter: header_in->pos: %d", (int)(r->header_in->pos - r->header_in->start));
+
     conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
 
     /*
@@ -149,11 +156,6 @@ ngx_http_chunkin_header_filter(ngx_http_request_t *r)
     dd("is chunked? %d",
             ngx_http_chunkin_is_chunked_encoding(r));
             */
-
-    if (r != r->main) {
-        dd("We ignore subrequests.");
-        return ngx_http_next_header_filter(r);
-    }
 
     if ( ! conf->enabled || r->headers_out.status != NGX_HTTP_LENGTH_REQUIRED
             || ! ngx_http_chunkin_is_chunked_encoding(r))
@@ -215,6 +217,7 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
         ctx->ignore_body = 0;
 
+        ctx->r_discard_body = r->discard_body;
         r->discard_body = 0;
         r->error_page = 0;
         r->err_status = 0;
@@ -252,7 +255,7 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
             return rc;
         }
 
-        return ngx_http_chunkin_restart_request(r);
+        return ngx_http_chunkin_restart_request(r, ctx);
     }
 
     dd("ignore body...");
@@ -323,6 +326,24 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     */
 
     ngx_http_chunkin_clear_transfer_encoding(r);
+
+    r->header_in->pos = r->header_end + sizeof(CRLF) - 1;
+
+    if (r->header_in->pos > r->header_in->last) {
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                      "chunkin: r->header_in->pos overflown");
+
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    if (*(r->header_in->pos - 2) != CR || *(r->header_in->pos - 1) != LF) {
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
+                      "chunkin: r->header_in->pos not lead by CRLF");
+
+        return NGX_HTTP_INTERNAL_SERVER_ERROR;
+    }
+
+    dd("chunkin handler: header_in->pos: %d", (int)(r->header_in->pos - r->header_in->start));
 
     rc = ngx_http_chunkin_read_chunked_request_body(r,
             ngx_http_chunkin_post_read);

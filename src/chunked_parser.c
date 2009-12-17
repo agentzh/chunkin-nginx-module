@@ -2,8 +2,8 @@
 #line 1 "src/chunked_parser.rl"
 /* Copyright (C) agentzh */
 
-#define EXTENDED_DEBUG 1
-#define DDEBUG 0
+#define EXTENDED_DEBUG 0
+#define DDEBUG 1
 
 #include "ddebug.h"
 

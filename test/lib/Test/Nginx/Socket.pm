@@ -77,83 +77,89 @@ sub parse_request ($$) {
 sub run_test_helper ($) {
     my $block = shift;
 
-    my $request;
-    if (defined $block->request_eval) {
-        $request = eval $block->request_eval;
-        if ($@) {
-            warn $@;
-        }
-    } else {
-        $request = $block->request;
-    }
-
     my $name = $block->name;
 
-    my $is_chunked = 0;
-    my $more_headers = '';
-    if ($block->more_headers) {
-        my @headers = split /\n+/, $block->more_headers;
-        for my $header (@headers) {
-            next if $header =~ /^\s*\#/;
-            my ($key, $val) = split /:\s*/, $header, 2;
-            if (lc($key) eq 'transfer-encoding' and $val eq 'chunked') {
-                $is_chunked = 1;
-            }
-            #warn "[$key, $val]\n";
-            $more_headers .= "$key: $val\r\n";
-        }
-    }
-
     my $req;
-    if ($block->pipelined_requests) {
-        my $reqs = $block->pipelined_requests;
-        if (!ref $reqs || ref $reqs ne 'ARRAY') {
-            Test::More::BAIL_OUT("$name - invalid entries in --- pipelined_requests");
+
+    if (defined $block->raw_request) {
+        $req = $block->raw_request;
+    } else {
+        my $request;
+        if (defined $block->request_eval) {
+            $request = eval $block->request_eval;
+            if ($@) {
+                warn $@;
+            }
+        } else {
+            $request = $block->request;
         }
-        my $i = 0;
-        for my $request (@$reqs) {
-            my $conn_type;
-            if ($i++ == @$reqs - 1) {
-                $conn_type = 'close';
-            } else {
-                $conn_type = 'keep-alive';
+
+        my $is_chunked = 0;
+        my $more_headers = '';
+        if ($block->more_headers) {
+            my @headers = split /\n+/, $block->more_headers;
+            for my $header (@headers) {
+                next if $header =~ /^\s*\#/;
+                my ($key, $val) = split /:\s*/, $header, 2;
+                if (lc($key) eq 'transfer-encoding' and $val eq 'chunked') {
+                    $is_chunked = 1;
+                }
+                #warn "[$key, $val]\n";
+                $more_headers .= "$key: $val\r\n";
             }
-            my $parsed_req = parse_request($name, \$request);
+        }
 
-            my $len_header = '';
-            if (!$is_chunked && defined $parsed_req->{content} 
-                    && $parsed_req->{content} ne ''
-                    && $more_headers !~ /\bContent-Length:/)
-            {
-                $parsed_req->{content} =~ s/^\s+|\s+$//gs;
-
-                $len_header .= "Content-Length: " . length($parsed_req->{content}) . "\r\n";
+        if ($block->pipelined_requests) {
+            my $reqs = $block->pipelined_requests;
+            if (!ref $reqs || ref $reqs ne 'ARRAY') {
+                Test::More::BAIL_OUT("$name - invalid entries in --- pipelined_requests");
             }
+            my $i = 0;
+            for my $request (@$reqs) {
+                my $conn_type;
+                if ($i++ == @$reqs - 1) {
+                    $conn_type = 'close';
+                } else {
+                    $conn_type = 'keep-alive';
+                }
+                my $parsed_req = parse_request($name, \$request);
 
-            $req .= "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
+                my $len_header = '';
+                if (!$is_chunked && defined $parsed_req->{content} 
+                        && $parsed_req->{content} ne ''
+                        && $more_headers !~ /\bContent-Length:/)
+                {
+                    $parsed_req->{content} =~ s/^\s+|\s+$//gs;
+
+                    $len_header .= "Content-Length: " . length($parsed_req->{content}) . "\r\n";
+                }
+
+                $req .= "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
 Host: localhost\r
 Connection: $conn_type\r
 $more_headers$len_header\r
 $parsed_req->{content}";
-        }
-    } else {
-        my $parsed_req = parse_request($name, \$request);
-        ### $parsed_req
+            }
+        } else {
+            my $parsed_req = parse_request($name, \$request);
+            ### $parsed_req
 
-        my $len_header = '';
-        if (!$is_chunked && defined $parsed_req->{content}
-                && $parsed_req->{content} ne ''
-                && $more_headers !~ /\bContent-Length:/)
-        {
-            $parsed_req->{content} =~ s/^\s+|\s+$//gs;
-            $len_header .= "Content-Length: " . length($parsed_req->{content}) . "\r\n";
-        }
+            my $len_header = '';
+            if (!$is_chunked && defined $parsed_req->{content}
+                    && $parsed_req->{content} ne ''
+                    && $more_headers !~ /\bContent-Length:/)
+            {
+                $parsed_req->{content} =~ s/^\s+|\s+$//gs;
+                $len_header .= "Content-Length: " . length($parsed_req->{content}) . "\r\n";
+            }
 
-        $req = "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
+            $req = "$parsed_req->{method} $parsed_req->{url} HTTP/1.1\r
 Host: localhost\r
 Connection: Close\r
 $more_headers$len_header\r
 $parsed_req->{content}";
+        }
+
     }
 
     if (!$req) {

@@ -140,21 +140,12 @@ ngx_http_chunkin_get_buf(ngx_pool_t *pool, ngx_http_chunkin_ctx_t *ctx)
  * in ngx_http_core_module.c of nginx 0.8.29.
  * copyrighted by Igor Sysoev. */
 ngx_int_t
-ngx_http_chunkin_restart_request(ngx_http_request_t *r)
+ngx_http_chunkin_restart_request(ngx_http_request_t *r,
+        ngx_http_chunkin_ctx_t *ctx)
 {
-    ngx_http_chunkin_ctx_t      *ctx;
-
     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "chunkin: restart request: \"%V?%V\"",
                    &r->uri, &r->args);
-
-#if defined(nginx_version) && nginx_version >= 8011
-
-    r->main->count++;
-
-#endif
-
-    ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
 
     ngx_memzero(r->ctx, sizeof(void *) * ngx_http_max_module);
 
@@ -164,6 +155,16 @@ ngx_http_chunkin_restart_request(ngx_http_request_t *r)
     /* r->phase_handler = 0; */
 
     ngx_http_handler(r);
+
+#if defined(nginx_version) && nginx_version >= 8011
+
+    dd("DISCARD BODY: %d", (int)r->discard_body);
+
+    if ( ! ctx->r_discard_body ) {
+        r->main->count++;
+    }
+
+#endif
 
     return NGX_DONE;
 }
