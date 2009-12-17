@@ -287,7 +287,8 @@ cd\r
 --- error_code: 404
 
 
-=== TEST 13: phase issue
+
+=== TEST 14: phase issue
 --- config
     chunkin on;
     location /ar.do {

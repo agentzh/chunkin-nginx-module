@@ -1,5 +1,6 @@
 /* Copyright (C) agentzh */
 
+#define EXTENDED_DEBUG 1
 #define DDEBUG 0
 
 #include "ddebug.h"
@@ -195,6 +196,13 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     }
 
     if (cs == chunked_error) {
+
+#if EXTENDED_DEBUG
+
+        ngx_str_t           headers_buf, preread_buf;
+
+#endif
+
         for (post.data = p, post.len = 0;
                 post.data + post.len != pe; post.len++)
         {
@@ -215,6 +223,21 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
             user_agent = r->headers_in.user_agent->value;
         }
 
+#if EXTENDED_DEBUG
+
+        headers_buf.data = r->header_in->start;
+        headers_buf.len = ctx->saved_header_in_pos - r->header_in->start;
+
+        if (strcmp(caller_info, "preread") == 0) {
+            preread_buf.data = pos;
+            preread_buf.len = pe - pos;
+        } else {
+            preread_buf.data = ctx->saved_header_in_pos;
+            preread_buf.len = r->header_in->pos - ctx->saved_header_in_pos;
+        }
+
+#endif
+
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                 "bad chunked body (buf size %O, buf offset %O, "
                 "total decoded %uz, chunks count %d, "
@@ -230,6 +253,13 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
                 "keepalive %d, err ctx \"%s\", "
                 "ctx ref count %ud, user agent \"%V\", "
+
+#if EXTENDED_DEBUG
+
+                "headers \"%V\", preread \"%V\", "
+
+#endif
+
                 "at char '%c' (%d), "
                 "near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
                 (off_t) (pe - pos), (off_t) (p - pos),
@@ -247,6 +277,13 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
                 (int) r->keepalive, err_ctx,
                 ctx->count, &user_agent,
+
+#if EXTENDED_DEBUG
+
+                &headers_buf, &preread_buf,
+
+#endif
+
                 *p, *p,
                 &pre, &post);
 

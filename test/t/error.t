@@ -282,3 +282,23 @@ hello\r
 --- response_body_like: 400 Bad Request
 --- error_code: 400
 
+
+
+=== TEST 15: error near the end of big chunks
+--- config
+    chunkin on;
+    location /main {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /main
+800\r
+".('a'x2047)."\r
+0\r
+\r
+"
+--- response_body_like: 400 Bad Request
+--- error_code: 400
+

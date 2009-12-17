@@ -2,6 +2,7 @@
 #line 1 "src/chunked_parser.rl"
 /* Copyright (C) agentzh */
 
+#define EXTENDED_DEBUG 1
 #define DDEBUG 0
 
 #include "ddebug.h"
@@ -15,9 +16,9 @@ enum {
 };
 
 
-#line 16 "src/chunked_parser.rl"
+#line 17 "src/chunked_parser.rl"
 
-#line 21 "src/chunked_parser.c"
+#line 22 "src/chunked_parser.c"
 static const char _chunked_actions[] = {
 	0, 1, 0, 1, 1, 1, 3, 1, 
 	5, 1, 7, 1, 8, 2, 2, 3, 
@@ -107,7 +108,7 @@ static const int chunked_error = 0;
 static const int chunked_en_main = 1;
 
 
-#line 17 "src/chunked_parser.rl"
+#line 18 "src/chunked_parser.rl"
 
 
 ngx_int_t
@@ -117,12 +118,12 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
     int cs;
 
     
-#line 121 "src/chunked_parser.c"
+#line 122 "src/chunked_parser.c"
 	{
 	cs = chunked_start;
 	}
 
-#line 26 "src/chunked_parser.rl"
+#line 27 "src/chunked_parser.rl"
 
     ctx->chunks = NULL;
     ctx->next_chunk = NULL;
@@ -156,11 +157,11 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     ngx_str_t           user_agent = ngx_string("");
 
     
-#line 181 "src/chunked_parser.rl"
+#line 182 "src/chunked_parser.rl"
 
 
     
-#line 164 "src/chunked_parser.c"
+#line 165 "src/chunked_parser.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -195,7 +196,7 @@ _resume:
 	case 0: {
 		_widec = (short)(256u + ((*p) - 0u));
 		if ( 
-#line 65 "src/chunked_parser.rl"
+#line 66 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -268,13 +269,13 @@ _match:
 		switch ( *_acts++ )
 		{
 	case 0:
-#line 61 "src/chunked_parser.rl"
+#line 62 "src/chunked_parser.rl"
 	{
             done = 1;
         }
 	break;
 	case 1:
-#line 69 "src/chunked_parser.rl"
+#line 70 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read++;
 
@@ -289,7 +290,7 @@ _match:
         }
 	break;
 	case 2:
-#line 82 "src/chunked_parser.rl"
+#line 83 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
@@ -297,7 +298,7 @@ _match:
         }
 	break;
 	case 3:
-#line 88 "src/chunked_parser.rl"
+#line 89 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -314,7 +315,7 @@ _match:
         }
 	break;
 	case 4:
-#line 103 "src/chunked_parser.rl"
+#line 104 "src/chunked_parser.rl"
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
@@ -335,7 +336,7 @@ _match:
         }
 	break;
 	case 5:
-#line 122 "src/chunked_parser.rl"
+#line 123 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -363,30 +364,30 @@ _match:
         }
 	break;
 	case 6:
-#line 148 "src/chunked_parser.rl"
+#line 149 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 	break;
 	case 7:
-#line 157 "src/chunked_parser.rl"
+#line 158 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
 	case 8:
-#line 161 "src/chunked_parser.rl"
+#line 162 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	break;
 	case 9:
-#line 169 "src/chunked_parser.rl"
+#line 170 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
 	break;
 	case 10:
-#line 173 "src/chunked_parser.rl"
+#line 174 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	break;
 	case 11:
-#line 176 "src/chunked_parser.rl"
+#line 177 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
-#line 390 "src/chunked_parser.c"
+#line 391 "src/chunked_parser.c"
 		}
 	}
 
@@ -403,30 +404,30 @@ _again:
 	while ( __nacts-- > 0 ) {
 		switch ( *__acts++ ) {
 	case 6:
-#line 148 "src/chunked_parser.rl"
+#line 149 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 	break;
 	case 7:
-#line 157 "src/chunked_parser.rl"
+#line 158 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
 	case 8:
-#line 161 "src/chunked_parser.rl"
+#line 162 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	break;
 	case 9:
-#line 169 "src/chunked_parser.rl"
+#line 170 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
 	break;
 	case 10:
-#line 173 "src/chunked_parser.rl"
+#line 174 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	break;
 	case 11:
-#line 176 "src/chunked_parser.rl"
+#line 177 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
-#line 430 "src/chunked_parser.c"
+#line 431 "src/chunked_parser.c"
 		}
 	}
 	}
@@ -434,7 +435,7 @@ _again:
 	_out: {}
 	}
 
-#line 184 "src/chunked_parser.rl"
+#line 185 "src/chunked_parser.rl"
 
     ctx->parser_state = cs;
 
@@ -449,6 +450,13 @@ _again:
     }
 
     if (cs == chunked_error) {
+
+#if EXTENDED_DEBUG
+
+        ngx_str_t           headers_buf, preread_buf;
+
+#endif
+
         for (post.data = p, post.len = 0;
                 post.data + post.len != pe; post.len++)
         {
@@ -469,6 +477,21 @@ _again:
             user_agent = r->headers_in.user_agent->value;
         }
 
+#if EXTENDED_DEBUG
+
+        headers_buf.data = r->header_in->start;
+        headers_buf.len = ctx->saved_header_in_pos - r->header_in->start;
+
+        if (strcmp(caller_info, "preread") == 0) {
+            preread_buf.data = pos;
+            preread_buf.len = pe - pos;
+        } else {
+            preread_buf.data = ctx->saved_header_in_pos;
+            preread_buf.len = r->header_in->pos - ctx->saved_header_in_pos;
+        }
+
+#endif
+
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                 "bad chunked body (buf size %O, buf offset %O, "
                 "total decoded %uz, chunks count %d, "
@@ -484,6 +507,13 @@ _again:
 
                 "keepalive %d, err ctx \"%s\", "
                 "ctx ref count %ud, user agent \"%V\", "
+
+#if EXTENDED_DEBUG
+
+                "headers \"%V\", preread \"%V\", "
+
+#endif
+
                 "at char '%c' (%d), "
                 "near \"%V <-- HERE %V\", marked by \" <-- HERE \").\n",
                 (off_t) (pe - pos), (off_t) (p - pos),
@@ -501,6 +531,13 @@ _again:
 
                 (int) r->keepalive, err_ctx,
                 ctx->count, &user_agent,
+
+#if EXTENDED_DEBUG
+
+                &headers_buf, &preread_buf,
+
+#endif
+
                 *p, *p,
                 &pre, &post);
 
