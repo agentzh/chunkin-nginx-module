@@ -1,7 +1,7 @@
 /* Copyright (C) agentzh */
 
 #define EXTENDED_DEBUG 0
-#define DDEBUG 1
+#define DDEBUG 0
 
 #include "ddebug.h"
 
