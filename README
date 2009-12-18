@@ -6,12 +6,18 @@ Name
     installation instructions.
 
 Version
-    This document describes chunkin-nginx-module v0.16
+    This document describes chunkin-nginx-module v0.17
     (<http://github.com/agentzh/chunkin-nginx-module/downloads>) released on
-    Dec 15, 2009.
+    Dec 18, 2009.
 
 Synopsis
       chunkin on;
+
+      error_page 411 = @my_411_error;
+      location @my_411_error {
+          chunkin_resume;
+      }
+
       location /foo {
           # your fastcgi_pass/proxy_pass/set/if and
           # any other config directives go here...
@@ -19,8 +25,14 @@ Synopsis
       ...
 
       chunkin on;
+
+      error_page 411 = @my_411_error;
+      location @my_411_error {
+          chunkin_resume;
+      }
+
       location /bar {
-        chunkin_keepalive on;
+        chunkin_keepalive on;  # WARNING: too experimental!
 
         # your fastcgi_pass/proxy_pass/set/if and
         # any other config directives go here...
@@ -99,6 +111,42 @@ Directives
 
     Enables or disables this module's hooks.
 
+  chunkin_resume
+    syntax: *chunkin_resume*
+
+    default: *none*
+
+    context: *location*
+
+    This directive must be used in your custom "411 error page" location to
+    help this module work correctly. For example:
+
+      error_page 411 = @my_error;
+      location @my_error {
+          chunkin_resume;
+      }
+
+    For the technical reason behind the necessity of this directive, please
+    read the "nginx-devel" thread Content-Length is not ignored for chunked
+    requests: Nginx violates RFC 2616
+    (<http://nginx.org/pipermail/nginx-devel/2009-December/000041.html>).
+
+    This directive was first introduced in the v0.17 release.
+
+  chunkin_max_chunks_per_buf
+    syntax: *chunkin_max_chunks_per_buf <number>*
+
+    default: *512*
+
+    context: *http, server, location*
+
+    Set the max chunk count threshold for the buffer determined by the
+    client_body_buffer_size directive. If the average chunk size is "1 KB"
+    and your client_body_buffer_size setting is 1 meta bytes, then you
+    should set this threshold to 1024 or 2048.
+
+    This directive was first introduced in the v0.17 release.
+
   chunkin_keepalive
     syntax: *chunkin_keepalive on|off*
 
@@ -167,12 +215,12 @@ Installation
     _parser.c>), use the following command from the root of the chunkin
     module's source tree:
 
-        $ ragel -G2 src/chunked_parser.rl
+        $ ragel -T1 src/chunked_parser.rl
 
 Compatibility
     The following versions of Nginx should work with this module:
 
-    *   0.8.x (last tested version is 0.8.29)
+    *   0.8.x (last tested version is 0.8.30)
 
     *   0.7.x >= 0.7.21 (last tested version is 0.7.64)
 
@@ -197,6 +245,22 @@ Source Repository
     (<http://github.com/agentzh/chunkin-nginx-module>).
 
 ChangeLog
+  v0.17
+    *   implemented the chunkin_max_chunks_per_buf directive to allow
+        overriding the default 512 setting.
+
+    *   we now bypass nginx's discard requesty body bug
+        (<http://nginx.org/pipermail/nginx-devel/2009-December/000041.html>)
+        by requiring our users to define explicit "411 error_page" with
+        chunkin_resume in the error page location.
+
+    *   fixed "r->phase_handler" in our post read handler. our handler may
+        run one more time before :P
+
+    *   the chunkin handler now returns "NGX_DECLINED" rather than "NGX_OK"
+        when our "ngx_http_chunkin_read_chunked_request_body" function
+        returns "NGX_OK", to avoid bypassing other access-phase handlers.
+
   v0.16
     *   turned off ddebug in the previous release. thanks J for reporting
         it.
@@ -321,6 +385,12 @@ Known Issues
     *   HTTP 1.1 pipelining may not fully work yet.
 
 TODO
+    *   add new directive "chunkin_max_chunks_per_buffer" to adjust the
+        currently harded-coded value, 512.
+
+    *   make the chunkin handler run at the end of the "access phase" rather
+        than beginning.
+
     *   Fix the known issues.
 
     *   Add support for trailers and chunked extensions as specified in the

@@ -6,21 +6,35 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.16] released on Dec 15, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.17] released on Dec 18, 2009.
 
 = Synopsis =
 
 <geshi lang="nginx">
   chunkin on;
+  
+  error_page 411 = @my_411_error;
+  location @my_411_error {
+      chunkin_resume;
+  }
+  
   location /foo {
       # your fastcgi_pass/proxy_pass/set/if and
       # any other config directives go here...
   }
   ...
+</geshi>
 
+<geshi lang="nginx">
   chunkin on;
+  
+  error_page 411 = @my_411_error;
+  location @my_411_error {
+      chunkin_resume;
+  }
+  
   location /bar {
-    chunkin_keepalive on;
+    chunkin_keepalive on;  # WARNING: too experimental!
     
     # your fastcgi_pass/proxy_pass/set/if and
     # any other config directives go here...
@@ -76,6 +90,39 @@ Special efforts have been made to reduce data copying and dynamic memory allocat
 '''context:''' ''http, server''
 
 Enables or disables this module's hooks.
+
+== chunkin_resume ==
+'''syntax:''' ''chunkin_resume''
+
+'''default:''' ''none''
+
+'''context:''' ''location''
+
+This directive must be used in your custom <code>411 error page</code> location to help this module work correctly. For example:
+
+<geshi lang="nginx">
+  error_page 411 = @my_error;
+  location @my_error {
+      chunkin_resume;
+  }
+</geshi>
+
+For the technical reason behind the necessity of this directive, please read the <code>nginx-devel</code> thread [http://nginx.org/pipermail/nginx-devel/2009-December/000041.html Content-Length is not ignored for chunked requests: Nginx violates RFC 2616].
+
+This directive was first introduced in the [[#v0.17|v0.17]] release.
+
+== chunkin_max_chunks_per_buf ==
+'''syntax:''' ''chunkin_max_chunks_per_buf <number>''
+
+'''default:''' ''512''
+
+'''context:''' ''http, server, location''
+
+Set the max chunk count threshold for the buffer determined by the [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]] directive.
+If the average chunk size is <code>1 KB</code> and your [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]] setting
+is 1 meta bytes, then you should set this threshold to <code>1024</code> or <code>2048</code>.
+
+This directive was first introduced in the [[#v0.17|v0.17]] release.
 
 == chunkin_keepalive ==
 '''syntax:''' ''chunkin_keepalive on|off''
@@ -141,14 +188,14 @@ regenerate the parser's C file, i.e., [http://github.com/agentzh/chunkin-nginx-m
 the following command from the root of the chunkin module's source tree:
 
 <geshi lang="bash">
-    $ ragel -G2 src/chunked_parser.rl
+    $ ragel -T1 src/chunked_parser.rl
 </geshi>
 
 = Compatibility =
 
 The following versions of Nginx should work with this module:
 
-* '''0.8.x'''                       (last tested version is 0.8.29)
+* '''0.8.x'''                       (last tested version is 0.8.30)
 * '''0.7.x >= 0.7.21'''             (last tested version is 0.7.64)
 
 Earlier versions of Nginx like 0.6.x and 0.5.x will ''not'' work.
@@ -167,6 +214,12 @@ Although a lot of effort has been put into testing and code tuning, there must b
 Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/chunkin-nginx-module].
 
 = ChangeLog =
+
+== v0.17 ==
+* implemented the [[#chunkin_max_chunks_per_buf|chunkin_max_chunks_per_buf]] directive to allow overriding the default <code>512</code> setting.
+* we now bypass nginx's [http://nginx.org/pipermail/nginx-devel/2009-December/000041.html discard requesty body bug] by requiring our users to define explicit <code>411 error_page</code> with [[#chunkin_resume|chunkin_resume]] in the error page location.
+* fixed <code>r->phase_handler</code> in our post read handler. our handler may run one more time before :P
+* the chunkin handler now returns <code>NGX_DECLINED</code> rather than <code>NGX_OK</code> when our <code>ngx_http_chunkin_read_chunked_request_body</code> function returns <code>NGX_OK</code>, to avoid bypassing other access-phase handlers.
 
 == v0.16 ==
 * turned off ddebug in the previous release. thanks J for reporting it.
@@ -245,6 +298,8 @@ Some parts of the test suite requires modules [[NginxHttpProxyModule|proxy]] and
 
 = TODO =
 
+* add new directive <code>chunkin_max_chunks_per_buffer</code> to adjust the currently harded-coded value, <code>512</code>.
+* make the chunkin handler run at the end of the <code>access phase</code> rather than beginning.
 * Fix the [[#Known Issues|known issues]].
 * Add support for trailers and chunked extensions as specified in the [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC]
 
