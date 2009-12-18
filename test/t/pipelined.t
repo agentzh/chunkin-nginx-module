@@ -6,11 +6,11 @@ my $skip_all;
 
 BEGIN { $skip_all = 1; }
 
-use Test::Nginx::Socket $skip_all ?
+use Test::Nginx::Socket::Chunkin $skip_all ?
     (skip_all => 'too experimental to run the tests properly :P')
     : ();
 
-plan tests => $Test::Nginx::Socket::RepeatEach * 2 * blocks();
+plan tests => repeat_each() * 2 * blocks();
 
 no_diff;
 

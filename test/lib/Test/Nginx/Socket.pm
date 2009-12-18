@@ -2,15 +2,17 @@ package Test::Nginx::Socket;
 
 use lib 'lib';
 use lib 'inc';
-use Test::Base -Base;
-use Data::Dumper;
 
-our $VERSION = '0.03';
+use Test::Base -Base;
+
+our $VERSION = '0.04';
+
+use Data::Dumper;
+use Time::HiRes qw(sleep time);
+use Test::LongString;
 
 our $Timeout = 2;
 
-use Time::HiRes qw(sleep time);
-use Test::LongString;
 use Test::Nginx::Util qw(
     setup_server_root
     write_config_file
@@ -176,7 +178,7 @@ $parsed_req->{content}";
         $timeout = $Timeout;
     }
 
-    my $raw_resp = send_request($req, $block->raw_request_body_middle_delay,
+    my $raw_resp = send_request($req, $block->raw_request_middle_delay,
         $timeout);
 
     #warn "raw resonse: [$raw_resp]\n";
@@ -494,6 +496,14 @@ The following sections are supported:
 =item response_headers_like
 
 =item error_code
+
+=item raw_request
+
+Both string scalar and string arrays are supported as values.
+
+=item raw_request_middle_delay
+
+Delay in sec between sending successive packets in the "raw_request" array value.
 
 =back
 

@@ -33,6 +33,7 @@ Transfer-Encoding: chunked
 '%Q`3ï¿½BBT0123456789AF%Q_ï¿½k%Q_ï¿½kwtk-emulatorSunMicrosystems_wtk AX7`encoding=pcm encoding=pcm&rate=8000&bits=8&channels=1 encoding=pcm&rate=22050&bits=16&chanZach-Laptop-W1.01.0en-US1.01.11.11.0SunMicrosystems_wtMIDP-2.11.0.10H,1Haudio/x-wavtruetruetruetruenencoding=rgb565&width=160&height=120 encoding=rgb565&width=320&height=240 encoding=rgb565&width=120&height=160encoding=jpeg encoding=png+12345678900http://mmsc.127.0.0.01'
 
 
+
 === TEST 2: CRLF in data (missing trailing CRLF)
 --- config
     chunkin on;
@@ -362,7 +363,7 @@ Connection: close\r
 ", "0\r
 \r
 "]
---- raw_request_body_middle_delay: 0.001
+--- raw_request_middle_delay: 0.001
 --- response_body: hello
 --- timeout: 4
 
@@ -390,7 +391,7 @@ Connection: close\r
 ", "0\r
 \r
 "]
---- raw_request_body_middle_delay: 0
+--- raw_request_middle_delay: 0
 --- response_body: hello
 --- timeout: 1
 

@@ -3,6 +3,8 @@ package Test::Nginx::Util;
 use strict;
 use warnings;
 
+our $VERSION = '0.04';
+
 use base 'Exporter';
 
 use POSIX qw( SIGQUIT SIGKILL SIGTERM );
@@ -12,8 +14,6 @@ use Module::Install::Can;
 use Cwd qw( cwd );
 use Module::Install::Can;
 use List::Util qw( shuffle );
-
-our $VERSION = '0.03';
 
 our $NoNginxManager = 0;
 our $RepeatEach = 1;

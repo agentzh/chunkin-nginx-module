@@ -5,9 +5,9 @@ use Test::Nginx::Socket::Chunkin;
 
 our $data;
 
-$Test::Nginx::Socket::RepeatEach = 500;
+repeat_each(500);
 
-plan tests => $Test::Nginx::Socket::RepeatEach * 2 * blocks();
+plan tests => repeat_each() * 2 * blocks();
 
 no_diff;
 
