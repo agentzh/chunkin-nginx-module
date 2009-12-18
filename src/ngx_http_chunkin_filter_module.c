@@ -9,6 +9,10 @@
 #include "ngx_http_chunkin_filter_module.h"
 #include "ngx_http_chunkin_request_body.h"
 
+enum {
+    DEFAULT_MAX_CHUNKS_PER_BUF = 512
+};
+
 static ngx_int_t ngx_http_chunkin_resume_handler(ngx_http_request_t *r);
 
 static char* ngx_http_chunkin_resume(ngx_conf_t *cf, ngx_command_t *cmd,
@@ -41,6 +45,13 @@ static ngx_command_t  ngx_http_chunkin_commands[] = {
       ngx_conf_set_flag_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_chunkin_conf_t, enabled),
+      NULL },
+
+    { ngx_string("chunkin_max_chunks_per_buf"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_num_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_chunkin_conf_t, max_chunks_per_buf),
       NULL },
 
     { ngx_string("chunkin_resume"),
@@ -105,6 +116,7 @@ ngx_http_chunkin_create_conf(ngx_conf_t *cf)
 
     conf->enabled = NGX_CONF_UNSET;
     conf->keepalive = NGX_CONF_UNSET;
+    conf->max_chunks_per_buf = NGX_CONF_UNSET_UINT;
 
     return conf;
 }
@@ -118,6 +130,9 @@ ngx_http_chunkin_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->enabled, prev->enabled, 0);
     ngx_conf_merge_value(conf->keepalive, prev->keepalive, 0);
+    ngx_conf_merge_uint_value(conf->max_chunks_per_buf,
+            prev->max_chunks_per_buf,
+            DEFAULT_MAX_CHUNKS_PER_BUF);
 
     return NGX_CONF_OK;
 }

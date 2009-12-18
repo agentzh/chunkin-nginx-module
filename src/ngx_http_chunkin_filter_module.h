@@ -8,7 +8,10 @@
 typedef struct {
     ngx_flag_t          enabled;
     ngx_flag_t          keepalive;
+    ngx_uint_t          max_chunks_per_buf;
+
 } ngx_http_chunkin_conf_t;
+
 
 typedef struct {
     ngx_flag_t          ignore_body /* for output filters only */;
@@ -20,7 +23,7 @@ typedef struct {
 
     size_t              chunks_total_size;
     size_t              chunks_written_size;
-    int                 chunks_count;
+    ngx_uint_t          chunks_count;
 
     off_t               raw_body_size;
 
@@ -38,6 +41,7 @@ typedef struct {
     ngx_uint_t          count;
     ngx_flag_t          r_discard_body;
 } ngx_http_chunkin_ctx_t;
+
 
 extern ngx_module_t  ngx_http_chunkin_filter_module;
 
