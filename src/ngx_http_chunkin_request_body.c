@@ -102,17 +102,6 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
             dd("keepalive? %s", r->keepalive ? "yes" : "no");
 
-            if (ctx->chunks == NULL) {
-                dd("empty chunks found.");
-
-                rb->bufs = NULL;
-
-                rc = ngx_http_chunkin_set_content_length_header(r, 0);
-
-                /* post_handler(r); */
-                return NGX_OK;
-            }
-
             dd("chunks total size: %d", ctx->chunks_total_size);
 
             rc = ngx_http_chunkin_set_content_length_header(r, ctx->chunks_total_size);
@@ -122,7 +111,9 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
             }
 
             rb->bufs = ctx->chunks;
-            rb->buf = ctx->chunks->buf;
+            if (rb->bufs) {
+                rb->buf = ctx->chunks->buf;
+            }
 
             dd("buf len: %d", rb->buf->last - rb->buf->pos);
 
@@ -132,9 +123,11 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
             /* r->header_in->pos = r->header_in->last; */
 
-            r->request_length += preread;
+            r->request_length += r->header_in->pos
+                - ctx->saved_header_in_pos;
 
-            ctx->raw_body_size += preread;
+            ctx->raw_body_size += r->header_in->pos
+                - ctx->saved_header_in_pos;
 
             /* post_handler(r); */
 
@@ -501,23 +494,22 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
         b->file_last = rb->temp_file->file.offset;
         b->file = &rb->temp_file->file;
 
-        rb->bufs = ctx->chunks;
+        rb->bufs = ngx_http_chunkin_get_buf(r->pool, ctx);
+
         if (rb->bufs == NULL) {
-            rb->bufs = ngx_alloc_chain_link(r->pool);
-            if (rb->bufs == NULL) {
-                return NGX_HTTP_INTERNAL_SERVER_ERROR;
-            }
+            return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
 
-        rb->bufs->next = NULL;
         rb->bufs->buf = b;
 
     } else if ( r->request_body_in_single_buf ) {
         dd("request body in single buf");
 
+        /* XXX we may not have to allocate a big buffer here */
+
         size = 0;
         for (cl = ctx->chunks; cl != NULL; cl = cl->next) {
-            size += cl->buf->last - cl->buf->pos;
+            size += ngx_buf_size(cl->buf);
         }
 
         rb->buf = ngx_create_temp_buf(r->pool, size);
@@ -527,7 +519,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
         }
 
         for (cl = ctx->chunks; cl != NULL; cl = cl->next) {
-            size = cl->buf->last - cl->buf->pos;
+            size = ngx_buf_size(cl->buf);
 
             dd("copy buf ...(size %d)", size);
 
@@ -535,11 +527,13 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                 ngx_cpymem(rb->buf->last, cl->buf->pos, size);
         }
 
-        rb->bufs = ctx->chunks;
-        if (rb->bufs) {
-            rb->bufs->next = NULL;
-            rb->bufs->buf = rb->buf;
+        rb->bufs = ngx_http_chunkin_get_buf(r->pool, ctx);
+
+        if (rb->bufs == NULL) {
+            return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
+
+        rb->bufs->buf = rb->buf;
 
     } else {
         rb->bufs = ctx->chunks;
