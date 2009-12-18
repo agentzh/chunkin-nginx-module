@@ -45,17 +45,24 @@ This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-
 
 This module adds [http://tools.ietf.org/html/rfc2616#section-3.6.1 HTTP 1.1 chunked] input support for Nginx without the need of patching the Nginx core.
 
-Behind the scene, it registers an access-phase handler that will eagerly read and decode incoming request bodies when a "Transfer-Encoding: chunked" header triggers a 411 error page in Nginx (hey, that's what you have to pay for avoiding patching the core ;)). For requests that are not in the "chunked" transfer encoding, this module is a "no-op".
+Behind the scene, it registers an access-phase handler that will eagerly read and decode incoming request bodies when a <code>Transfer-Encoding: chunked</code> header triggers a <code>411</code> error page in Nginx (hey, that's what you have to pay for avoiding patching the core ;)). For requests that are not in the <code>chunked</code> transfer encoding, this module is a "no-op".
 
-To enable the magic, just turn on the "chunkin" config option like this:
+To enable the magic, just turn on the [[#chunkin|chunkin]] config option and define a custom <code>411 error_page</code> using [[#chunkin_resume|chunkin_resume]], like this:
 
 <geshi lang="nginx">
+  server {
     chunkin on;
-    location /foo { ... }
-    ....
+
+    error_page 411 = @my_411_error;
+    location @my_411_error {
+        chunkin_resume;
+    }
+
+    ...
+  }
 </geshi>
 
-No other modification is required in your nginx.conf file and everything should work out of the box including the standard [[NginxHttpProxyModule|proxy module]] (except for those [[#Known Issues|known issues]]). Note that the "chunkin" directive is not allowed in the location block BTW.
+No other modification is required in your nginx.conf file and everything should work out of the box including the standard [[NginxHttpProxyModule|proxy module]] (except for those [[#Known Issues|known issues]]). Note that the [[#chunkin|chunkin]] directive is not allowed in the location block while the [[#chunkin_resume|chunkin_resume]] directive is only allowed on in <code>locations</code>.
 
 The core module's [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]], [[NginxHttpCoreModule#client_max_body_size|client_max_body_size]], and [[NginxHttpCoreModule#client_body_timeout|client_body_timeout]] directive settings are honored.
 
@@ -298,7 +305,6 @@ Some parts of the test suite requires modules [[NginxHttpProxyModule|proxy]] and
 
 = TODO =
 
-* add new directive <code>chunkin_max_chunks_per_buffer</code> to adjust the currently harded-coded value, <code>512</code>.
 * make the chunkin handler run at the end of the <code>access phase</code> rather than beginning.
 * Fix the [[#Known Issues|known issues]].
 * Add support for trailers and chunked extensions as specified in the [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC]

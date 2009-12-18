@@ -49,16 +49,25 @@ Description
     have to pay for avoiding patching the core ;)). For requests that are
     not in the "chunked" transfer encoding, this module is a "no-op".
 
-    To enable the magic, just turn on the "chunkin" config option like this:
+    To enable the magic, just turn on the chunkin config option and define a
+    custom "411 error_page" using chunkin_resume, like this:
 
+      server {
         chunkin on;
-        location /foo { ... }
-        ....
+
+        error_page 411 = @my_411_error;
+        location @my_411_error {
+            chunkin_resume;
+        }
+
+        ...
+      }
 
     No other modification is required in your nginx.conf file and everything
     should work out of the box including the standard proxy module (except
-    for those known issues). Note that the "chunkin" directive is not
-    allowed in the location block BTW.
+    for those known issues). Note that the chunkin directive is not allowed
+    in the location block while the chunkin_resume directive is only allowed
+    on in "locations".
 
     The core module's client_body_buffer_size, client_max_body_size, and
     client_body_timeout directive settings are honored.
@@ -385,9 +394,6 @@ Known Issues
     *   HTTP 1.1 pipelining may not fully work yet.
 
 TODO
-    *   add new directive "chunkin_max_chunks_per_buffer" to adjust the
-        currently harded-coded value, 512.
-
     *   make the chunkin handler run at the end of the "access phase" rather
         than beginning.
 
