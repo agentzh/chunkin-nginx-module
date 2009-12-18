@@ -18,6 +18,14 @@ our $VERSION = '0.03';
 our $NoNginxManager = 0;
 our $RepeatEach = 1;
 
+sub repeat_each (@) {
+    if (@_) {
+        $RepeatEach = shift;
+    } else {
+        return $RepeatEach;
+    }
+}
+
 our @EXPORT_OK = qw(
     setup_server_root
     write_config_file
@@ -36,6 +44,8 @@ our @EXPORT_OK = qw(
     $RunTestHelper
     $NoNginxManager
     $RepeatEach
+    config_preamble
+    repeat_each
 );
 
 our $Workers                = 1;
@@ -46,6 +56,12 @@ our $LogLevel               = 'debug';
 our $ServerPort             = 1984;
 our $ServerPortForClient    = 1984;
 #our $ServerPortForClient    = 1984;
+
+our $ConfigPreamble = '';
+
+sub config_preamble ($) {
+    $ConfigPreamble = shift;
+}
 
 our $RunTestHelper;
 
@@ -119,6 +135,10 @@ http {
         client_max_body_size 30M;
         #client_body_buffer_size 4k;
 
+        # Begin preamble config...
+$ConfigPreamble
+        # End preamble config...
+
         # Begin test case config...
 $$rconfig
         # End test case config.
@@ -126,10 +146,6 @@ $$rconfig
         location / {
             root $HtmlDir;
             index index.html index.htm;
-        }
-        error_page 411 = \@chunkin_error;
-        location \@chunkin_error {
-            chunkin_resume;
         }
     }
 }

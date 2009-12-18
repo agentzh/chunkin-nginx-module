@@ -1,9 +1,9 @@
 # vi:filetype=perl
 
 use lib 'lib';
-use Test::Nginx::Socket;
+use Test::Nginx::Socket::Chunkin;
 
-plan tests => $Test::Nginx::Socket::RepeatEach * 2 * blocks();
+plan tests => repeat_each() * 2 * blocks();
 
 no_diff;
 

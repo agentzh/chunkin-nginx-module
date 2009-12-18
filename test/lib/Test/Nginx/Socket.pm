@@ -27,6 +27,8 @@ use Test::Nginx::Util qw(
     $ConfFile
     $RunTestHelper
     $RepeatEach
+    config_preamble
+    repeat_each
 );
 
 #use Smart::Comments::JSON '###';
@@ -36,7 +38,8 @@ use IO::Socket;
 
 #our ($PrevRequest, $PrevConfig);
 
-our @EXPORT = qw( plan run_tests run_test );
+our @EXPORT = qw( plan run_tests run_test
+    repeat_each config_preamble);
 
 sub send_request ($$$);
 
@@ -285,9 +288,7 @@ $parsed_req->{content}";
 sub send_request ($$$) {
     my ($req, $middle_delay, $timeout) = @_;
 
-    if (!ref $req) {
-        $req = [$req];
-    }
+    my @req_bits = ref $req ? @$req : ($req);
 
     my $sock = IO::Socket::INET->new(
         PeerAddr => 'localhost',
@@ -305,7 +306,7 @@ sub send_request ($$$) {
     my $write_offset = 0;
     my $buf_size = 1024;
 
-    my $write_buf = shift @$req;
+    my $write_buf = shift @req_bits;
 
     my $now = time;
     while (1) {
@@ -361,7 +362,7 @@ write_sock:
             #warn "wrote $bytes bytes.\n";
             $write_offset += $bytes;
         } else {
-            $write_buf = shift @$req or next;
+            $write_buf = shift @req_bits or next;
             $write_offset = 0;
             if (defined $middle_delay) {
                 #warn "sleeping..";
