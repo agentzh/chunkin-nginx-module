@@ -143,6 +143,8 @@ sub run_test_helper ($) {
             $req->header($key => $val);
         }
     }
+
+    #warn "req: ", $req->as_string, "\n";
     #warn "DONE!!!!!!!!!!!!!!!!!!!!";
 
     my $res = $UserAgent->request($req);

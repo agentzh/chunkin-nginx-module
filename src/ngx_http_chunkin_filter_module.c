@@ -9,6 +9,11 @@
 #include "ngx_http_chunkin_filter_module.h"
 #include "ngx_http_chunkin_request_body.h"
 
+static ngx_int_t ngx_http_chunkin_resume_handler(ngx_http_request_t *r);
+
+static char* ngx_http_chunkin_resume(ngx_conf_t *cf, ngx_command_t *cmd,
+        void *conf);
+
 static ngx_http_output_header_filter_pt  ngx_http_next_header_filter;
 
 static ngx_http_output_body_filter_pt    ngx_http_next_body_filter;
@@ -36,6 +41,13 @@ static ngx_command_t  ngx_http_chunkin_commands[] = {
       ngx_conf_set_flag_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_chunkin_conf_t, enabled),
+      NULL },
+
+    { ngx_string("chunkin_resume"),
+      NGX_HTTP_LOC_CONF|NGX_CONF_NOARGS,
+      ngx_http_chunkin_resume,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
       NULL },
 
     { ngx_string("chunkin_keepalive"),
@@ -141,7 +153,7 @@ ngx_http_chunkin_header_filter(ngx_http_request_t *r)
     ngx_http_chunkin_conf_t     *conf;
 
     if (r != r->main || r->request_body) {
-        dd("We ignore subrequests.");
+        dd("We ignore subrequests or main requests with request_body.");
         return ngx_http_next_header_filter(r);
     }
 
@@ -232,10 +244,7 @@ ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
             return NGX_OK;
         }
 
-        if (r->headers_in.transfer_encoding) {
-            r->headers_in.transfer_encoding->value.len = 0;
-            r->headers_in.transfer_encoding->value.data = (u_char*) "";
-        }
+        ngx_http_chunkin_clear_transfer_encoding(r);
 
         /*
         r->method = NGX_HTTP_PUT;
@@ -295,12 +304,16 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
 
     if (!conf->enabled || r != r->main) {
+        dd("conf not enabled: %d", (int) conf->enabled);
+
         return NGX_DECLINED;
     }
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
 
     if (ctx == NULL) {
+        dd("ctx not found");
+
         return NGX_DECLINED;
     }
 
@@ -393,5 +406,75 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
 
     r->phase_handler++;
     ngx_http_core_run_phases(r);
+}
+
+
+static char* ngx_http_chunkin_resume(ngx_conf_t *cf, ngx_command_t *cmd,
+        void *conf)
+{
+    ngx_http_core_loc_conf_t        *clcf;
+
+    clcf = ngx_http_conf_get_module_loc_conf(cf,
+                ngx_http_core_module);
+
+    clcf->handler = ngx_http_chunkin_resume_handler;
+
+    return NGX_CONF_OK;
+}
+
+
+static ngx_int_t
+ngx_http_chunkin_resume_handler(ngx_http_request_t *r) {
+    ngx_int_t                   rc;
+    ngx_http_chunkin_conf_t     *conf;
+    ngx_http_chunkin_ctx_t      *ctx;
+
+    conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
+
+    if (!conf->enabled || r != r->main
+            || ! ngx_http_chunkin_is_chunked_encoding(r->main))
+    {
+        return NGX_HTTP_LENGTH_REQUIRED;
+    }
+
+    ngx_http_chunkin_clear_transfer_encoding(r);
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
+
+    if (ctx == NULL) {
+        ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_chunkin_ctx_t));
+        if (ctx == NULL) {
+            return NGX_ERROR;
+        }
+
+        /* ctx->ignore_body is set to 0 */
+    }
+
+    r->discard_body = 0;
+    r->error_page = 0;
+    r->err_status = 0;
+
+#if 0
+    r->method = NGX_HTTP_PUT;
+    r->headers_in.content_length = NULL;
+    r->headers_in.content_length_n = -1;
+#endif
+
+    rc = ngx_http_chunkin_process_request_header(r);
+    if (rc != NGX_OK) {
+        return rc;
+    }
+
+#if 0
+    r->plain_http = 1;
+#endif
+
+    rc = ngx_http_chunkin_process_request(r);
+    if (rc != NGX_OK) {
+        return rc;
+    }
+
+    return ngx_http_chunkin_internal_redirect(r, &r->main->uri, &r->main->args,
+            ctx);
 }
 

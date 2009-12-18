@@ -127,6 +127,10 @@ $$rconfig
             root $HtmlDir;
             index index.html index.htm;
         }
+        error_page 411 = \@chunkin_error;
+        location \@chunkin_error {
+            chunkin_resume;
+        }
     }
 }
 
@@ -285,6 +289,8 @@ sub run_test ($) {
         }
 
         unless ($nginx_is_running) {
+            #system("killall -9 nginx");
+
             #warn "*** Restarting the nginx server...\n";
             setup_server_root();
             write_config_file(\$config);

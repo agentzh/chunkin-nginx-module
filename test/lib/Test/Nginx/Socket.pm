@@ -38,7 +38,7 @@ use IO::Socket;
 
 our @EXPORT = qw( plan run_tests run_test );
 
-sub send_request ($$);
+sub send_request ($$$);
 
 sub run_test_helper ($);
 
@@ -173,7 +173,8 @@ $parsed_req->{content}";
         $timeout = $Timeout;
     }
 
-    my $raw_resp = send_request($req, $timeout);
+    my $raw_resp = send_request($req, $block->raw_request_body_middle_delay,
+        $timeout);
 
     #warn "raw resonse: [$raw_resp]\n";
 
@@ -281,8 +282,12 @@ $parsed_req->{content}";
     }
 }
 
-sub send_request ($$) {
-    my ($write_buf, $timeout) = @_;
+sub send_request ($$$) {
+    my ($req, $middle_delay, $timeout) = @_;
+
+    if (!ref $req) {
+        $req = [$req];
+    }
 
     my $sock = IO::Socket::INET->new(
         PeerAddr => 'localhost',
@@ -299,6 +304,8 @@ sub send_request ($$) {
     my $resp = '';
     my $write_offset = 0;
     my $buf_size = 1024;
+
+    my $write_buf = shift @$req;
 
     my $now = time;
     while (1) {
@@ -327,6 +334,9 @@ sub send_request ($$) {
         #warn "read $bytes ($read_buf) bytes.\n";
 
 write_sock:
+
+        next if !defined $write_buf;
+
         my $rest = length($write_buf) - $write_offset;
         #warn "offset: $write_offset, rest: $rest, length ", length($write_buf), "\n";
         #die;
@@ -350,6 +360,13 @@ write_sock:
 
             #warn "wrote $bytes bytes.\n";
             $write_offset += $bytes;
+        } else {
+            $write_buf = shift @$req or next;
+            $write_offset = 0;
+            if (defined $middle_delay) {
+                #warn "sleeping..";
+                sleep $middle_delay;
+            }
         }
     }
     return $resp;

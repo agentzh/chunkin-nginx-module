@@ -336,3 +336,59 @@ hello\r
 --- response_body: hello
 --- timeout: 1
 
+
+
+=== TEST 16: Content-length AND chunked
+--- config
+    chunkin on;
+    location /aar.do {
+        echo_request_body;
+    }
+--- raw_request eval
+["POST /aar.do HTTP/1.1\r
+Host: data.test.com\r
+Content-Type:application/octet-stream\r
+transfer-encoding:chunked\r
+User-Agent: SEC-SGHD840/1.0 NetFront/3.2 Profile/MIDP-2.0 Configuration/CLDC-1.1 UNTRUSTED/1.0\r
+Content-Length: 6263\r
+Via: ZXWAP GateWay,ZTE Technologies\r
+x-up-calling-line-id: 841223657459\r
+Connection: close\r
+\r
+5\r
+", "hell","o\r
+", "0\r
+\r
+"]
+--- raw_request_body_middle_delay: 0.001
+--- response_body: hello
+--- timeout: 4
+
+
+
+=== TEST 17: Content-length AND chunked (ready for the read_discard_request_body to work)
+--- config
+    chunkin on;
+    location /aar.do {
+        echo_request_body;
+    }
+--- raw_request eval
+["POST /aar.do HTTP/1.1\r
+Host: data.test.com\r
+Content-Type:application/octet-stream\r
+transfer-encoding:chunked\r
+User-Agent: SEC-SGHD840/1.0 NetFront/3.2 Profile/MIDP-2.0 Configuration/CLDC-1.1 UNTRUSTED/1.0\r
+Content-Length: 6263\r
+Via: ZXWAP GateWay,ZTE Technologies\r
+x-up-calling-line-id: 841223657459\r
+Connection: close\r
+\r
+5\r
+", "hell","o\r
+", "0\r
+\r
+"]
+--- raw_request_body_middle_delay: 0
+--- response_body: hello
+--- timeout: 4
+

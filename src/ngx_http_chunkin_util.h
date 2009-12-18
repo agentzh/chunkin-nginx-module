@@ -18,5 +18,8 @@ ngx_int_t ngx_http_chunkin_process_request_header(ngx_http_request_t *r);
 
 ngx_int_t ngx_http_chunkin_process_request(ngx_http_request_t *r);
 
+ngx_int_t ngx_http_chunkin_internal_redirect(ngx_http_request_t *r,
+    ngx_str_t *uri, ngx_str_t *args, ngx_http_chunkin_ctx_t *ctx);
+
 #endif /* NGX_HTTP_CHUNKIN_UTIL_H */
 

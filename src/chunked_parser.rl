@@ -1,6 +1,6 @@
 /* Copyright (C) agentzh */
 
-#define EXTENDED_DEBUG 0
+#define EXTENDED_DEBUG 1
 #define DDEBUG 0
 
 #include "ddebug.h"

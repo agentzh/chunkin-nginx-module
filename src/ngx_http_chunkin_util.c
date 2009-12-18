@@ -1,3 +1,5 @@
+/* Copyright (C) agentzh */
+
 #define DDEBUG 0
 
 #include "ddebug.h"
@@ -12,6 +14,8 @@ void
 ngx_http_chunkin_clear_transfer_encoding(ngx_http_request_t *r)
 {
     if (r->headers_in.transfer_encoding) {
+        r->headers_in.transfer_encoding->value.len = 0;
+        r->headers_in.transfer_encoding->value.data = (u_char *) "";
         r->headers_in.transfer_encoding->hash = 0;
         r->headers_in.transfer_encoding = NULL;
     }
@@ -307,5 +311,78 @@ ngx_http_chunkin_process_request(ngx_http_request_t *r)
 #endif
 
     return NGX_OK;
+}
+
+
+ngx_int_t
+ngx_http_chunkin_internal_redirect(ngx_http_request_t *r,
+    ngx_str_t *uri, ngx_str_t *args, ngx_http_chunkin_ctx_t *ctx)
+{
+    ngx_http_core_srv_conf_t  *cscf;
+
+    r->uri_changes--;
+
+    if (r->uri_changes == 0) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      "rewrite or internal redirection cycle "
+                      "while internal redirect to \"%V\"", uri);
+
+#if defined(nginx_version) && nginx_version >= 8011
+
+        r->main->count++;
+
+#endif
+
+        ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
+        return NGX_DONE;
+    }
+
+    r->uri = *uri;
+
+    if (args) {
+        r->args = *args;
+
+    } else {
+        r->args.len = 0;
+        r->args.data = NULL;
+    }
+
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "internal redirect: \"%V?%V\"", uri, &r->args);
+
+    ngx_http_set_exten(r);
+
+    /* clear the modules contexts */
+    ngx_memzero(r->ctx, sizeof(void *) * ngx_http_max_module);
+
+    ngx_http_set_ctx(r, ctx, ngx_http_chunkin_filter_module);
+
+    ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
+    dd("ctx defined in internal redirect? %d", ctx ? 1 : 0);
+
+    cscf = ngx_http_get_module_srv_conf(r, ngx_http_core_module);
+    r->loc_conf = cscf->ctx->loc_conf;
+
+    ngx_http_update_location_config(r);
+
+#if (NGX_HTTP_CACHE)
+    r->cache = NULL;
+#endif
+
+    r->internal = 0;
+
+#if defined(nginx_version) && nginx_version >= 8011
+
+    dd("DISCARD BODY: %d", (int)r->discard_body);
+
+    if ( ! ctx->r_discard_body ) {
+        r->main->count++;
+    }
+
+#endif
+
+    ngx_http_handler(r);
+
+    return NGX_DONE;
 }
 
