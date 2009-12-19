@@ -259,6 +259,8 @@ ChangeLog
         2616 (<http://tools.ietf.org/html/rfc2616#section-3.6.1>), but we
         just ignore them (if any) because we don't understand them.
 
+    *   added more diagnostic information for certian error messages.
+
   v0.17
     *   implemented the chunkin_max_chunks_per_buf directive to allow
         overriding the default 512 setting.

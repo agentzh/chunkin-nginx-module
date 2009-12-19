@@ -224,6 +224,7 @@ Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/c
 
 == v0.18 ==
 * added support for <code>chunk-extension</code> to the chunked parser as per [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC 2616], but we just ignore them (if any) because we don't understand them.
+* added more diagnostic information for certian error messages.
 
 == v0.17 ==
 * implemented the [[#chunkin_max_chunks_per_buf|chunkin_max_chunks_per_buf]] directive to allow overriding the default <code>512</code> setting.
