@@ -182,7 +182,7 @@ cd\r
 
 
 
-=== TEST 9: padding spaces
+=== TEST 9: padding spaces (using HT)
 --- config
     chunkin on;
     location /ar.do {
@@ -192,7 +192,7 @@ cd\r
 Transfer-Encoding: chunked
 --- request eval
 "POST /ar.do
-6  \11\r
+6  \t\r
 ab\r
 cd\r
 0\r
@@ -203,7 +203,53 @@ cd\r
 
 
 
-=== TEST 10: leading CRLF
+=== TEST 10: padding spaces (using \t and ' ' in last chunk)
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+6  \t\r
+ab\r
+cd\r
+0\t \r
+\r
+"
+--- response_body eval
+"ab\r\ncd"
+
+
+
+=== TEST 11: padding LWS (using \t and ' '  with a leading CRLF in last chunk)
+--- config
+    chunkin on;
+    location /ar.do {
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"POST /ar.do
+6\r
+\r
+\t\r
+ab\r
+cd\r
+0\t\r
+\r
+\r
+\r
+"
+--- response_body_like: 400 Bad Request
+--- error_code: 400
+
+
+
+=== TEST 12: leading CRLF
 --- config
     chunkin on;
     location /ar.do {
@@ -220,12 +266,12 @@ cd\r
 0\r
 \r
 "
---- response_body eval
-"ab\r\ncd"
+--- response_body_like: 400 Bad Request
+--- error_code: 400
 
 
 
-=== TEST 11: zero-padding
+=== TEST 13: zero-padding
 --- config
     chunkin on;
     location /ar.do {
@@ -246,7 +292,7 @@ cd\r
 
 
 
-=== TEST 12: leading new lines
+=== TEST 14: leading new lines
 --- config
     chunkin on;
     location /ar.do {
@@ -263,12 +309,12 @@ cd\r
 0\r
 \r
 "
---- response_body eval
-"ab\r\ncd"
+--- response_body_like: 400 Bad Request
+--- error_code: 400
 
 
 
-=== TEST 13: internal guard
+=== TEST 15: internal guard
 --- config
     chunkin on;
     location /ar.do {
@@ -291,7 +337,7 @@ cd\r
 
 
 
-=== TEST 14: phase issue
+=== TEST 16: phase issue
 --- config
     chunkin on;
     location /ar.do {
@@ -312,7 +358,7 @@ a\r
 
 
 
-=== TEST 15: contenth-length AND chunked
+=== TEST 17: contenth-length AND chunked
 --- config
     chunkin on;
     location /aar.do {
@@ -341,7 +387,7 @@ hello\r
 
 
 
-=== TEST 16: Content-length AND chunked
+=== TEST 18: Content-length AND chunked
 --- config
     chunkin on;
     location /aar.do {
@@ -369,7 +415,7 @@ Connection: close\r
 
 
 
-=== TEST 17: Content-length AND chunked (ready for the read_discard_request_body to work)
+=== TEST 19: Content-length AND chunked (ready for the read_discard_request_body to work)
 --- config
     chunkin on;
     location /aar.do {

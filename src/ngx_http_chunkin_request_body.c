@@ -298,9 +298,9 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                             && ctx->chunks_total_size <=
                             ctx->chunks_written_size))
                 {
-                    ngx_log_error(NGX_LOG_ALERT, c->log, 0,
+                    ngx_log_error(NGX_LOG_WARN, c->log, 0,
                           "chunkin: the chunkin_max_chunks_per_buf or "
-                          "max_client_body_size setting is too small "
+                          "max_client_body_size setting seems rather small "
                           "(chunks %snull, total decoded %d, "
                           "total written %d)",
                           (u_char *) (ctx->chunks ? "not " : ""),
@@ -646,7 +646,13 @@ ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body,
         tf->file.log = r->connection->log;
         tf->path = clcf->client_body_temp_path;
         tf->pool = r->pool;
-        tf->warn = "a client request body is buffered to a temporary file";
+
+        if (rb->buf && rb->buf->last == rb->buf->end) {
+            tf->warn = "a client request body is buffered to a temporary file (exceeding client_body_buffer_size)";
+        } else {
+            tf->warn = "a client request body is buffered to a temporary file (exceeding chunkin_max_chunks_per_buf)";
+        }
+
         tf->log_level = r->request_body_file_log_level;
         tf->persistent = r->request_body_in_persistent_file;
         tf->clean = r->request_body_in_clean_file;

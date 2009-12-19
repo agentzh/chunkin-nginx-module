@@ -146,7 +146,11 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
             }
         }
 
-        CRLF = "\r\n" $err{ err_ctx = "CRLF"; };
+        CR = "\r";
+
+        LF = "\n";
+
+        CRLF = CR LF $err{ err_ctx = "CRLF"; };
 
         chunk_size = (xdigit+ - "0"+) >start_reading_size $read_size;
 
@@ -158,22 +162,57 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                      $err{ err_ctx = "chunk_data"; }
                    ;
 
-        chunk_data_terminator = "\r" when ! test_len "\n"
+        chunk_data_terminator = CR when ! test_len LF
                                 $err{ err_ctx = "chunk_data_terminator"; }
                               ;
 
-        SP = 32;
-        HT = 9;
+        SP = ' ';
+        HT = '\t';
 
-        LWS = ( SP | HT )+;
+        LWS = CRLF ? ( SP | HT )+;
 
-        chunk = chunk_size LWS* CRLF $err{ err_ctx = "chunk_size"; }
+        separator = "(" | ")" | "<" | ">" | "@"
+                  | "," | ";" | ":" | "\\" | ["]
+                  | "/" | "[" | "]" | "?" | "="
+                  | "{" | "}" | SP | HT
+                  ;
+
+        CTL = 0..31 | 127;
+
+        token = (any -- (CTL | separator))+;
+
+        chunk_ext_name = token;
+
+        TEXT = (any -- CTL) | LWS;
+
+        qdtext = TEXT -- ["];
+
+        CHAR = 0..127;
+
+        quoted_pair = "\\" CHAR;
+
+        quoted_string = ["] ( qdtext | quoted_pair )* ["];
+
+        chunk_ext_val = token | quoted_string;
+
+        chunk_extension = ( ";" LWS* chunk_ext_name LWS*
+                            ("=" LWS* chunk_ext_val LWS*) ? )*
+                        ;
+
+        chunk = chunk_size (LWS* -- CRLF)
+                    $err{ err_ctx = "chunk_size"; }
+                    (chunk_extension -- CRLF) ?
+                    CRLF
+                    $err{ err_ctx = "chunk_ext"; }
                         chunk_data chunk_data_terminator
                         @verify_data;
 
-        last_chunk = "0"+ " "* CRLF $err{ err_ctx = "last_chunk"; };
+        last_chunk = "0"+ (LWS* -- CRLF)
+                      (chunk_extension -- CRLF) ?
+                      CRLF $err{ err_ctx = "last_chunk"; }
+                   ;
 
-        parser = ([\r\n]|SP|HT)* chunk* last_chunk CRLF
+        parser = chunk* last_chunk CRLF
                  $err{ err_ctx = "parser"; }
                ;
 
