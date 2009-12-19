@@ -6,7 +6,7 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.17] released on Dec 18, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.18] released on Dec 19, 2009.
 
 = Synopsis =
 
@@ -222,9 +222,12 @@ Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/c
 
 = ChangeLog =
 
+== v0.18 ==
+* added support for <code>chunk-extension</code> to the chunked parser as per [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC 2616], but we just ignore them (if any) because we don't understand them.
+
 == v0.17 ==
 * implemented the [[#chunkin_max_chunks_per_buf|chunkin_max_chunks_per_buf]] directive to allow overriding the default <code>512</code> setting.
-* we now bypass nginx's [http://nginx.org/pipermail/nginx-devel/2009-December/000041.html discard requesty body bug] by requiring our users to define explicit <code>411 error_page</code> with [[#chunkin_resume|chunkin_resume]] in the error page location.
+* we now bypass nginx's [http://nginx.org/pipermail/nginx-devel/2009-December/000041.html discard requesty body bug] by requiring our users to define explicit <code>411 error_page</code> with [[#chunkin_resume|chunkin_resume]] in the error page location. Thanks J for reporting related bugs.
 * fixed <code>r->phase_handler</code> in our post read handler. our handler may run one more time before :P
 * the chunkin handler now returns <code>NGX_DECLINED</code> rather than <code>NGX_OK</code> when our <code>ngx_http_chunkin_read_chunked_request_body</code> function returns <code>NGX_OK</code>, to avoid bypassing other access-phase handlers.
 
@@ -306,8 +309,8 @@ Some parts of the test suite requires modules [[NginxHttpProxyModule|proxy]] and
 = TODO =
 
 * make the chunkin handler run at the end of the <code>access phase</code> rather than beginning.
-* Fix the [[#Known Issues|known issues]].
-* Add support for trailers and chunked extensions as specified in the [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC]
+* add support for <code>trailers</code> as specified in the [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC 2616].
+* fix the [[#Known Issues|known issues]].
 
 = Getting involved =
 

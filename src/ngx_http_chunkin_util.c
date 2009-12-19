@@ -357,9 +357,6 @@ ngx_http_chunkin_internal_redirect(ngx_http_request_t *r,
 
     ngx_http_set_ctx(r, ctx, ngx_http_chunkin_filter_module);
 
-    ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
-    dd("ctx defined in internal redirect? %d", ctx ? 1 : 0);
-
     cscf = ngx_http_get_module_srv_conf(r, ngx_http_core_module);
     r->loc_conf = cscf->ctx->loc_conf;
 
