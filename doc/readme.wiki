@@ -6,7 +6,7 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.18] released on Dec 19, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.19] released on Dec 21, 2009.
 
 = Synopsis =
 
@@ -64,7 +64,8 @@ To enable the magic, just turn on the [[#chunkin|chunkin]] config option and def
 
 No other modification is required in your nginx.conf file and everything should work out of the box including the standard [[NginxHttpProxyModule|proxy module]] (except for those [[#Known Issues|known issues]]). Note that the [[#chunkin|chunkin]] directive is not allowed in the location block while the [[#chunkin_resume|chunkin_resume]] directive is only allowed on in <code>locations</code>.
 
-The core module's [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]], [[NginxHttpCoreModule#client_max_body_size|client_max_body_size]], and [[NginxHttpCoreModule#client_body_timeout|client_body_timeout]] directive settings are honored.
+The core module's [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]], [[NginxHttpCoreModule#client_max_body_size|client_max_body_size]], and [[NginxHttpCoreModule#client_body_timeout|client_body_timeout]] directive settings are honored. Note that, the "body sizes" here always indicate chunked-encoded body, not the data that has already been decoded. Basically, the
+chunked-encoded body will always be slightly larger than the original data that is not encoded.
 
 The [[NginxHttpCoreModule#client_body_in_file_only|client_body_in_file_only]] and [[NginxHttpCoreModule#client_body_in_single_buffer|client_body_in_single_buffer]] settings are followed partially. See [[#Known Issues|Know Issues]].
 
@@ -128,6 +129,8 @@ This directive was first introduced in the [[#v0.17|v0.17]] release.
 Set the max chunk count threshold for the buffer determined by the [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]] directive.
 If the average chunk size is <code>1 KB</code> and your [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]] setting
 is 1 meta bytes, then you should set this threshold to <code>1024</code> or <code>2048</code>.
+
+When the raw body size is exceeding [[NginxHttpCoreModule#client_body_buffer_size|client_body_buffer_size]] ''or'' the chunk counter is exceeding this <code>chunkin_max_chunks_per_buf</code> setting, the decoded data will be temporarily buffered into disk files, and then the main buffer gets cleared and the chunk counter gets reset back to 0 (or <code>1</code> if there's a "pending chunk").
 
 This directive was first introduced in the [[#v0.17|v0.17]] release.
 
@@ -221,6 +224,10 @@ Although a lot of effort has been put into testing and code tuning, there must b
 Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/chunkin-nginx-module].
 
 = ChangeLog =
+
+== v0.19 ==
+* we now use ragel -G2 to generate the chunked parser and we're 36% faster.
+* we now eagerly read the data octets in the chunked parser and we're 43% faster.
 
 == v0.18 ==
 * added support for <code>chunk-extension</code> to the chunked parser as per [http://tools.ietf.org/html/rfc2616#section-3.6.1 RFC 2616], but we just ignore them (if any) because we don't understand them.

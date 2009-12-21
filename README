@@ -6,9 +6,9 @@ Name
     installation instructions.
 
 Version
-    This document describes chunkin-nginx-module v0.18
+    This document describes chunkin-nginx-module v0.19
     (<http://github.com/agentzh/chunkin-nginx-module/downloads>) released on
-    Dec 19, 2009.
+    Dec 21, 2009.
 
 Synopsis
       chunkin on;
@@ -70,7 +70,10 @@ Description
     on in "locations".
 
     The core module's client_body_buffer_size, client_max_body_size, and
-    client_body_timeout directive settings are honored.
+    client_body_timeout directive settings are honored. Note that, the "body
+    sizes" here always indicate chunked-encoded body, not the data that has
+    already been decoded. Basically, the chunked-encoded body will always be
+    slightly larger than the original data that is not encoded.
 
     The client_body_in_file_only and client_body_in_single_buffer settings
     are followed partially. See Know Issues.
@@ -153,6 +156,12 @@ Directives
     client_body_buffer_size directive. If the average chunk size is "1 KB"
     and your client_body_buffer_size setting is 1 meta bytes, then you
     should set this threshold to 1024 or 2048.
+
+    When the raw body size is exceeding client_body_buffer_size *or* the
+    chunk counter is exceeding this "chunkin_max_chunks_per_buf" setting,
+    the decoded data will be temporarily buffered into disk files, and then
+    the main buffer gets cleared and the chunk counter gets reset back to 0
+    (or 1 if there's a "pending chunk").
 
     This directive was first introduced in the v0.17 release.
 
@@ -254,6 +263,13 @@ Source Repository
     (<http://github.com/agentzh/chunkin-nginx-module>).
 
 ChangeLog
+  v0.19
+    *   we now use ragel -G2 to generate the chunked parser and we're 36%
+        faster.
+
+    *   we now eagerly read the data octets in the chunked parser and we're
+        43% faster.
+
   v0.18
     *   added support for "chunk-extension" to the chunked parser as per RFC
         2616 (<http://tools.ietf.org/html/rfc2616#section-3.6.1>), but we
