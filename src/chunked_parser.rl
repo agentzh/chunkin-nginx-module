@@ -8,6 +8,8 @@
 #include "chunked_parser.h"
 #include "ngx_http_chunkin_util.h"
 
+#define ngx_chunkin_min(x, y) ((x) < (y) ? (x) : (y))
+
 enum {
     PRE_TEXT_LEN = 25,
     POST_TEXT_LEN = 25
@@ -46,18 +48,19 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 {
     int                 cs   = ctx->parser_state;
     ngx_connection_t    *c   = r->connection;
-    u_char              *pos = *pos_addr;
-    u_char              *p   = *pos_addr;
-    u_char              *pe  = last;
-    u_char              *eof = NULL;
+    char                *pos = (char *) *pos_addr;
+    char                *p   = (char *) *pos_addr;
+    char                *pe  = (char *) last;
+    char                *eof = NULL;
     ngx_buf_t           *b;
     ngx_flag_t          done = 0;
     ngx_str_t           pre, post;
     char*               err_ctx = "";
     ngx_str_t           user_agent = ngx_string("");
+    ssize_t             rest;
 
     %%{
-        alphtype unsigned char;
+        #alphtype unsigned char;
 
         action finalize {
             done = 1;
@@ -68,13 +71,24 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         }
 
         action read_data_byte {
-            ctx->chunk_bytes_read++;
+            /* optimization for buffered chunk data */
 
-            ctx->chunk->buf->last = p + 1;
+            rest = ngx_chunkin_min(
+                (ssize_t)ctx->chunk_size - (ssize_t)ctx->chunk_bytes_read,
+                (ssize_t)(pe - p));
 
-            ctx->chunks_total_size++;
+            dd("moving %d, chunk size %d, read %d, rest %d",
+                (int)rest,
+                (int)ctx->chunk_size,
+                (int)ctx->chunk_bytes_read,
+                (int)rest);
 
-            dd("bytes read: %d (char '%c', bytes read %d, chunk size %d)", ctx->chunk->buf->last - ctx->chunk->buf->pos, *p, ctx->chunk_bytes_read, ctx->chunk_size);
+            ctx->chunk_bytes_read += rest;
+            p += rest - 1;
+            ctx->chunk->buf->last = (u_char *)p + 1;
+            ctx->chunks_total_size += rest;
+
+            /* dd("bytes read: %d (char '%c', bytes read %d, chunk size %d)", ctx->chunk->buf->last - ctx->chunk->buf->pos, *p, ctx->chunk_bytes_read, ctx->chunk_size); */
             ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: data bytes read: %uz (char: \"%c\")\n",
                     ctx->chunk_bytes_read, *p);
@@ -116,7 +130,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
             b = ctx->chunk->buf;
 
-            b->last = b->pos = p;
+            b->last = b->pos = (u_char *) p;
             b->memory = 1;
         }
 
@@ -126,7 +140,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
                         "ERROR: chunk size not met: "
                         "%uz != %uz\n", ctx->chunk_bytes_read,
                         ctx->chunk_size);
-                *pos_addr = p;
+                *pos_addr = (u_char*) p;
                 ctx->parser_state = chunked_error;
                 return NGX_ERROR;
             }
@@ -224,7 +238,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
     ctx->parser_state = cs;
 
-    *pos_addr = p;
+    *pos_addr = (u_char *) p;
 
     if (p != pe) {
         dd("ASSERTION FAILED: p != pe");
@@ -242,16 +256,16 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 
 #endif
 
-        for (post.data = p, post.len = 0;
-                post.data + post.len != pe; post.len++)
+        for (post.data = (u_char *) p, post.len = 0;
+                post.data + post.len != (u_char *) pe; post.len++)
         {
             if (post.len >= POST_TEXT_LEN) {
                 break;
             }
         }
 
-        for (pre.data = p, pre.len = 0;
-                pre.data != pos; pre.data--, pre.len++)
+        for (pre.data = (u_char *) p, pre.len = 0;
+                pre.data != (u_char *) pos; pre.data--, pre.len++)
         {
             if (pre.len >= PRE_TEXT_LEN) {
                 break;
@@ -268,7 +282,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         headers_buf.len = ctx->saved_header_in_pos - r->header_in->start;
 
         if (strcmp(caller_info, "preread") == 0) {
-            preread_buf.data = pos;
+            preread_buf.data = (u_char *) pos;
             preread_buf.len = pe - pos;
         } else {
             preread_buf.data = ctx->saved_header_in_pos;

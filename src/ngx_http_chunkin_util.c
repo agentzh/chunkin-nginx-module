@@ -106,9 +106,31 @@ ngx_http_chunkin_set_content_length_header(ngx_http_request_t *r, size_t len) {
 ngx_chain_t *
 ngx_http_chunkin_get_buf(ngx_pool_t *pool, ngx_http_chunkin_ctx_t *ctx)
 {
-    ngx_chain_t  *cl;
+    ngx_chain_t     *cl;
+    ngx_chain_t     **ll;
+    ngx_uint_t      i;
 
     cl = ctx->free_bufs;
+
+    if (cl == NULL) {
+        ll = &ctx->free_bufs;
+        for (i = 0; i < 4; i++) {
+            cl = ngx_alloc_chain_link(pool);
+            if (cl == NULL) {
+                return NULL;
+            }
+
+            cl->buf = ngx_calloc_buf(pool);
+            if (cl->buf == NULL) {
+                return NULL;
+            }
+
+            cl->next = NULL;
+            *ll = cl;
+            ll = &cl->next;
+        }
+        cl = ctx->free_bufs;
+    }
 
     if (cl) {
         ctx->free_bufs = cl->next;

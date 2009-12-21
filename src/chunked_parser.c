@@ -10,216 +10,17 @@
 #include "chunked_parser.h"
 #include "ngx_http_chunkin_util.h"
 
+#define ngx_chunkin_min(x, y) ((x) < (y) ? (x) : (y))
+
 enum {
     PRE_TEXT_LEN = 25,
     POST_TEXT_LEN = 25
 };
 
 
-#line 17 "src/chunked_parser.rl"
+#line 19 "src/chunked_parser.rl"
 
-#line 22 "src/chunked_parser.c"
-static const char _chunked_cond_offsets[] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 1, 4, 4, 4, 4, 4, 4, 
-	4, 4, 4, 4, 4, 4, 4, 4, 
-	4, 4, 4, 4
-};
-
-static const char _chunked_cond_lengths[] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	1, 3, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0
-};
-
-static const short _chunked_cond_keys[] = {
-	0u, 255u, 0u, 12u, 13u, 13u, 14u, 255u, 
-	0
-};
-
-static const char _chunked_cond_spaces[] = {
-	0, 0, 0, 0, 0
-};
-
-static const short _chunked_key_offsets[] = {
-	0, 0, 7, 18, 22, 23, 24, 25, 
-	41, 60, 65, 81, 99, 106, 109, 116, 
-	125, 142, 162, 172, 189, 208, 218, 222, 
-	223, 225, 228, 229, 236, 252, 271, 276, 
-	292, 310, 314, 321, 324, 331, 340, 357, 
-	377, 387, 404, 423
-};
-
-static const short _chunked_trans_keys[] = {
-	48u, 49u, 57u, 65u, 70u, 97u, 102u, 9u, 
-	13u, 32u, 48u, 59u, 49u, 57u, 65u, 70u, 
-	97u, 102u, 9u, 13u, 32u, 59u, 10u, 13u, 
-	10u, 9u, 32u, 34u, 44u, 47u, 123u, 125u, 
-	127u, 0u, 31u, 40u, 41u, 58u, 64u, 91u, 
-	93u, 9u, 13u, 32u, 34u, 44u, 47u, 59u, 
-	61u, 123u, 125u, 127u, 0u, 31u, 40u, 41u, 
-	58u, 64u, 91u, 93u, 9u, 13u, 32u, 59u, 
-	61u, 9u, 32u, 34u, 44u, 47u, 123u, 125u, 
-	127u, 0u, 31u, 40u, 41u, 58u, 64u, 91u, 
-	93u, 9u, 13u, 32u, 34u, 44u, 47u, 59u, 
-	123u, 125u, 127u, 0u, 31u, 40u, 41u, 58u, 
-	64u, 91u, 93u, 34u, 92u, 127u, 0u, 8u, 
-	10u, 31u, 13u, 34u, 92u, 34u, 92u, 127u, 
-	0u, 8u, 10u, 31u, 9u, 13u, 32u, 34u, 
-	59u, 92u, 127u, 0u, 31u, 9u, 32u, 34u, 
-	44u, 47u, 92u, 123u, 125u, 127u, 0u, 31u, 
-	40u, 41u, 58u, 64u, 91u, 93u, 9u, 13u, 
-	32u, 34u, 44u, 47u, 59u, 61u, 92u, 123u, 
-	125u, 127u, 0u, 31u, 40u, 41u, 58u, 64u, 
-	91u, 93u, 9u, 13u, 32u, 34u, 59u, 61u, 
-	92u, 127u, 0u, 31u, 9u, 32u, 34u, 44u, 
-	47u, 92u, 123u, 125u, 127u, 0u, 31u, 40u, 
-	41u, 58u, 64u, 91u, 93u, 9u, 13u, 32u, 
-	34u, 44u, 47u, 59u, 92u, 123u, 125u, 127u, 
-	0u, 31u, 40u, 41u, 58u, 64u, 91u, 93u, 
-	9u, 13u, 32u, 59u, 48u, 57u, 65u, 70u, 
-	97u, 102u, 9u, 13u, 32u, 59u, 10u, 512u, 
-	767u, 269u, 512u, 767u, 10u, 48u, 49u, 57u, 
-	65u, 70u, 97u, 102u, 9u, 32u, 34u, 44u, 
-	47u, 123u, 125u, 127u, 0u, 31u, 40u, 41u, 
-	58u, 64u, 91u, 93u, 9u, 13u, 32u, 34u, 
-	44u, 47u, 59u, 61u, 123u, 125u, 127u, 0u, 
-	31u, 40u, 41u, 58u, 64u, 91u, 93u, 9u, 
-	13u, 32u, 59u, 61u, 9u, 32u, 34u, 44u, 
-	47u, 123u, 125u, 127u, 0u, 31u, 40u, 41u, 
-	58u, 64u, 91u, 93u, 9u, 13u, 32u, 34u, 
-	44u, 47u, 59u, 123u, 125u, 127u, 0u, 31u, 
-	40u, 41u, 58u, 64u, 91u, 93u, 9u, 13u, 
-	32u, 59u, 34u, 92u, 127u, 0u, 8u, 10u, 
-	31u, 13u, 34u, 92u, 34u, 92u, 127u, 0u, 
-	8u, 10u, 31u, 9u, 13u, 32u, 34u, 59u, 
-	92u, 127u, 0u, 31u, 9u, 32u, 34u, 44u, 
-	47u, 92u, 123u, 125u, 127u, 0u, 31u, 40u, 
-	41u, 58u, 64u, 91u, 93u, 9u, 13u, 32u, 
-	34u, 44u, 47u, 59u, 61u, 92u, 123u, 125u, 
-	127u, 0u, 31u, 40u, 41u, 58u, 64u, 91u, 
-	93u, 9u, 13u, 32u, 34u, 59u, 61u, 92u, 
-	127u, 0u, 31u, 9u, 32u, 34u, 44u, 47u, 
-	92u, 123u, 125u, 127u, 0u, 31u, 40u, 41u, 
-	58u, 64u, 91u, 93u, 9u, 13u, 32u, 34u, 
-	44u, 47u, 59u, 92u, 123u, 125u, 127u, 0u, 
-	31u, 40u, 41u, 58u, 64u, 91u, 93u, 0
-};
-
-static const char _chunked_single_lengths[] = {
-	0, 1, 5, 4, 1, 1, 1, 8, 
-	11, 5, 8, 10, 3, 3, 3, 7, 
-	9, 12, 8, 9, 11, 4, 4, 1, 
-	0, 1, 1, 1, 8, 11, 5, 8, 
-	10, 4, 3, 3, 3, 7, 9, 12, 
-	8, 9, 11, 0
-};
-
-static const char _chunked_range_lengths[] = {
-	0, 3, 3, 0, 0, 0, 0, 4, 
-	4, 0, 4, 4, 2, 0, 2, 1, 
-	4, 4, 1, 4, 4, 3, 0, 0, 
-	1, 1, 0, 3, 4, 4, 0, 4, 
-	4, 0, 2, 0, 2, 1, 4, 4, 
-	1, 4, 4, 0
-};
-
-static const short _chunked_index_offsets[] = {
-	0, 0, 5, 14, 19, 21, 23, 25, 
-	38, 54, 60, 73, 88, 94, 98, 104, 
-	113, 127, 144, 154, 168, 184, 192, 197, 
-	199, 201, 204, 206, 211, 224, 240, 246, 
-	259, 274, 279, 285, 289, 295, 304, 318, 
-	335, 345, 359, 375
-};
-
-static const char _chunked_indicies[] = {
-	0, 2, 2, 2, 1, 4, 5, 4, 
-	6, 8, 7, 7, 7, 3, 4, 5, 
-	4, 8, 3, 10, 9, 12, 11, 14, 
-	13, 8, 8, 1, 1, 1, 1, 1, 
-	1, 1, 1, 1, 1, 15, 16, 5, 
-	16, 3, 3, 3, 8, 17, 3, 3, 
-	3, 3, 3, 3, 3, 15, 16, 5, 
-	16, 8, 17, 3, 17, 17, 19, 1, 
-	1, 1, 1, 1, 1, 1, 1, 1, 
-	18, 4, 5, 4, 3, 3, 3, 8, 
-	3, 3, 3, 3, 3, 3, 3, 18, 
-	4, 20, 1, 1, 1, 19, 21, 22, 
-	20, 19, 4, 20, 23, 23, 23, 19, 
-	22, 5, 22, 4, 24, 20, 3, 3, 
-	19, 24, 24, 4, 19, 19, 20, 19, 
-	19, 1, 1, 19, 19, 19, 25, 26, 
-	5, 26, 4, 19, 19, 24, 27, 20, 
-	19, 19, 3, 3, 19, 19, 19, 25, 
-	26, 5, 26, 4, 24, 27, 20, 3, 
-	3, 19, 27, 27, 22, 19, 19, 20, 
-	19, 19, 1, 1, 19, 19, 19, 28, 
-	22, 5, 22, 4, 19, 19, 24, 20, 
-	19, 19, 3, 3, 19, 19, 19, 28, 
-	30, 31, 30, 32, 7, 7, 7, 29, 
-	30, 31, 30, 32, 29, 34, 33, 36, 
-	35, 38, 39, 37, 41, 40, 0, 2, 
-	2, 2, 40, 32, 32, 1, 1, 1, 
-	1, 1, 1, 1, 1, 1, 1, 42, 
-	44, 31, 44, 43, 43, 43, 32, 45, 
-	43, 43, 43, 43, 43, 43, 43, 42, 
-	44, 31, 44, 32, 45, 43, 45, 45, 
-	47, 1, 1, 1, 1, 1, 1, 1, 
-	1, 1, 46, 48, 31, 48, 43, 43, 
-	43, 32, 43, 43, 43, 43, 43, 43, 
-	43, 46, 48, 31, 48, 32, 43, 48, 
-	49, 1, 1, 1, 47, 50, 51, 49, 
-	47, 48, 49, 23, 23, 23, 47, 51, 
-	31, 51, 48, 52, 49, 43, 43, 47, 
-	52, 52, 48, 47, 47, 49, 47, 47, 
-	1, 1, 47, 47, 47, 53, 54, 31, 
-	54, 48, 47, 47, 52, 55, 49, 47, 
-	47, 43, 43, 47, 47, 47, 53, 54, 
-	31, 54, 48, 52, 55, 49, 43, 43, 
-	47, 55, 55, 51, 47, 47, 49, 47, 
-	47, 1, 1, 47, 47, 47, 56, 51, 
-	31, 51, 48, 47, 47, 52, 49, 47, 
-	47, 43, 43, 47, 47, 47, 56, 13, 
-	0
-};
-
-static const char _chunked_trans_targs[] = {
-	2, 0, 21, 0, 3, 4, 2, 21, 
-	7, 0, 5, 0, 6, 0, 43, 8, 
-	9, 10, 11, 12, 13, 14, 15, 0, 
-	16, 17, 18, 19, 20, 0, 22, 23, 
-	28, 0, 24, 0, 25, 0, 26, 25, 
-	0, 27, 29, 0, 30, 31, 32, 34, 
-	33, 35, 36, 37, 38, 39, 40, 41, 
-	42
-};
-
-static const char _chunked_trans_actions[] = {
-	1, 0, 1, 2, 0, 0, 3, 3, 
-	0, 4, 0, 5, 0, 6, 7, 0, 
-	0, 0, 0, 0, 0, 0, 0, 8, 
-	0, 0, 0, 0, 0, 9, 0, 0, 
-	0, 10, 0, 11, 12, 13, 0, 14, 
-	15, 16, 0, 17, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0, 
-	0
-};
-
-static const char _chunked_eof_actions[] = {
-	0, 0, 2, 2, 4, 5, 6, 0, 
-	2, 2, 0, 2, 0, 0, 8, 2, 
-	0, 2, 2, 0, 2, 9, 9, 10, 
-	11, 13, 15, 15, 0, 17, 17, 0, 
-	17, 17, 0, 0, 8, 17, 0, 17, 
-	17, 0, 17, 0
-};
-
+#line 24 "src/chunked_parser.c"
 static const int chunked_start = 1;
 static const int chunked_first_final = 43;
 static const int chunked_error = 0;
@@ -227,7 +28,7 @@ static const int chunked_error = 0;
 static const int chunked_en_main = 1;
 
 
-#line 18 "src/chunked_parser.rl"
+#line 20 "src/chunked_parser.rl"
 
 
 ngx_int_t
@@ -237,12 +38,12 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
     int cs;
 
     
-#line 241 "src/chunked_parser.c"
+#line 42 "src/chunked_parser.c"
 	{
 	cs = chunked_start;
 	}
 
-#line 27 "src/chunked_parser.rl"
+#line 29 "src/chunked_parser.rl"
 
     ctx->chunks = NULL;
     ctx->next_chunk = NULL;
@@ -265,145 +66,113 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 {
     int                 cs   = ctx->parser_state;
     ngx_connection_t    *c   = r->connection;
-    u_char              *pos = *pos_addr;
-    u_char              *p   = *pos_addr;
-    u_char              *pe  = last;
-    u_char              *eof = NULL;
+    char                *pos = (char *) *pos_addr;
+    char                *p   = (char *) *pos_addr;
+    char                *pe  = (char *) last;
+    char                *eof = NULL;
     ngx_buf_t           *b;
     ngx_flag_t          done = 0;
     ngx_str_t           pre, post;
     char*               err_ctx = "";
     ngx_str_t           user_agent = ngx_string("");
+    ssize_t             rest;
 
     
-#line 221 "src/chunked_parser.rl"
+#line 235 "src/chunked_parser.rl"
 
 
     
-#line 284 "src/chunked_parser.c"
+#line 86 "src/chunked_parser.c"
 	{
-	int _klen;
-	const short *_keys;
-	int _trans;
 	short _widec;
-
 	if ( p == pe )
 		goto _test_eof;
-	if ( cs == 0 )
-		goto _out;
-_resume:
-	_widec = (*p);
-	_klen = _chunked_cond_lengths[cs];
-	_keys = _chunked_cond_keys + (_chunked_cond_offsets[cs]*2);
-	if ( _klen > 0 ) {
-		const short *_lower = _keys;
-		const short *_mid;
-		const short *_upper = _keys + (_klen<<1) - 2;
-		while (1) {
-			if ( _upper < _lower )
-				break;
-
-			_mid = _lower + (((_upper-_lower) >> 1) & ~1);
-			if ( _widec < _mid[0] )
-				_upper = _mid - 2;
-			else if ( _widec > _mid[1] )
-				_lower = _mid + 2;
-			else {
-				switch ( _chunked_cond_spaces[_chunked_cond_offsets[cs] + ((_mid - _keys)>>1)] ) {
-	case 0: {
-		_widec = (short)(256u + ((*p) - 0u));
-		if ( 
-#line 66 "src/chunked_parser.rl"
-
-            ctx->chunk_bytes_read < ctx->chunk_size
-         ) _widec += 256;
-		break;
-	}
-				}
-				break;
-			}
-		}
-	}
-
-	_keys = _chunked_trans_keys + _chunked_key_offsets[cs];
-	_trans = _chunked_index_offsets[cs];
-
-	_klen = _chunked_single_lengths[cs];
-	if ( _klen > 0 ) {
-		const short *_lower = _keys;
-		const short *_mid;
-		const short *_upper = _keys + _klen - 1;
-		while (1) {
-			if ( _upper < _lower )
-				break;
-
-			_mid = _lower + ((_upper-_lower) >> 1);
-			if ( _widec < *_mid )
-				_upper = _mid - 1;
-			else if ( _widec > *_mid )
-				_lower = _mid + 1;
-			else {
-				_trans += (_mid - _keys);
-				goto _match;
-			}
-		}
-		_keys += _klen;
-		_trans += _klen;
-	}
-
-	_klen = _chunked_range_lengths[cs];
-	if ( _klen > 0 ) {
-		const short *_lower = _keys;
-		const short *_mid;
-		const short *_upper = _keys + (_klen<<1) - 2;
-		while (1) {
-			if ( _upper < _lower )
-				break;
-
-			_mid = _lower + (((_upper-_lower) >> 1) & ~1);
-			if ( _widec < _mid[0] )
-				_upper = _mid - 2;
-			else if ( _widec > _mid[1] )
-				_lower = _mid + 2;
-			else {
-				_trans += ((_mid - _keys)>>1);
-				goto _match;
-			}
-		}
-		_trans += _klen;
-	}
-
-_match:
-	_trans = _chunked_indicies[_trans];
-	cs = _chunked_trans_targs[_trans];
-
-	if ( _chunked_trans_actions[_trans] == 0 )
-		goto _again;
-
-	switch ( _chunked_trans_actions[_trans] ) {
-	case 7:
-#line 62 "src/chunked_parser.rl"
+	switch ( cs )
 	{
-            done = 1;
-        }
-	break;
-	case 14:
-#line 70 "src/chunked_parser.rl"
+case 1:
+	if ( (*p) == 48 )
+		goto tr0;
+	if ( (*p) < 65 ) {
+		if ( 49 <= (*p) && (*p) <= 57 )
+			goto tr2;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto tr2;
+	} else
+		goto tr2;
+	goto st0;
+tr3:
+#line 226 "src/chunked_parser.rl"
+	{ err_ctx = "last_chunk"; }
+	goto st0;
+tr9:
+#line 167 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+#line 226 "src/chunked_parser.rl"
+	{ err_ctx = "last_chunk"; }
+	goto st0;
+tr11:
+#line 167 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+#line 226 "src/chunked_parser.rl"
+	{ err_ctx = "last_chunk"; }
+#line 230 "src/chunked_parser.rl"
+	{ err_ctx = "parser"; }
+	goto st0;
+tr13:
+#line 167 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+#line 230 "src/chunked_parser.rl"
+	{ err_ctx = "parser"; }
+	goto st0;
+tr23:
+#line 167 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+	goto st0;
+tr29:
+#line 217 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_size"; }
+#line 220 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_ext"; }
+	goto st0;
+tr33:
+#line 167 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+#line 220 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_ext"; }
+	goto st0;
+tr35:
+#line 167 "src/chunked_parser.rl"
+	{ err_ctx = "CRLF"; }
+#line 220 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_ext"; }
+#line 176 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_data"; }
+	goto st0;
+tr37:
+#line 176 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_data"; }
+	goto st0;
+tr40:
+#line 180 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_data_terminator"; }
+	goto st0;
+tr43:
+#line 220 "src/chunked_parser.rl"
+	{ err_ctx = "chunk_ext"; }
+	goto st0;
+#line 165 "src/chunked_parser.c"
+st0:
+cs = 0;
+	goto _out;
+tr0:
+#line 97 "src/chunked_parser.rl"
 	{
-            ctx->chunk_bytes_read++;
-
-            ctx->chunk->buf->last = p + 1;
-
-            ctx->chunks_total_size++;
-
-            dd("bytes read: %d (char '%c', bytes read %d, chunk size %d)", ctx->chunk->buf->last - ctx->chunk->buf->pos, *p, ctx->chunk_bytes_read, ctx->chunk_size);
-            ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                    "chunkin: data bytes read: %uz (char: \"%c\")\n",
-                    ctx->chunk_bytes_read, *p);
+            ctx->chunk_bytes_read = 0;
+            ctx->chunk_size = 0;
+            ctx->chunk_size_order = 0;
         }
-	break;
-	case 3:
-#line 89 "src/chunked_parser.rl"
+#line 103 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -418,16 +187,612 @@ _match:
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                     "chunkin: chunk size: %uz\n", ctx->chunk_size);
         }
-	break;
-	case 16:
-#line 123 "src/chunked_parser.rl"
+	goto st2;
+tr6:
+#line 103 "src/chunked_parser.rl"
+	{
+            ctx->chunk_size <<= 4;
+            ctx->chunk_size_order++;
+            if (*p >= 'A' && *p <= 'F') {
+                ctx->chunk_size |= 10 + *p - 'A';
+            } else if (*p >= 'a' && *p <= 'f') {
+                ctx->chunk_size |= 10 + *p - 'a';
+            } else {
+                ctx->chunk_size |= *p - '0';
+            }
+
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                    "chunkin: chunk size: %uz\n", ctx->chunk_size);
+        }
+	goto st2;
+st2:
+	if ( ++p == pe )
+		goto _test_eof2;
+case 2:
+#line 213 "src/chunked_parser.c"
+	switch( (*p) ) {
+		case 9: goto st3;
+		case 13: goto st4;
+		case 32: goto st3;
+		case 48: goto tr6;
+		case 59: goto st7;
+	}
+	if ( (*p) < 65 ) {
+		if ( 49 <= (*p) && (*p) <= 57 )
+			goto tr7;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto tr7;
+	} else
+		goto tr7;
+	goto tr3;
+st3:
+	if ( ++p == pe )
+		goto _test_eof3;
+case 3:
+	switch( (*p) ) {
+		case 9: goto st3;
+		case 13: goto st4;
+		case 32: goto st3;
+		case 59: goto st7;
+	}
+	goto tr3;
+st4:
+	if ( ++p == pe )
+		goto _test_eof4;
+case 4:
+	if ( (*p) == 10 )
+		goto st5;
+	goto tr9;
+st5:
+	if ( ++p == pe )
+		goto _test_eof5;
+case 5:
+	if ( (*p) == 13 )
+		goto st6;
+	goto tr11;
+st6:
+	if ( ++p == pe )
+		goto _test_eof6;
+case 6:
+	if ( (*p) == 10 )
+		goto tr14;
+	goto tr13;
+tr14:
+#line 65 "src/chunked_parser.rl"
+	{
+            done = 1;
+        }
+	goto st43;
+st43:
+	if ( ++p == pe )
+		goto _test_eof43;
+case 43:
+#line 272 "src/chunked_parser.c"
+	goto tr13;
+st7:
+	if ( ++p == pe )
+		goto _test_eof7;
+case 7:
+	switch( (*p) ) {
+		case 9: goto st7;
+		case 32: goto st7;
+		case 34: goto st0;
+		case 44: goto st0;
+		case 47: goto st0;
+		case 123: goto st0;
+		case 125: goto st0;
+		case 127: goto st0;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st0;
+		} else if ( (*p) >= 58 )
+			goto st0;
+	} else
+		goto st0;
+	goto st8;
+st8:
+	if ( ++p == pe )
+		goto _test_eof8;
+case 8:
+	switch( (*p) ) {
+		case 9: goto st9;
+		case 13: goto st4;
+		case 32: goto st9;
+		case 34: goto tr3;
+		case 44: goto tr3;
+		case 47: goto tr3;
+		case 59: goto st7;
+		case 61: goto st10;
+		case 123: goto tr3;
+		case 125: goto tr3;
+		case 127: goto tr3;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto tr3;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto tr3;
+		} else if ( (*p) >= 58 )
+			goto tr3;
+	} else
+		goto tr3;
+	goto st8;
+st9:
+	if ( ++p == pe )
+		goto _test_eof9;
+case 9:
+	switch( (*p) ) {
+		case 9: goto st9;
+		case 13: goto st4;
+		case 32: goto st9;
+		case 59: goto st7;
+		case 61: goto st10;
+	}
+	goto tr3;
+st10:
+	if ( ++p == pe )
+		goto _test_eof10;
+case 10:
+	switch( (*p) ) {
+		case 9: goto st10;
+		case 32: goto st10;
+		case 34: goto st12;
+		case 44: goto st0;
+		case 47: goto st0;
+		case 123: goto st0;
+		case 125: goto st0;
+		case 127: goto st0;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st0;
+		} else if ( (*p) >= 58 )
+			goto st0;
+	} else
+		goto st0;
+	goto st11;
+st11:
+	if ( ++p == pe )
+		goto _test_eof11;
+case 11:
+	switch( (*p) ) {
+		case 9: goto st3;
+		case 13: goto st4;
+		case 32: goto st3;
+		case 34: goto tr3;
+		case 44: goto tr3;
+		case 47: goto tr3;
+		case 59: goto st7;
+		case 123: goto tr3;
+		case 125: goto tr3;
+		case 127: goto tr3;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto tr3;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto tr3;
+		} else if ( (*p) >= 58 )
+			goto tr3;
+	} else
+		goto tr3;
+	goto st11;
+st12:
+	if ( ++p == pe )
+		goto _test_eof12;
+case 12:
+	switch( (*p) ) {
+		case 34: goto st3;
+		case 92: goto st13;
+		case 127: goto st0;
+	}
+	if ( (*p) > 8 ) {
+		if ( 10 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) >= 0 )
+		goto st0;
+	goto st12;
+st13:
+	if ( ++p == pe )
+		goto _test_eof13;
+case 13:
+	switch( (*p) ) {
+		case 13: goto st14;
+		case 34: goto st15;
+		case 92: goto st13;
+	}
+	goto st12;
+st14:
+	if ( ++p == pe )
+		goto _test_eof14;
+case 14:
+	switch( (*p) ) {
+		case 34: goto st3;
+		case 92: goto st13;
+		case 127: goto tr23;
+	}
+	if ( (*p) > 8 ) {
+		if ( 10 <= (*p) && (*p) <= 31 )
+			goto tr23;
+	} else if ( (*p) >= 0 )
+		goto tr23;
+	goto st12;
+st15:
+	if ( ++p == pe )
+		goto _test_eof15;
+case 15:
+	switch( (*p) ) {
+		case 9: goto st15;
+		case 13: goto st4;
+		case 32: goto st15;
+		case 34: goto st3;
+		case 59: goto st16;
+		case 92: goto st13;
+		case 127: goto tr3;
+	}
+	if ( 0 <= (*p) && (*p) <= 31 )
+		goto tr3;
+	goto st12;
+st16:
+	if ( ++p == pe )
+		goto _test_eof16;
+case 16:
+	switch( (*p) ) {
+		case 9: goto st16;
+		case 32: goto st16;
+		case 34: goto st3;
+		case 44: goto st12;
+		case 47: goto st12;
+		case 92: goto st13;
+		case 123: goto st12;
+		case 125: goto st12;
+		case 127: goto st0;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st12;
+		} else if ( (*p) >= 58 )
+			goto st12;
+	} else
+		goto st12;
+	goto st17;
+st17:
+	if ( ++p == pe )
+		goto _test_eof17;
+case 17:
+	switch( (*p) ) {
+		case 9: goto st18;
+		case 13: goto st4;
+		case 32: goto st18;
+		case 34: goto st3;
+		case 44: goto st12;
+		case 47: goto st12;
+		case 59: goto st16;
+		case 61: goto st19;
+		case 92: goto st13;
+		case 123: goto st12;
+		case 125: goto st12;
+		case 127: goto tr3;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto tr3;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st12;
+		} else if ( (*p) >= 58 )
+			goto st12;
+	} else
+		goto st12;
+	goto st17;
+st18:
+	if ( ++p == pe )
+		goto _test_eof18;
+case 18:
+	switch( (*p) ) {
+		case 9: goto st18;
+		case 13: goto st4;
+		case 32: goto st18;
+		case 34: goto st3;
+		case 59: goto st16;
+		case 61: goto st19;
+		case 92: goto st13;
+		case 127: goto tr3;
+	}
+	if ( 0 <= (*p) && (*p) <= 31 )
+		goto tr3;
+	goto st12;
+st19:
+	if ( ++p == pe )
+		goto _test_eof19;
+case 19:
+	switch( (*p) ) {
+		case 9: goto st19;
+		case 32: goto st19;
+		case 34: goto st15;
+		case 44: goto st12;
+		case 47: goto st12;
+		case 92: goto st13;
+		case 123: goto st12;
+		case 125: goto st12;
+		case 127: goto st0;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st12;
+		} else if ( (*p) >= 58 )
+			goto st12;
+	} else
+		goto st12;
+	goto st20;
+st20:
+	if ( ++p == pe )
+		goto _test_eof20;
+case 20:
+	switch( (*p) ) {
+		case 9: goto st15;
+		case 13: goto st4;
+		case 32: goto st15;
+		case 34: goto st3;
+		case 44: goto st12;
+		case 47: goto st12;
+		case 59: goto st16;
+		case 92: goto st13;
+		case 123: goto st12;
+		case 125: goto st12;
+		case 127: goto tr3;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto tr3;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st12;
+		} else if ( (*p) >= 58 )
+			goto st12;
+	} else
+		goto st12;
+	goto st20;
+tr2:
+#line 97 "src/chunked_parser.rl"
+	{
+            ctx->chunk_bytes_read = 0;
+            ctx->chunk_size = 0;
+            ctx->chunk_size_order = 0;
+        }
+#line 103 "src/chunked_parser.rl"
+	{
+            ctx->chunk_size <<= 4;
+            ctx->chunk_size_order++;
+            if (*p >= 'A' && *p <= 'F') {
+                ctx->chunk_size |= 10 + *p - 'A';
+            } else if (*p >= 'a' && *p <= 'f') {
+                ctx->chunk_size |= 10 + *p - 'a';
+            } else {
+                ctx->chunk_size |= *p - '0';
+            }
+
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                    "chunkin: chunk size: %uz\n", ctx->chunk_size);
+        }
+	goto st21;
+tr7:
+#line 103 "src/chunked_parser.rl"
+	{
+            ctx->chunk_size <<= 4;
+            ctx->chunk_size_order++;
+            if (*p >= 'A' && *p <= 'F') {
+                ctx->chunk_size |= 10 + *p - 'A';
+            } else if (*p >= 'a' && *p <= 'f') {
+                ctx->chunk_size |= 10 + *p - 'a';
+            } else {
+                ctx->chunk_size |= *p - '0';
+            }
+
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                    "chunkin: chunk size: %uz\n", ctx->chunk_size);
+        }
+	goto st21;
+st21:
+	if ( ++p == pe )
+		goto _test_eof21;
+case 21:
+#line 625 "src/chunked_parser.c"
+	switch( (*p) ) {
+		case 9: goto st22;
+		case 13: goto st23;
+		case 32: goto st22;
+		case 59: goto st28;
+	}
+	if ( (*p) < 65 ) {
+		if ( 48 <= (*p) && (*p) <= 57 )
+			goto tr7;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto tr7;
+	} else
+		goto tr7;
+	goto tr29;
+st22:
+	if ( ++p == pe )
+		goto _test_eof22;
+case 22:
+	switch( (*p) ) {
+		case 9: goto st22;
+		case 13: goto st23;
+		case 32: goto st22;
+		case 59: goto st28;
+	}
+	goto tr29;
+st23:
+	if ( ++p == pe )
+		goto _test_eof23;
+case 23:
+	if ( (*p) == 10 )
+		goto st24;
+	goto tr33;
+st24:
+	if ( ++p == pe )
+		goto _test_eof24;
+case 24:
+	_widec = (*p);
+	_widec = (short)(128 + ((*p) - -128));
+	if ( 
+#line 69 "src/chunked_parser.rl"
+
+            ctx->chunk_bytes_read < ctx->chunk_size
+         ) _widec += 256;
+	if ( 384 <= _widec && _widec <= 639 )
+		goto tr36;
+	goto tr35;
+tr36:
+#line 118 "src/chunked_parser.rl"
+	{
+            ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
+
+            ctx->chunks_count++;
+
+            if (ctx->chunks) {
+                *ctx->next_chunk = ctx->chunk;
+            } else {
+                ctx->chunks = ctx->chunk;
+            }
+
+            ctx->next_chunk = &ctx->chunk->next;
+
+            b = ctx->chunk->buf;
+
+            b->last = b->pos = (u_char *) p;
+            b->memory = 1;
+        }
+#line 73 "src/chunked_parser.rl"
+	{
+            /* optimization for buffered chunk data */
+
+            rest = ngx_chunkin_min(
+                (ssize_t)ctx->chunk_size - (ssize_t)ctx->chunk_bytes_read,
+                (ssize_t)(pe - p));
+
+            dd("moving %d, chunk size %d, read %d, rest %d",
+                (int)rest,
+                (int)ctx->chunk_size,
+                (int)ctx->chunk_bytes_read,
+                (int)rest);
+
+            ctx->chunk_bytes_read += rest;
+            p += rest - 1;
+            ctx->chunk->buf->last = (u_char *)p + 1;
+            ctx->chunks_total_size += rest;
+
+            /* dd("bytes read: %d (char '%c', bytes read %d, chunk size %d)", ctx->chunk->buf->last - ctx->chunk->buf->pos, *p, ctx->chunk_bytes_read, ctx->chunk_size); */
+            ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                    "chunkin: data bytes read: %uz (char: \"%c\")\n",
+                    ctx->chunk_bytes_read, *p);
+        }
+	goto st25;
+tr39:
+#line 73 "src/chunked_parser.rl"
+	{
+            /* optimization for buffered chunk data */
+
+            rest = ngx_chunkin_min(
+                (ssize_t)ctx->chunk_size - (ssize_t)ctx->chunk_bytes_read,
+                (ssize_t)(pe - p));
+
+            dd("moving %d, chunk size %d, read %d, rest %d",
+                (int)rest,
+                (int)ctx->chunk_size,
+                (int)ctx->chunk_bytes_read,
+                (int)rest);
+
+            ctx->chunk_bytes_read += rest;
+            p += rest - 1;
+            ctx->chunk->buf->last = (u_char *)p + 1;
+            ctx->chunks_total_size += rest;
+
+            /* dd("bytes read: %d (char '%c', bytes read %d, chunk size %d)", ctx->chunk->buf->last - ctx->chunk->buf->pos, *p, ctx->chunk_bytes_read, ctx->chunk_size); */
+            ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
+                    "chunkin: data bytes read: %uz (char: \"%c\")\n",
+                    ctx->chunk_bytes_read, *p);
+        }
+	goto st25;
+st25:
+	if ( ++p == pe )
+		goto _test_eof25;
+case 25:
+#line 748 "src/chunked_parser.c"
+	_widec = (*p);
+	if ( (*p) < 13 ) {
+		if ( (*p) <= 12 ) {
+			_widec = (short)(128 + ((*p) - -128));
+			if ( 
+#line 69 "src/chunked_parser.rl"
+
+            ctx->chunk_bytes_read < ctx->chunk_size
+         ) _widec += 256;
+		}
+	} else if ( (*p) > 13 ) {
+		if ( 14 <= (*p) )
+ {			_widec = (short)(128 + ((*p) - -128));
+			if ( 
+#line 69 "src/chunked_parser.rl"
+
+            ctx->chunk_bytes_read < ctx->chunk_size
+         ) _widec += 256;
+		}
+	} else {
+		_widec = (short)(128 + ((*p) - -128));
+		if ( 
+#line 69 "src/chunked_parser.rl"
+
+            ctx->chunk_bytes_read < ctx->chunk_size
+         ) _widec += 256;
+	}
+	if ( _widec == 269 )
+		goto st26;
+	if ( 384 <= _widec && _widec <= 639 )
+		goto tr39;
+	goto tr37;
+st26:
+	if ( ++p == pe )
+		goto _test_eof26;
+case 26:
+	if ( (*p) == 10 )
+		goto tr41;
+	goto tr40;
+tr41:
+#line 137 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
                         "ERROR: chunk size not met: "
                         "%uz != %uz\n", ctx->chunk_bytes_read,
                         ctx->chunk_size);
-                *pos_addr = p;
+                *pos_addr = (u_char*) p;
                 ctx->parser_state = chunked_error;
                 return NGX_ERROR;
             }
@@ -446,208 +811,479 @@ _match:
                 ctx->last_complete_chunk = ctx->chunk;
             }
         }
-	break;
-	case 8:
-#line 153 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-	break;
-	case 13:
-#line 162 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_data"; }
-	break;
-	case 15:
-#line 166 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_data_terminator"; }
-	break;
-	case 17:
-#line 206 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_ext"; }
-	break;
-	case 2:
-#line 212 "src/chunked_parser.rl"
-	{ err_ctx = "last_chunk"; }
-	break;
-	case 1:
-#line 83 "src/chunked_parser.rl"
-	{
-            ctx->chunk_bytes_read = 0;
-            ctx->chunk_size = 0;
-            ctx->chunk_size_order = 0;
-        }
-#line 89 "src/chunked_parser.rl"
-	{
-            ctx->chunk_size <<= 4;
-            ctx->chunk_size_order++;
-            if (*p >= 'A' && *p <= 'F') {
-                ctx->chunk_size |= 10 + *p - 'A';
-            } else if (*p >= 'a' && *p <= 'f') {
-                ctx->chunk_size |= 10 + *p - 'a';
-            } else {
-                ctx->chunk_size |= *p - '0';
-            }
-
-            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                    "chunkin: chunk size: %uz\n", ctx->chunk_size);
-        }
-	break;
-	case 12:
-#line 104 "src/chunked_parser.rl"
-	{
-            ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
-
-            ctx->chunks_count++;
-
-            if (ctx->chunks) {
-                *ctx->next_chunk = ctx->chunk;
-            } else {
-                ctx->chunks = ctx->chunk;
-            }
-
-            ctx->next_chunk = &ctx->chunk->next;
-
-            b = ctx->chunk->buf;
-
-            b->last = b->pos = p;
-            b->memory = 1;
-        }
-#line 70 "src/chunked_parser.rl"
-	{
-            ctx->chunk_bytes_read++;
-
-            ctx->chunk->buf->last = p + 1;
-
-            ctx->chunks_total_size++;
-
-            dd("bytes read: %d (char '%c', bytes read %d, chunk size %d)", ctx->chunk->buf->last - ctx->chunk->buf->pos, *p, ctx->chunk_bytes_read, ctx->chunk_size);
-            ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                    "chunkin: data bytes read: %uz (char: \"%c\")\n",
-                    ctx->chunk_bytes_read, *p);
-        }
-	break;
-	case 10:
-#line 153 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-#line 206 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_ext"; }
-	break;
-	case 4:
-#line 153 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-#line 212 "src/chunked_parser.rl"
-	{ err_ctx = "last_chunk"; }
-	break;
-	case 6:
-#line 153 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-#line 216 "src/chunked_parser.rl"
-	{ err_ctx = "parser"; }
-	break;
-	case 9:
-#line 203 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_size"; }
-#line 206 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_ext"; }
-	break;
-	case 11:
-#line 153 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-#line 206 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_ext"; }
-#line 162 "src/chunked_parser.rl"
-	{ err_ctx = "chunk_data"; }
-	break;
-	case 5:
-#line 153 "src/chunked_parser.rl"
-	{ err_ctx = "CRLF"; }
-#line 212 "src/chunked_parser.rl"
-	{ err_ctx = "last_chunk"; }
-#line 216 "src/chunked_parser.rl"
-	{ err_ctx = "parser"; }
-	break;
-#line 568 "src/chunked_parser.c"
+	goto st27;
+st27:
+	if ( ++p == pe )
+		goto _test_eof27;
+case 27:
+#line 820 "src/chunked_parser.c"
+	if ( (*p) == 48 )
+		goto tr0;
+	if ( (*p) < 65 ) {
+		if ( 49 <= (*p) && (*p) <= 57 )
+			goto tr2;
+	} else if ( (*p) > 70 ) {
+		if ( 97 <= (*p) && (*p) <= 102 )
+			goto tr2;
+	} else
+		goto tr2;
+	goto tr40;
+st28:
+	if ( ++p == pe )
+		goto _test_eof28;
+case 28:
+	switch( (*p) ) {
+		case 9: goto st28;
+		case 32: goto st28;
+		case 34: goto st0;
+		case 44: goto st0;
+		case 47: goto st0;
+		case 123: goto st0;
+		case 125: goto st0;
+		case 127: goto st0;
 	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st0;
+		} else if ( (*p) >= 58 )
+			goto st0;
+	} else
+		goto st0;
+	goto st29;
+st29:
+	if ( ++p == pe )
+		goto _test_eof29;
+case 29:
+	switch( (*p) ) {
+		case 9: goto st30;
+		case 13: goto st23;
+		case 32: goto st30;
+		case 34: goto tr43;
+		case 44: goto tr43;
+		case 47: goto tr43;
+		case 59: goto st28;
+		case 61: goto st31;
+		case 123: goto tr43;
+		case 125: goto tr43;
+		case 127: goto tr43;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto tr43;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto tr43;
+		} else if ( (*p) >= 58 )
+			goto tr43;
+	} else
+		goto tr43;
+	goto st29;
+st30:
+	if ( ++p == pe )
+		goto _test_eof30;
+case 30:
+	switch( (*p) ) {
+		case 9: goto st30;
+		case 13: goto st23;
+		case 32: goto st30;
+		case 59: goto st28;
+		case 61: goto st31;
+	}
+	goto tr43;
+st31:
+	if ( ++p == pe )
+		goto _test_eof31;
+case 31:
+	switch( (*p) ) {
+		case 9: goto st31;
+		case 32: goto st31;
+		case 34: goto st34;
+		case 44: goto st0;
+		case 47: goto st0;
+		case 123: goto st0;
+		case 125: goto st0;
+		case 127: goto st0;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st0;
+		} else if ( (*p) >= 58 )
+			goto st0;
+	} else
+		goto st0;
+	goto st32;
+st32:
+	if ( ++p == pe )
+		goto _test_eof32;
+case 32:
+	switch( (*p) ) {
+		case 9: goto st33;
+		case 13: goto st23;
+		case 32: goto st33;
+		case 34: goto tr43;
+		case 44: goto tr43;
+		case 47: goto tr43;
+		case 59: goto st28;
+		case 123: goto tr43;
+		case 125: goto tr43;
+		case 127: goto tr43;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto tr43;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto tr43;
+		} else if ( (*p) >= 58 )
+			goto tr43;
+	} else
+		goto tr43;
+	goto st32;
+st33:
+	if ( ++p == pe )
+		goto _test_eof33;
+case 33:
+	switch( (*p) ) {
+		case 9: goto st33;
+		case 13: goto st23;
+		case 32: goto st33;
+		case 59: goto st28;
+	}
+	goto tr43;
+st34:
+	if ( ++p == pe )
+		goto _test_eof34;
+case 34:
+	switch( (*p) ) {
+		case 34: goto st33;
+		case 92: goto st35;
+		case 127: goto st0;
+	}
+	if ( (*p) > 8 ) {
+		if ( 10 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) >= 0 )
+		goto st0;
+	goto st34;
+st35:
+	if ( ++p == pe )
+		goto _test_eof35;
+case 35:
+	switch( (*p) ) {
+		case 13: goto st36;
+		case 34: goto st37;
+		case 92: goto st35;
+	}
+	goto st34;
+st36:
+	if ( ++p == pe )
+		goto _test_eof36;
+case 36:
+	switch( (*p) ) {
+		case 34: goto st33;
+		case 92: goto st35;
+		case 127: goto tr23;
+	}
+	if ( (*p) > 8 ) {
+		if ( 10 <= (*p) && (*p) <= 31 )
+			goto tr23;
+	} else if ( (*p) >= 0 )
+		goto tr23;
+	goto st34;
+st37:
+	if ( ++p == pe )
+		goto _test_eof37;
+case 37:
+	switch( (*p) ) {
+		case 9: goto st37;
+		case 13: goto st23;
+		case 32: goto st37;
+		case 34: goto st33;
+		case 59: goto st38;
+		case 92: goto st35;
+		case 127: goto tr43;
+	}
+	if ( 0 <= (*p) && (*p) <= 31 )
+		goto tr43;
+	goto st34;
+st38:
+	if ( ++p == pe )
+		goto _test_eof38;
+case 38:
+	switch( (*p) ) {
+		case 9: goto st38;
+		case 32: goto st38;
+		case 34: goto st33;
+		case 44: goto st34;
+		case 47: goto st34;
+		case 92: goto st35;
+		case 123: goto st34;
+		case 125: goto st34;
+		case 127: goto st0;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st34;
+		} else if ( (*p) >= 58 )
+			goto st34;
+	} else
+		goto st34;
+	goto st39;
+st39:
+	if ( ++p == pe )
+		goto _test_eof39;
+case 39:
+	switch( (*p) ) {
+		case 9: goto st40;
+		case 13: goto st23;
+		case 32: goto st40;
+		case 34: goto st33;
+		case 44: goto st34;
+		case 47: goto st34;
+		case 59: goto st38;
+		case 61: goto st41;
+		case 92: goto st35;
+		case 123: goto st34;
+		case 125: goto st34;
+		case 127: goto tr43;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto tr43;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st34;
+		} else if ( (*p) >= 58 )
+			goto st34;
+	} else
+		goto st34;
+	goto st39;
+st40:
+	if ( ++p == pe )
+		goto _test_eof40;
+case 40:
+	switch( (*p) ) {
+		case 9: goto st40;
+		case 13: goto st23;
+		case 32: goto st40;
+		case 34: goto st33;
+		case 59: goto st38;
+		case 61: goto st41;
+		case 92: goto st35;
+		case 127: goto tr43;
+	}
+	if ( 0 <= (*p) && (*p) <= 31 )
+		goto tr43;
+	goto st34;
+st41:
+	if ( ++p == pe )
+		goto _test_eof41;
+case 41:
+	switch( (*p) ) {
+		case 9: goto st41;
+		case 32: goto st41;
+		case 34: goto st37;
+		case 44: goto st34;
+		case 47: goto st34;
+		case 92: goto st35;
+		case 123: goto st34;
+		case 125: goto st34;
+		case 127: goto st0;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto st0;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st34;
+		} else if ( (*p) >= 58 )
+			goto st34;
+	} else
+		goto st34;
+	goto st42;
+st42:
+	if ( ++p == pe )
+		goto _test_eof42;
+case 42:
+	switch( (*p) ) {
+		case 9: goto st37;
+		case 13: goto st23;
+		case 32: goto st37;
+		case 34: goto st33;
+		case 44: goto st34;
+		case 47: goto st34;
+		case 59: goto st38;
+		case 92: goto st35;
+		case 123: goto st34;
+		case 125: goto st34;
+		case 127: goto tr43;
+	}
+	if ( (*p) < 40 ) {
+		if ( 0 <= (*p) && (*p) <= 31 )
+			goto tr43;
+	} else if ( (*p) > 41 ) {
+		if ( (*p) > 64 ) {
+			if ( 91 <= (*p) && (*p) <= 93 )
+				goto st34;
+		} else if ( (*p) >= 58 )
+			goto st34;
+	} else
+		goto st34;
+	goto st42;
+	}
+	_test_eof2: cs = 2; goto _test_eof; 
+	_test_eof3: cs = 3; goto _test_eof; 
+	_test_eof4: cs = 4; goto _test_eof; 
+	_test_eof5: cs = 5; goto _test_eof; 
+	_test_eof6: cs = 6; goto _test_eof; 
+	_test_eof43: cs = 43; goto _test_eof; 
+	_test_eof7: cs = 7; goto _test_eof; 
+	_test_eof8: cs = 8; goto _test_eof; 
+	_test_eof9: cs = 9; goto _test_eof; 
+	_test_eof10: cs = 10; goto _test_eof; 
+	_test_eof11: cs = 11; goto _test_eof; 
+	_test_eof12: cs = 12; goto _test_eof; 
+	_test_eof13: cs = 13; goto _test_eof; 
+	_test_eof14: cs = 14; goto _test_eof; 
+	_test_eof15: cs = 15; goto _test_eof; 
+	_test_eof16: cs = 16; goto _test_eof; 
+	_test_eof17: cs = 17; goto _test_eof; 
+	_test_eof18: cs = 18; goto _test_eof; 
+	_test_eof19: cs = 19; goto _test_eof; 
+	_test_eof20: cs = 20; goto _test_eof; 
+	_test_eof21: cs = 21; goto _test_eof; 
+	_test_eof22: cs = 22; goto _test_eof; 
+	_test_eof23: cs = 23; goto _test_eof; 
+	_test_eof24: cs = 24; goto _test_eof; 
+	_test_eof25: cs = 25; goto _test_eof; 
+	_test_eof26: cs = 26; goto _test_eof; 
+	_test_eof27: cs = 27; goto _test_eof; 
+	_test_eof28: cs = 28; goto _test_eof; 
+	_test_eof29: cs = 29; goto _test_eof; 
+	_test_eof30: cs = 30; goto _test_eof; 
+	_test_eof31: cs = 31; goto _test_eof; 
+	_test_eof32: cs = 32; goto _test_eof; 
+	_test_eof33: cs = 33; goto _test_eof; 
+	_test_eof34: cs = 34; goto _test_eof; 
+	_test_eof35: cs = 35; goto _test_eof; 
+	_test_eof36: cs = 36; goto _test_eof; 
+	_test_eof37: cs = 37; goto _test_eof; 
+	_test_eof38: cs = 38; goto _test_eof; 
+	_test_eof39: cs = 39; goto _test_eof; 
+	_test_eof40: cs = 40; goto _test_eof; 
+	_test_eof41: cs = 41; goto _test_eof; 
+	_test_eof42: cs = 42; goto _test_eof; 
 
-_again:
-	if ( cs == 0 )
-		goto _out;
-	if ( ++p != pe )
-		goto _resume;
 	_test_eof: {}
 	if ( p == eof )
 	{
-	switch ( _chunked_eof_actions[cs] ) {
-	case 8:
-#line 153 "src/chunked_parser.rl"
+	switch ( cs ) {
+	case 14: 
+	case 36: 
+#line 167 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 	break;
-	case 13:
-#line 162 "src/chunked_parser.rl"
+	case 25: 
+#line 176 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
-	case 15:
-#line 166 "src/chunked_parser.rl"
+	case 26: 
+	case 27: 
+#line 180 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	break;
-	case 17:
-#line 206 "src/chunked_parser.rl"
+	case 29: 
+	case 30: 
+	case 32: 
+	case 33: 
+	case 37: 
+	case 39: 
+	case 40: 
+	case 42: 
+#line 220 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	break;
-	case 2:
-#line 212 "src/chunked_parser.rl"
+	case 2: 
+	case 3: 
+	case 8: 
+	case 9: 
+	case 11: 
+	case 15: 
+	case 17: 
+	case 18: 
+	case 20: 
+#line 226 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	break;
-	case 10:
-#line 153 "src/chunked_parser.rl"
+	case 23: 
+#line 167 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 206 "src/chunked_parser.rl"
+#line 220 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	break;
-	case 4:
-#line 153 "src/chunked_parser.rl"
+	case 4: 
+#line 167 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 212 "src/chunked_parser.rl"
+#line 226 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	break;
-	case 6:
-#line 153 "src/chunked_parser.rl"
+	case 6: 
+#line 167 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 216 "src/chunked_parser.rl"
+#line 230 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
-	case 9:
-#line 203 "src/chunked_parser.rl"
+	case 21: 
+	case 22: 
+#line 217 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
-#line 206 "src/chunked_parser.rl"
+#line 220 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	break;
-	case 11:
-#line 153 "src/chunked_parser.rl"
+	case 24: 
+#line 167 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 206 "src/chunked_parser.rl"
+#line 220 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
-#line 162 "src/chunked_parser.rl"
+#line 176 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
-	case 5:
-#line 153 "src/chunked_parser.rl"
+	case 5: 
+#line 167 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 212 "src/chunked_parser.rl"
+#line 226 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
-#line 216 "src/chunked_parser.rl"
+#line 230 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
-#line 640 "src/chunked_parser.c"
+#line 1276 "src/chunked_parser.c"
 	}
 	}
 
 	_out: {}
 	}
 
-#line 224 "src/chunked_parser.rl"
+#line 238 "src/chunked_parser.rl"
 
     ctx->parser_state = cs;
 
-    *pos_addr = p;
+    *pos_addr = (u_char *) p;
 
     if (p != pe) {
         dd("ASSERTION FAILED: p != pe");
@@ -665,16 +1301,16 @@ _again:
 
 #endif
 
-        for (post.data = p, post.len = 0;
-                post.data + post.len != pe; post.len++)
+        for (post.data = (u_char *) p, post.len = 0;
+                post.data + post.len != (u_char *) pe; post.len++)
         {
             if (post.len >= POST_TEXT_LEN) {
                 break;
             }
         }
 
-        for (pre.data = p, pre.len = 0;
-                pre.data != pos; pre.data--, pre.len++)
+        for (pre.data = (u_char *) p, pre.len = 0;
+                pre.data != (u_char *) pos; pre.data--, pre.len++)
         {
             if (pre.len >= PRE_TEXT_LEN) {
                 break;
@@ -691,7 +1327,7 @@ _again:
         headers_buf.len = ctx->saved_header_in_pos - r->header_in->start;
 
         if (strcmp(caller_info, "preread") == 0) {
-            preread_buf.data = pos;
+            preread_buf.data = (u_char *) pos;
             preread_buf.len = pe - pos;
         } else {
             preread_buf.data = ctx->saved_header_in_pos;

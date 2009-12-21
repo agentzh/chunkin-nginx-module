@@ -441,3 +441,115 @@ Connection: close\r
 --- response_body: hello
 --- timeout: 1
 
+
+
+=== TEST 20: packets in a single buf
+--- config
+    chunkin on;
+    location /aar.do {
+        client_body_buffer_size 1m;
+        echo_request_body;
+    }
+--- raw_request eval
+["POST /aar.do HTTP/1.1\r
+Content-Type: application/octet-stream\r
+Connection: close\r
+Host: data.test.com\r
+Transfer-Encoding: chunked\r
+User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNTRUSTED/1.0\r
+\r
+",
+"535\r
+".('a' x 1228),
+('a' x 107), "\r
+", "0\r
+\r
+"]
+--- raw_request_middle_delay: 0.002
+--- response_body: hello
+--- timeout: 2
+--- SKIP
+
+
+
+=== TEST 21: packets in a single buf
+--- config
+    chunkin on;
+    location /aar.do {
+        client_body_buffer_size 1m;
+        echo_request_body;
+    }
+--- raw_request eval
+["POST /aar.do HTTP/1.1\r
+Content-Type: application/octet-stream\r
+Connection: close\r
+Host: data.test.com\r
+Transfer-Encoding: chunked\r
+User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNTRUSTED/1.0\r
+\r
+",
+"535\r
+".('a' x 1228),
+('a' x 105) . "\r
+", "0\r
+\r
+"]
+--- raw_request_middle_delay: 0.002
+--- response_body eval
+'a' x 0x535
+--- timeout: 2
+
+
+
+=== TEST 22: packets in a single buf
+--- config
+    chunkin on;
+    location /aar.do {
+        client_body_buffer_size 1m;
+        echo_request_body;
+    }
+--- raw_request eval
+["POST /aar.do HTTP/1.1\r
+Content-Type: application/octet-stream\r
+Connection: close\r
+Host: data.test.com\r
+Transfer-Encoding: chunked\r
+User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNTRUSTED/1.0\r
+\r
+",
+"7e0\r
+".('a' x 2016)."\r",
+"aaaa
+", "0\r
+\r
+"]
+--- raw_request_middle_delay: 0.002
+--- response_body eval
+'a' x 0x7e0
+--- timeout: 2
+--- SKIP
+
+
+=== TEST 10: not exceeding max body limit (chunk spanning preread and rb->buf)
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    10m;
+        client_max_body_size       10m;
+        chunkin_max_chunks_per_buf 2048;
+
+        echo_read_request_body;
+
+        echo_request_body;
+        echo;
+    }
+--- more_headers
+#Transfer-Encoding: chunked
+--- request eval
+"POST /main
+".("a" x (1 * 1024 * 1024))
+--- response_body eval
+"a" x (1 * 1024 * 1024)
+--- timeout: 60
+--- SKIP
+

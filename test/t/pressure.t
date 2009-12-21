@@ -156,3 +156,25 @@ hello, world
 --- response_body chomp
 hello, world
 
+
+
+=== TEST 9: not exceeding max body limit (chunk spanning preread and rb->buf)
+--- config
+    chunkin on;
+    location /main {
+        client_body_buffer_size    10m;
+        client_max_body_size       10m;
+
+        echo_request_body;
+        echo;
+    }
+--- request
+POST /main
+--- chunked_body eval
+[split //, "a" x (500 * 1024)]
+--- middle_chunk_delay: 0
+--- response_body eval
+"a" x (500 * 1024)
+--- quit
+--- SKIP
+

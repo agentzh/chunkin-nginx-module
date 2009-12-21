@@ -2,7 +2,7 @@
 
 # this file is mostly meant to be used by the author himself.
 
-ragel -T1 src/chunked_parser.rl
+ragel -G2 src/chunked_parser.rl
 
 if [ $? != 0 ]; then
     echo 'Failed to generate the chunked parser.' 1>&2
@@ -22,6 +22,7 @@ if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$
           --add-module=$root $opts \
           --with-http_ssl_module #\
           #--with-debug
+          #--with-cc-opt="-pg" --with-ld-opt="-pg" \
   #--without-http_ssi_module  # we cannot disable ssi because echo_location_async depends on it (i dunno why?!)
 
 fi
