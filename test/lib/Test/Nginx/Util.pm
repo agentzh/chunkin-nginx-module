@@ -14,7 +14,6 @@ use Module::Install::Can;
 use Cwd qw( cwd );
 use Module::Install::Can;
 use List::Util qw( shuffle );
-use Parallel::ForkManager;
 
 our $NoNginxManager = 0;
 our $Profiling = 0;
@@ -25,6 +24,10 @@ our $MAX_PROCESSES = 10;
 our $ForkManager;
 
 if ($Profiling) {
+    eval "use Parallel::ForkManager";
+    if ($@) {
+        die "Failed to load Parallel::ForkManager: $@\n";
+    }
     $ForkManager = new Parallel::ForkManager($MAX_PROCESSES);
 }
 
