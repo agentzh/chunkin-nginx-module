@@ -3,6 +3,9 @@
 use lib 'lib';
 use Test::Nginx::Socket::Chunkin;
 
+#worker_connections(1024);
+master_process_enabled(1);
+
 our $data;
 
 repeat_each(500);

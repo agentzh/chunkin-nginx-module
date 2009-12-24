@@ -3,7 +3,7 @@ package Test::Nginx::Util;
 use strict;
 use warnings;
 
-our $VERSION = '0.04';
+our $VERSION = '0.06';
 
 use base 'Exporter';
 
@@ -12,7 +12,6 @@ use File::Spec ();
 use HTTP::Response;
 use Module::Install::Can;
 use Cwd qw( cwd );
-use Module::Install::Can;
 use List::Util qw( shuffle );
 
 our $NoNginxManager = 0;
@@ -31,11 +30,37 @@ if ($Profiling) {
     $ForkManager = new Parallel::ForkManager($MAX_PROCESSES);
 }
 
+our $Workers                = 1;
+our $WorkerConnections      = 64;
+our $LogLevel               = 'debug';
+our $MasterProcessEnabled   = 'off';
+our $DaemonEnabled          = 'on';
+our $ServerPort             = 1984;
+our $ServerPortForClient    = 1984;
+#our $ServerPortForClient    = 1984;
+
+
 sub repeat_each (@) {
     if (@_) {
         $RepeatEach = shift;
     } else {
         return $RepeatEach;
+    }
+}
+
+sub worker_connections (@) {
+    if (@_) {
+        $WorkerConnections = shift;
+    } else {
+        return $WorkerConnections;
+    }
+}
+
+sub master_process_enabled (@) {
+    if (@_) {
+        $MasterProcessEnabled = shift() ? 'on' : 'off';
+    } else {
+        return $MasterProcessEnabled;
     }
 }
 
@@ -57,18 +82,12 @@ our @EXPORT_OK = qw(
     $RunTestHelper
     $NoNginxManager
     $RepeatEach
+    worker_connections
+    master_process_enabled
     config_preamble
     repeat_each
 );
 
-our $Workers                = 1;
-our $WorkerConnections      = 1024;
-our $LogLevel               = 'debug';
-our $MasterProcessEnabled   = 'on';
-our $DaemonEnabled          = 'on';
-our $ServerPort             = 1984;
-our $ServerPortForClient    = 1984;
-#our $ServerPortForClient    = 1984;
 
 if ($Profiling) {
     $DaemonEnabled          = 'off';
@@ -130,12 +149,31 @@ sub setup_server_root () {
         die "Failed to do mkdir $LogDir\n";
     mkdir $HtmlDir or
         die "Failed to do mkdir $HtmlDir\n";
+
+    my $index_file = "$HtmlDir/index.html";
+
+    open my $out, ">$index_file" or
+        die "Can't open $index_file for writing: $!\n";
+
+    print $out '<html><head><title>It works!</title></head><body>It works!</body></html>';
+
+    close $out;
+
     mkdir $ConfDir or
         die "Failed to do mkdir $ConfDir\n";
 }
 
-sub write_config_file ($) {
-    my $rconfig = shift;
+sub write_config_file ($$) {
+    my ($config, $http_config) = @_;
+
+    if (!defined $config) {
+        $config = '';
+    }
+
+    if (!defined $http_config) {
+        $http_config = '';
+    }
+
     open my $out, ">$ConfFile" or
         die "Can't open $ConfFile for writing: $!\n";
     print $out <<_EOC_;
@@ -150,6 +188,9 @@ http {
 
     default_type text/plain;
     keepalive_timeout  68;
+
+    $http_config
+
     server {
         listen          $ServerPort;
         server_name     localhost;
@@ -162,7 +203,7 @@ $ConfigPreamble
         # End preamble config...
 
         # Begin test case config...
-$$rconfig
+$config
         # End test case config.
 
         location / {
@@ -307,7 +348,7 @@ sub run_test ($) {
             my $pid = get_pid_from_pidfile($name);
             if (system("ps $pid > /dev/null") == 0) {
                 #warn "found running nginx...";
-                write_config_file(\$config);
+                write_config_file($config, $block->http_config);
                 if (kill(SIGQUIT, $pid) == 0) { # send quit signal
                     #warn("$name - Failed to send quit signal to the nginx process with PID $pid");
                 }
@@ -332,7 +373,7 @@ sub run_test ($) {
 
             #warn "*** Restarting the nginx server...\n";
             setup_server_root();
-            write_config_file(\$config);
+            write_config_file($config, $block->http_config);
             if ( ! Module::Install::Can->can_run('nginx') ) {
                 Test::More::BAIL_OUT("$name - Cannot find the nginx executable in the PATH environment");
                 die;
@@ -392,7 +433,7 @@ sub run_test ($) {
         if (-f $PidFile) {
             my $pid = get_pid_from_pidfile($name);
             if (system("ps $pid > /dev/null") == 0) {
-                write_config_file(\$config);
+                write_config_file($config, $block->http_config);
                 if (kill(SIGQUIT, $pid) == 0) { # send quit signal
                     #warn("$name - Failed to send quit signal to the nginx process with PID $pid");
                 }
