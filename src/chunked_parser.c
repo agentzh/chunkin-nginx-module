@@ -74,7 +74,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     ngx_flag_t          done = 0;
     ngx_str_t           pre, post;
     char*               err_ctx = "";
-    ngx_str_t           user_agent = ngx_string("");
+    ngx_str_t           user_agent = ngx_null_string;
     ssize_t             rest;
 
     
