@@ -29,3 +29,9 @@ genmobi.sh
 *.mobi
 misc/chunked
 reindex
+src/body.h
+src/module.c
+src/util.h
+src/module.h
+src/body.c
+src/util.c
