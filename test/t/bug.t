@@ -530,7 +530,8 @@ User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNT
 --- SKIP
 
 
-=== TEST 10: not exceeding max body limit (chunk spanning preread and rb->buf)
+
+=== TEST 23: not exceeding max body limit (chunk spanning preread and rb->buf)
 --- config
     chunkin on;
     location /main {
