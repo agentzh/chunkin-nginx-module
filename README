@@ -5,9 +5,6 @@ Name
     *This module is not distributed with the Nginx source.* See the
     installation instructions.
 
-    WARNING This module is considered highly experimental and broken in
-    various ways. Use it at your own risk.
-
 Version
     This document describes chunkin-nginx-module v0.19
     (<http://github.com/agentzh/chunkin-nginx-module/downloads>) released on
@@ -48,8 +45,9 @@ Description
 
     Behind the scene, it registers an access-phase handler that will eagerly
     read and decode incoming request bodies when a "Transfer-Encoding:
-    chunked" header triggers a 411 error page in Nginx. For requests that
-    are not in the "chunked" transfer encoding, this module is a "no-op".
+    chunked" header triggers a 411 error page in Nginx (hey, that's what you
+    have to pay for avoiding patching the core ;)). For requests that are
+    not in the "chunked" transfer encoding, this module is a "no-op".
 
     To enable the magic, just turn on the chunkin config option and define a
     custom "411 error_page" using chunkin_resume, like this:
@@ -80,6 +78,10 @@ Description
     The client_body_in_file_only and client_body_in_single_buffer settings
     are followed partially. See Know Issues.
 
+    WARNING: This module is in its very early phase in development and is
+    considered *experimental*. But you're encouraged to play and test it in
+    your environment and report any quirks that you find.
+
     This module is not supposed to be merged into the Nginx core because
     I've used Ragel (<http://www.complang.org/ragel/>) to generate the
     chunked encoding parser for joy :)
@@ -108,7 +110,8 @@ Description
     "r->request_body->bufs" already exists.
 
     Special efforts have been made to reduce data copying and dynamic memory
-    allocation.
+    allocation, thus unfortunately raising the risk of potential buffer
+    handling bugs caused by premature optimizations :P
 
 Directives
   chunkin
@@ -230,12 +233,12 @@ Installation
     _parser.c>), use the following command from the root of the chunkin
     module's source tree:
 
-        $ ragel -G2 src/chunked_parser.rl
+        $ ragel -T1 src/chunked_parser.rl
 
 Compatibility
     The following versions of Nginx should work with this module:
 
-    *   0.8.x (last tested version is 0.8.36)
+    *   0.8.x (last tested version is 0.8.30)
 
     *   0.7.x >= 0.7.21 (last tested version is 0.7.64)
 

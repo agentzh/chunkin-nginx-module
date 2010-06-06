@@ -5,7 +5,6 @@ use Test::Nginx::LWP::Chunkin;
 
 plan tests => repeat_each() * 2 * blocks();
 
-no_shuffle();
 no_diff;
 
 run_tests();
@@ -22,24 +21,21 @@ __DATA__
 POST /main
 --- chunked_body eval
 ["hello", "world"]
---- error_code: 200
---- response_body
-hi
+--- error_code: 411
+--- response_body_like: 411 Length Required
 
 
 
 === TEST 2: default (off) & POST
 --- config
     location /main {
-        echo hi;
     }
 --- request
 POST /main
 --- chunked_body eval
 ["hello", "world"]
---- error_code: 200
---- response_body
-hi
+--- error_code: 411
+--- response_body_like: 411 Length Required
 
 
 
@@ -439,23 +435,5 @@ POST /main
 --- error_code: 200
 --- response_body
 body:
-helloworld
-
-
-
-=== TEST 21: on & PUT
---- config
-    chunkin on;
-    location /main {
-        echo $request_method;
-        echo $echo_request_body;
-    }
---- request
-PUT /main
---- chunked_body eval
-["hello", "world"]
---- error_code: 200
---- response_body
-PUT
 helloworld
 
