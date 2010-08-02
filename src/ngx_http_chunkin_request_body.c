@@ -43,7 +43,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     /* r->request_body_in_file_only = 1; */
 
     if (r->request_body || r->discard_body) {
-        /* post_handler(r); */
+        post_handler(r);
         return NGX_OK;
     }
 
@@ -129,7 +129,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
             ctx->raw_body_size += r->header_in->pos
                 - ctx->saved_header_in_pos;
 
-            /* post_handler(r); */
+            post_handler(r);
 
             return NGX_OK;
         }
