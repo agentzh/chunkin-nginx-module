@@ -205,8 +205,8 @@ the following command from the root of the chunkin module's source tree:
 
 The following versions of Nginx should work with this module:
 
-* '''0.8.x'''                       (last tested version is 0.8.36)
-* '''0.7.x >= 0.7.21'''             (last tested version is 0.7.64)
+* '''0.8.0 ~ 0.8.41'''              (newer 0.8.x versions won't work)
+* '''0.7.x >= 0.7.21'''             (last tested version is 0.7.67)
 
 Earlier versions of Nginx like 0.6.x and 0.5.x will ''not'' work.
 
