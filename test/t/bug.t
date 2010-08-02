@@ -497,7 +497,7 @@ User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNT
 --- raw_request_middle_delay: 0.002
 --- response_body eval
 'a' x 0x535
---- timeout: 2
+--- timeout: 5
 
 
 

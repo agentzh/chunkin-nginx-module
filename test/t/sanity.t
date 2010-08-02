@@ -437,3 +437,19 @@ POST /main
 body:
 helloworld
 
+
+
+=== TEST 21: on & PUT
+--- config
+    chunkin on;
+    location /main {
+        echo_request_body;
+    }
+--- request
+PUT /main
+hello
+--- response_body
+hello
+--- error_code: 200
+--- SKIP
+

@@ -236,17 +236,19 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
             ngx_http_chunkin_post_read);
 
     if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
-        dd("read client request body returned special response %d", rc);
+        dd("read client request body returned special response %d", (int) rc);
         return rc;
     }
 
-    dd("read client request body returned %d", rc);
+    dd("read client request body returned %d", (int) rc);
 
     if (rc == NGX_AGAIN) {
         ctx->waiting_more_body = 1;
 
         return NGX_AGAIN;
     }
+
+    ctx->done = 1;
 
     return NGX_DECLINED;
 }
@@ -265,6 +267,8 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
     r->read_event_handler = ngx_http_block_reading;
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
+
+    ctx->done = 1;
 
     if (ctx->waiting_more_body) {
         ctx->waiting_more_body = 0;
@@ -294,6 +298,8 @@ ngx_http_chunkin_resume_handler(ngx_http_request_t *r) {
     ngx_http_chunkin_ctx_t      *ctx;
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
+
+    dd("method: %.*s", (int) r->method_name.len, r->method_name.data);
 
     if (!conf->enabled || r != r->main
             || ! ngx_http_chunkin_is_chunked_encoding(r->main))
