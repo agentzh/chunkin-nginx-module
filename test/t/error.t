@@ -301,4 +301,5 @@ Transfer-Encoding: chunked
 "
 --- response_body_like: 400 Bad Request
 --- error_code: 400
+--- timeout: 10
 

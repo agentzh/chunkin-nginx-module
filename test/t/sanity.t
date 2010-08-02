@@ -443,13 +443,14 @@ helloworld
 --- config
     chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- request
 PUT /main
-hello
---- response_body
-hello
+--- chunked_body eval
+["hello", "world"]
+--- response_body chomp
+helloworld
 --- error_code: 200
---- SKIP
 

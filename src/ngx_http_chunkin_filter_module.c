@@ -132,6 +132,8 @@ ngx_http_chunkin_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 static ngx_flag_t
 ngx_http_chunkin_is_chunked_encoding(ngx_http_request_t *r)
 {
+    dd("is chunked encoding...");
+
     return r->headers_in.transfer_encoding &&
         r->headers_in.transfer_encoding->value.len >= 7 &&
         ngx_strcasestrn(r->headers_in.transfer_encoding->value.data,
@@ -299,13 +301,27 @@ ngx_http_chunkin_resume_handler(ngx_http_request_t *r) {
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
 
-    dd("method: %.*s", (int) r->method_name.len, r->method_name.data);
+    dd("method: %.*s (%d)", (int) r->method_name.len, r->method_name.data, (int) r->method);
 
     if (!conf->enabled || r != r->main
-            || ! ngx_http_chunkin_is_chunked_encoding(r->main))
+            || (r->method != NGX_HTTP_PUT && r->method != NGX_HTTP_POST))
     {
+        dd("conf not enabled or in subrequest or not POST nor PUT requests");
+
         return NGX_HTTP_LENGTH_REQUIRED;
     }
+
+    if (r->method == NGX_HTTP_POST &&
+                ! ngx_http_chunkin_is_chunked_encoding(r->main))
+    {
+        dd("found POST request, but not chunked");
+        return NGX_HTTP_LENGTH_REQUIRED;
+    }
+
+    dd("chunked request test passed");
+
+    /* XXX just to fool the nginx core */
+    r->headers_in.content_length_n = 1;
 
     ngx_http_chunkin_clear_transfer_encoding(r);
 

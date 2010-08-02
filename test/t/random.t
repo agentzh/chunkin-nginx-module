@@ -50,6 +50,7 @@ close $out;
 $s
 --- response_body_eval
 $::data
+--- timeout: 10
 
 
 
@@ -85,4 +86,5 @@ close $out;
 $s
 --- response_body eval
 $::data
+--- timeout: 10
 
