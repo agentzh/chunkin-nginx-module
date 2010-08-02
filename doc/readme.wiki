@@ -4,7 +4,7 @@
 
 ''This module is not distributed with the Nginx source.'' See [[#Installation|the installation instructions]].
 
-'''WARNING''' This module is considered highly experimental. Use it at your own risk. You're been warned.
+'''WARNING''' This module is considered highly experimental. Use it at your own risk. You've been warned.
 
 = Version =
 
