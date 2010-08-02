@@ -18,18 +18,9 @@ static ngx_int_t ngx_http_chunkin_resume_handler(ngx_http_request_t *r);
 static char* ngx_http_chunkin_resume(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf);
 
-static ngx_http_output_header_filter_pt  ngx_http_next_header_filter;
-
-static ngx_http_output_body_filter_pt    ngx_http_next_body_filter;
-
-static ngx_int_t ngx_http_chunkin_header_filter(ngx_http_request_t *r);
-static ngx_int_t ngx_http_chunkin_body_filter(ngx_http_request_t *r,
-        ngx_chain_t *in);
-
 static void *ngx_http_chunkin_create_conf(ngx_conf_t *cf);
 static char *ngx_http_chunkin_merge_conf(ngx_conf_t *cf, void *parent,
     void *child);
-static ngx_int_t ngx_http_chunkin_filter_init(ngx_conf_t *cf);
 
 static ngx_int_t ngx_http_chunkin_handler(ngx_http_request_t *r);
 
@@ -138,19 +129,6 @@ ngx_http_chunkin_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 }
 
 
-static ngx_int_t
-ngx_http_chunkin_filter_init(ngx_conf_t *cf)
-{
-    ngx_http_next_header_filter = ngx_http_top_header_filter;
-    ngx_http_top_header_filter = ngx_http_chunkin_header_filter;
-
-    ngx_http_next_body_filter = ngx_http_top_body_filter;
-    ngx_http_top_body_filter = ngx_http_chunkin_body_filter;
-
-    return NGX_OK;
-}
-
-
 static ngx_flag_t
 ngx_http_chunkin_is_chunked_encoding(ngx_http_request_t *r)
 {
@@ -158,133 +136,6 @@ ngx_http_chunkin_is_chunked_encoding(ngx_http_request_t *r)
         r->headers_in.transfer_encoding->value.len >= 7 &&
         ngx_strcasestrn(r->headers_in.transfer_encoding->value.data,
                 "chunked", 7 - 1);
-}
-
-
-static ngx_int_t
-ngx_http_chunkin_header_filter(ngx_http_request_t *r)
-{
-    ngx_http_chunkin_ctx_t      *ctx;
-    ngx_http_chunkin_conf_t     *conf;
-
-    if (r != r->main || r->request_body) {
-        dd("We ignore subrequests or main requests with request_body.");
-        return ngx_http_next_header_filter(r);
-    }
-
-    dd("header filter: header_in->pos: %d", (int)(r->header_in->pos - r->header_in->start));
-
-    conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
-
-    /*
-    dd("chunkin enabled? %d", conf->enabled);
-    dd("length required status? %d",
-            r->headers_out.status == NGX_HTTP_LENGTH_REQUIRED);
-    dd("is chunked? %d",
-            ngx_http_chunkin_is_chunked_encoding(r));
-            */
-
-    if ( ! conf->enabled || r->headers_out.status != NGX_HTTP_LENGTH_REQUIRED
-            || ! ngx_http_chunkin_is_chunked_encoding(r))
-    {
-        dd("inactive");
-        return ngx_http_next_header_filter(r);
-    }
-
-    ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
-
-    if (ctx) {
-        dd("HAHA Found ctx...skipped.");
-        return ngx_http_next_header_filter(r);
-    }
-
-    ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_chunkin_ctx_t));
-    if (ctx == NULL) {
-        return NGX_ERROR;
-    }
-
-    ctx->ignore_body = 1;
-
-    ngx_http_set_ctx(r, ctx, ngx_http_chunkin_filter_module);
-
-    return NGX_OK;
-}
-
-
-static ngx_int_t
-ngx_http_chunkin_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
-{
-    ngx_http_chunkin_ctx_t      *ctx;
-    ngx_flag_t                  last;
-    ngx_int_t                   rc;
-    ngx_chain_t                 *cl;
-
-    ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
-
-    if (ctx == NULL || !ctx->ignore_body || r->request_body) {
-        dd("ctx NULL? %s", ctx == NULL ? "yes" : "NO");
-        return ngx_http_next_body_filter(r, in);
-    }
-
-    /* throw away the 411 response body */
-
-    last = 0;
-
-    for (cl = in; cl; cl = cl->next) {
-        /* mark the buf as consumed */
-        cl->buf->pos = cl->buf->last;
-
-        if (cl->buf->last_buf) {
-            last = 1;
-        }
-    }
-
-    if (last) {
-        dd("ignore last body...");
-
-        ctx->ignore_body = 0;
-
-        ctx->r_discard_body = r->discard_body;
-        r->discard_body = 0;
-        r->error_page = 0;
-        r->err_status = 0;
-
-        /* set new content length header */
-        rc = ngx_http_chunkin_set_content_length_header(r,
-                sizeof("0\r\n\r\n"));
-        if (rc != NGX_OK) {
-            ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
-                          "chunkin: failed to set content length.");
-
-            return NGX_OK;
-        }
-
-        ngx_http_chunkin_clear_transfer_encoding(r);
-
-        /*
-        r->method = NGX_HTTP_PUT;
-        r->headers_in.content_length = NULL;
-        r->headers_in.content_length_n = -1;
-        */
-
-        rc = ngx_http_chunkin_process_request_header(r);
-        if (rc != NGX_OK) {
-            return rc;
-        }
-
-        /* r->plain_http = 1; */
-
-        rc = ngx_http_chunkin_process_request(r);
-        if (rc != NGX_OK) {
-            return rc;
-        }
-
-        return ngx_http_chunkin_restart_request(r, ctx);
-    }
-
-    dd("ignore body...");
-
-    return NGX_OK;
 }
 
 
@@ -303,7 +154,7 @@ ngx_http_chunkin_init(ngx_conf_t *cf)
 
     *h = ngx_http_chunkin_handler;
 
-    return ngx_http_chunkin_filter_init(cf);
+    return NGX_OK;
 }
 
 
@@ -330,6 +181,14 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
         dd("ctx not found");
 
         return NGX_DECLINED;
+    }
+
+    if (ctx->done) {
+        return NGX_DECLINED;
+    }
+
+    if (ctx->waiting_more_body) {
+        return NGX_AGAIN;
     }
 
     dd("reading chunked input eagerly...");
@@ -383,18 +242,20 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
 
     dd("read client request body returned %d", rc);
 
-    if (rc == NGX_OK) {
-        return NGX_DECLINED;
+    if (rc == NGX_AGAIN) {
+        ctx->waiting_more_body = 1;
+
+        return NGX_AGAIN;
     }
 
-    return rc;
+    return NGX_DECLINED;
 }
 
 
 static void
 ngx_http_chunkin_post_read(ngx_http_request_t *r)
 {
-    /* ngx_http_chunkin_ctx_t          *ctx; */
+    ngx_http_chunkin_ctx_t          *ctx;
 
     dd("post read");
 
@@ -402,25 +263,13 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
     dd_check_write_event_handler(r);
 
     r->read_event_handler = ngx_http_block_reading;
-    r->write_event_handler = ngx_http_core_run_phases;
 
-    /*
     ctx = ngx_http_get_module_ctx(r, ngx_http_chunkin_filter_module);
 
-    if (ctx == NULL) {
-        ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_chunkin_ctx_t));
-        if (ctx == NULL) {
-            ngx_http_core_run_phases(r);
-            return;
-        }
+    if (ctx->waiting_more_body) {
+        ctx->waiting_more_body = 0;
+        ngx_http_core_run_phases(r);
     }
-
-    dd("set ignore_body in post read");
-
-    */
-
-    r->phase_handler++;
-    ngx_http_core_run_phases(r);
 }
 
 

@@ -39,7 +39,11 @@ typedef struct {
     u_char              *saved_header_in_pos;
 
     ngx_uint_t          count;
-    ngx_flag_t          r_discard_body;
+    ngx_flag_t          r_discard_body:1;
+
+    ngx_flag_t          done:1;
+    ngx_flag_t          waiting_more_body:1;
+
 } ngx_http_chunkin_ctx_t;
 
 
