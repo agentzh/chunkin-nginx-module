@@ -4,11 +4,11 @@
 
 ''This module is not distributed with the Nginx source.'' See [[#Installation|the installation instructions]].
 
-'''WARNING''' This module is considered highly experimental and broken in various ways. Use it at your own risk.
+'''WARNING''' This module is considered highly experimental. Use it at your own risk. You're been warned.
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/downloads v0.19] released on Dec 21, 2009.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/tarball/v0.20 v0.20] released on August 2, 2010.
 
 = Synopsis =
 
@@ -224,6 +224,12 @@ Although a lot of effort has been put into testing and code tuning, there must b
 Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/chunkin-nginx-module].
 
 = ChangeLog =
+
+== v0.20 ==
+* fixed a bug that may read incomplete chunked body. thanks Gong Kaihui (龚开晖).
+* fixed various memory issues in the implementation which may cause nginx processes to crash.
+* added support for chunked POST requests.
+* now we always require "error_page 411 @resume" and no default (buggy) magic any more. thanks Gong Kaihui (龚开晖).
 
 == v0.19 ==
 * we now use ragel -G2 to generate the chunked parser and we're 36% faster.
