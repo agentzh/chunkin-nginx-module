@@ -1,4 +1,4 @@
-# vi:filetype=perl
+# vi:ft=
 
 use lib 'lib';
 use Test::Nginx::LWP::Chunkin;
@@ -443,7 +443,7 @@ helloworld
 --- config
     chunkin on;
     location /main {
-        echo_read_request_body;
+        #echo_read_request_body;
         echo_request_body;
     }
 --- request
