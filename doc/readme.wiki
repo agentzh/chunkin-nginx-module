@@ -8,7 +8,7 @@
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/tarball/v0.20 v0.20] released on August 2, 2010.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/tarball/v0.21 v0.21] released on August 3, 2010.
 
 = Synopsis =
 
@@ -174,12 +174,12 @@ clean and safe way to reallocate or extend the <code>r->header_in</code> buffer?
 = Installation =
 
 Grab the nginx source code from [http://nginx.net/ nginx.net], for example,
-the version 0.8.29 (see [[#Compatibility|nginx compatibility]]), and then build the source with this module:
+the version 0.8.41 (see [[#Compatibility|nginx compatibility]]), and then build the source with this module:
 
 <geshi lang="bash">
-    $ wget 'http://sysoev.ru/nginx/nginx-0.8.29.tar.gz'
-    $ tar -xzvf nginx-0.8.29.tar.gz
-    $ cd nginx-0.8.29/
+    $ wget 'http://sysoev.ru/nginx/nginx-0.8.41.tar.gz'
+    $ tar -xzvf nginx-0.8.41.tar.gz
+    $ cd nginx-0.8.41/
     
     # Here we assume you would install you nginx under /opt/nginx/.
     $ ./configure --prefix=/opt/nginx \
@@ -224,6 +224,9 @@ Although a lot of effort has been put into testing and code tuning, there must b
 Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/chunkin-nginx-module].
 
 = ChangeLog =
+
+== v0.21 ==
+* applied a patch from Gong Kaihui (龚开晖) to always call <code>post_handler</code> in <code>ngx_http_chunkin_read_chunked_request_body</code>.
 
 == v0.20 ==
 * fixed a bug that may read incomplete chunked body. thanks Gong Kaihui (龚开晖).

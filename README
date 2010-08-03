@@ -9,9 +9,9 @@ Name
     own risk. You've been warned.
 
 Version
-    This document describes chunkin-nginx-module v0.20
-    (<http://github.com/agentzh/chunkin-nginx-module/tarball/v0.20>)
-    released on August 2, 2010.
+    This document describes chunkin-nginx-module v0.21
+    (<http://github.com/agentzh/chunkin-nginx-module/tarball/v0.21>)
+    released on August 3, 2010.
 
 Synopsis
       chunkin on;
@@ -204,12 +204,12 @@ Directives
 
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/>), for
-    example, the version 0.8.29 (see nginx compatibility), and then build
+    example, the version 0.8.41 (see nginx compatibility), and then build
     the source with this module:
 
-        $ wget 'http://sysoev.ru/nginx/nginx-0.8.29.tar.gz'
-        $ tar -xzvf nginx-0.8.29.tar.gz
-        $ cd nginx-0.8.29/
+        $ wget 'http://sysoev.ru/nginx/nginx-0.8.41.tar.gz'
+        $ tar -xzvf nginx-0.8.41.tar.gz
+        $ cd nginx-0.8.41/
 
         # Here we assume you would install you nginx under /opt/nginx/.
         $ ./configure --prefix=/opt/nginx \
@@ -260,6 +260,10 @@ Source Repository
     (<http://github.com/agentzh/chunkin-nginx-module>).
 
 ChangeLog
+  v0.21
+    *   applied a patch from Gong Kaihui (龚开晖) to always call "post_handler"
+        in "ngx_http_chunkin_read_chunked_request_body".
+
   v0.20
     *   fixed a bug that may read incomplete chunked body. thanks Gong
         Kaihui (龚开晖).
