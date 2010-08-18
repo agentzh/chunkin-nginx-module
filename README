@@ -5,8 +5,9 @@ Name
     *This module is not distributed with the Nginx source.* See the
     installation instructions.
 
-    WARNING This module is considered highly experimental. Use it at your
-    own risk. You've been warned.
+Status
+    This module is considered production ready when combined with nginx
+    0.8.x <= 0.8.41 and 0.7.x.
 
 Version
     This document describes chunkin-nginx-module v0.21
@@ -271,7 +272,7 @@ ChangeLog
     *   fixed various memory issues in the implementation which may cause
         nginx processes to crash.
 
-    *   added support for chunked POST requests.
+    *   added support for chunked PUT requests.
 
     *   now we always require "error_page 411 @resume" and no default
         (buggy) magic any more. thanks Gong Kaihui (龚开晖).
