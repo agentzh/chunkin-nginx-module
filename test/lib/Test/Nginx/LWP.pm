@@ -4,7 +4,7 @@ use lib 'lib';
 use lib 'inc';
 use Test::Base -Base;
 
-our $VERSION = '0.10';
+our $VERSION = '0.09';
 
 our $NoLongString;
 
@@ -51,7 +51,7 @@ sub no_long_string () {
     $NoLongString = 1;
 }
 
-sub run_test_helper ($$);
+sub run_test_helper ($);
 
 $RunTestHelper = \&run_test_helper;
 
@@ -96,8 +96,8 @@ sub chunk_it ($$$) {
     }
 }
 
-sub run_test_helper ($$) {
-    my ($block, $dry_run) = @_;
+sub run_test_helper ($) {
+    my ($block) = @_;
 
     my $request = $block->request;
 
@@ -162,23 +162,14 @@ sub run_test_helper ($$) {
     #warn "req: ", $req->as_string, "\n";
     #warn "DONE!!!!!!!!!!!!!!!!!!!!";
 
-    my $res = HTTP::Response->new;
-    unless ($dry_run) {
-        $res = $UserAgent->request($req);
-    }
+    my $res = $UserAgent->request($req);
 
     #warn "res returned!!!";
 
-    if ($dry_run) {
-        SKIP: {
-            Test::More::skip("$name - tests skipped due to the lack of directive $dry_run", 1);
-        }
+    if (defined $block->error_code) {
+        is($res->code, $block->error_code, "$name - status code ok");
     } else {
-        if (defined $block->error_code) {
-            is($res->code, $block->error_code, "$name - status code ok");
-        } else {
-            is($res->code, 200, "$name - status code ok");
-        }
+        is($res->code, 200, "$name - status code ok");
     }
 
     if (defined $block->response_headers) {
@@ -188,14 +179,8 @@ sub run_test_helper ($$) {
             if (!defined $expected_val) {
                 $expected_val = '';
             }
-            if ($dry_run) {
-                SKIP: {
-                    Test::More::skip("$name - tests skipped due to the lack of directive $dry_run", 1);
-                }
-            } else {
-                is $expected_val, $val,
-                    "$name - header $key ok";
-            }
+            is $expected_val, $val,
+                "$name - header $key ok";
         }
     } elsif (defined $block->response_headers_like) {
         my $headers = parse_headers($block->response_headers_like);
@@ -204,14 +189,8 @@ sub run_test_helper ($$) {
             if (!defined $expected_val) {
                 $expected_val = '';
             }
-            if ($dry_run) {
-                SKIP: {
-                    Test::More::skip("$name - tests skipped due to the lack of directive $dry_run", 1);
-                }
-            } else {
-                like $expected_val, qr/^$val$/,
-                    "$name - header $key like ok";
-            }
+            like $expected_val, qr/^$val$/,
+                "$name - header $key like ok";
         }
     }
 
@@ -227,18 +206,12 @@ sub run_test_helper ($$) {
         $expected =~ s/\$ServerPortForClient\b/$ServerPortForClient/g;
         #warn show_all_chars($content);
 
-        if ($dry_run) {
-            SKIP: {
-                Test::More::skip("$name - tests skipped due to the lack of directive $dry_run", 1);
-            }
+        if ($NoLongString) {
+            is($content, $expected, "$name - response_body - response is expected");
         } else {
-            if ($NoLongString) {
-                is($content, $expected, "$name - response_body - response is expected");
-            } else {
-                is_string($content, $expected, "$name - response_body - response is expected");
-            }
-            #is($content, $expected, "$name - response_body - response is expected");
+            is_string($content, $expected, "$name - response_body - response is expected");
         }
+        #is($content, $expected, "$name - response_body - response is expected");
 
     } elsif (defined $block->response_body_like) {
         my $content = $res->content;
@@ -250,14 +223,7 @@ sub run_test_helper ($$) {
         $expected_pat =~ s/\$ServerPort\b/$ServerPort/g;
         $expected_pat =~ s/\$ServerPortForClient\b/$ServerPortForClient/g;
         my $summary = trim($content);
-
-        if ($dry_run) {
-            SKIP: {
-                Test::More::skip("$name - tests skipped due to the lack of directive $dry_run", 1);
-            }
-        } else {
-            like($content, qr/$expected_pat/s, "$name - response_body_like - response is expected ($summary)");
-        }
+        like($content, qr/$expected_pat/s, "$name - response_body_like - response is expected ($summary)");
     }
 }
 
