@@ -23,9 +23,9 @@ if [ ! -s "nginx-$version.tar.gz" ]; then
     fi
 fi
 
-tar -xzvf nginx-$version.tar.gz || exit 1
-cp $root/../no-pool-nginx/nginx-0.8.41-no_pool.patch ./
-patch -p0 < nginx-0.8.41-no_pool.patch
+#tar -xzvf nginx-$version.tar.gz || exit 1
+#cp $root/../no-pool-nginx/nginx-0.8.41-no_pool.patch ./
+#patch -p0 < nginx-0.8.41-no_pool.patch
 
 cd nginx-$version/
 if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$root/util/build.sh" -nt Makefile ]]; then
