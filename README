@@ -203,6 +203,24 @@ Directives
     Is there a clean and safe way to reallocate or extend the "r->header_in"
     buffer?
 
+Trouble Shooting
+    When combining this module with ngx_proxy and ngx_fastcgi, nginx sends a
+    "Transfer-Encoding: " header which is invalid and not being treated well
+    by some webservers on backend, for example, riak. So a work-around for
+    now is to use the ngx_headers_more
+    (<http://wiki.nginx.org/NginxHttpHeadersMoreModule>) module to remove
+    the "Transfer-Encoding" completely, as in
+
+    chunkin on;
+
+    error_page 411 = @my_411_error; location @my_411_error { chunkin_resume;
+    }
+
+    location / { more_clear_input_headers 'Transfer-Encoding'; proxy_pass
+    http://riak; }
+
+    Thanks hoodoos (<http://github.com/hoodoos>) for sharing this trick :)
+
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/>), for
     example, the version 0.8.41 (see nginx compatibility), and then build

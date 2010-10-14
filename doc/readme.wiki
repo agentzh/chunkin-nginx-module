@@ -173,6 +173,26 @@ I haven't fully grokked all the details among <code>r->header_in</code>, <code>c
 busy/free lists and those so-called "large header buffers". Is there a
 clean and safe way to reallocate or extend the <code>r->header_in</code> buffer?
 
+= Trouble Shooting =
+
+When combining this module with ngx_proxy and ngx_fastcgi, nginx sends a "Transfer-Encoding: " header which is invalid and not being treated well by some webservers on backend, for example, riak. So a work-around for now is to use the [http://wiki.nginx.org/NginxHttpHeadersMoreModule ngx_headers_more] module to remove the <code>Transfer-Encoding</code> completely, as in
+
+<geshi lang="nginx">
+chunkin on;
+
+error_page 411 = @my_411_error;
+    location @my_411_error {
+    chunkin_resume;
+}
+
+location / {
+    more_clear_input_headers 'Transfer-Encoding';
+    proxy_pass http://riak;
+}
+</geshi>
+
+Thanks [http://github.com/hoodoos hoodoos] for sharing this trick :)
+
 = Installation =
 
 Grab the nginx source code from [http://nginx.net/ nginx.net], for example,
