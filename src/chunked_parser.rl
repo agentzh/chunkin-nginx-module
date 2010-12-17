@@ -284,6 +284,7 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
         if (strcmp(caller_info, "preread") == 0) {
             preread_buf.data = (u_char *) pos;
             preread_buf.len = pe - pos;
+
         } else {
             preread_buf.data = ctx->saved_header_in_pos;
             preread_buf.len = r->header_in->pos - ctx->saved_header_in_pos;
