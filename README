@@ -6,16 +6,7 @@ Name
     installation instructions.
 
 Status
-    This module is considered production ready when combined with nginx
-    0.8.x <= 0.8.41 and 0.7.x.
-
-    For nginx 0.8.53, one should apply the following patch to the nginx
-    core:
-
-        http://agentzh.org/misc/nginx/nginx-0.8.53-rewrite_phase_fix.patch
-
-    This patch may also be applied cleanly for other versions of nginx
-    0.8.42+ :)
+    This module is considered production ready.
 
 Version
     This document describes chunkin-nginx-module v0.21
@@ -262,21 +253,9 @@ Installation
 Compatibility
     The following versions of Nginx should work with this module:
 
-    *   0.8.0 ~ 0.8.41 (newer 0.8.x versions won't work)
+    *   0.8.x (last tested: 0.8.54)
 
-    *   0.7.x >= 0.7.21 (last tested version is 0.7.67)
-
-    Latest nginx 0.8.42+ will not work with this module due to a regression
-    since nginx 0.8.42 as explained in the following thread:
-
-        http://forum.nginx.org/read.php?29,103078
-
-    One should apply the following patch to nginx 0.8.42+:
-
-        http://agentzh.org/misc/nginx/nginx-0.8.53-rewrite_phase_fix.patch
-
-    This patch is for nginx 0.8.53, but should also be applied cleanly for
-    other versions of nginx 0.8.42+ :)
+    *   0.7.x >= 0.7.21 (last tested: 0.7.67)
 
     Earlier versions of Nginx like 0.6.x and 0.5.x will *not* work.
 
@@ -511,6 +490,10 @@ Copyright & License
     *   Redistributions in binary form must reproduce the above copyright
         notice, this list of conditions and the following disclaimer in the
         documentation and/or other materials provided with the distribution.
+
+    *   Neither the name of the Taobao Inc. nor the names of its
+        contributors may be used to endorse or promote products derived from
+        this software without specific prior written permission.
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
     IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
