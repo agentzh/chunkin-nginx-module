@@ -304,7 +304,8 @@ ngx_http_chunkin_resume_handler(ngx_http_request_t *r) {
     dd("method: %.*s (%d)", (int) r->method_name.len, r->method_name.data, (int) r->method);
 
     if (!conf->enabled || r != r->main
-            || (r->method != NGX_HTTP_PUT && r->method != NGX_HTTP_POST))
+            || (r->method != NGX_HTTP_PUT && r->method != NGX_HTTP_POST &&
+                r->method != NGX_HTTP_DELETE))
     {
         dd("conf not enabled or in subrequest or not POST nor PUT requests");
 

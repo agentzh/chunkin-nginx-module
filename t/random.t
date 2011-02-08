@@ -1,6 +1,6 @@
-# vi:filetype=perl
+# vi:filetype=
 
-use lib 'lib';
+use lib 't/lib';
 use Test::Nginx::Socket::Chunkin;
 
 #worker_connections(1024);

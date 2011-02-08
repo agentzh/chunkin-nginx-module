@@ -20,7 +20,7 @@ test/blib
 test.sh
 t.sh
 t/t.sh
-test/t/servroot/
+t/servroot/
 releng
 reset
 *.t_
@@ -35,3 +35,7 @@ src/util.h
 src/module.h
 src/body.c
 src/util.c
+ctags
+go
+util/gprof
+all.sh

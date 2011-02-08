@@ -1,6 +1,6 @@
-# vi:filetype=perl
+# vi:filetype=
 
-use lib 'lib';
+use lib 't/lib';
 use Test::Nginx::Socket::Chunkin;
 
 repeat_each(3);
@@ -553,4 +553,26 @@ User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNT
 "a" x (1 * 1024 * 1024)
 --- timeout: 60
 --- SKIP
+
+
+
+=== TEST 24: binary in data
+--- config
+    chunkin on;
+    location /ar.do {
+        echo $request_method;
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"DELETE /ar.do
+5\r
+hello\r
+0\r
+\r
+"
+--- response_body chop
+DELETE
+hello
 

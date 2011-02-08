@@ -1,6 +1,6 @@
-# vi:filetype=perl
+# vi:filetype=
 
-use lib 'lib';
+use lib 't/lib';
 
 my $skip_all;
 

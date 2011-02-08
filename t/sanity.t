@@ -1,6 +1,6 @@
 # vi:ft=
 
-use lib 'lib';
+use lib 't/lib';
 use Test::Nginx::LWP::Chunkin;
 
 plan tests => repeat_each() * 2 * blocks();
