@@ -10,28 +10,33 @@ if [ $? != 0 ]; then
 fi
 
 root=`pwd`
-cd ~/work
 version=$1
 opts=$2
+target=$root/work/nginx
+
+if [ ! -d ./buildroot ]; then
+    mkdir ./buildroot || exit 1
+fi
+
+cd buildroot || exit 1
 
 if [ ! -s "nginx-$version.tar.gz" ]; then
-    wget "http://sysoev.ru/nginx/nginx-$version.tar.gz" -O nginx-$version.tar.gz || exit 1
-    tar -xzvf nginx-$version.tar.gz || exit 1
-    if [ "$version" = "0.8.41" ]; then
-        cp $root/../no-pool-nginx/nginx-$version-no_pool.patch ./
-        patch -p0 < nginx-$version-no_pool.patch || exit 1
+    if [ -f ~/work/nginx-$version.tar.gz ]; then
+        cp ~/work/nginx-$version.tar.gz ./ || exit 1
+    else
+        wget "http://sysoev.ru/nginx/nginx-$version.tar.gz" -O nginx-$version.tar.gz || exit 1
     fi
+
+    tar -xzvf nginx-$version.tar.gz || exit 1
+    cp $root/../no-pool-nginx/nginx-$version-no_pool.patch ./ || exit 1
+    patch -p0 < nginx-$version-no_pool.patch || exit 1
 fi
 
 #tar -xzvf nginx-$version.tar.gz || exit 1
-#cp $root/../no-pool-nginx/nginx-0.8.41-no_pool.patch ./
-#patch -p0 < nginx-0.8.41-no_pool.patch
+#cp $root/../no-pool-nginx/nginx-$version-no_pool.patch ./ || exit 1
+#patch -p0 < nginx-$version-no_pool.patch || exit 1
 
-if [ "$version" = "0.8.53" ]; then
-    cd nginx-$version-patched/
-else
-    cd nginx-$version
-fi
+cd nginx-$version/ || exit 1
 
 if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$root/util/build.sh" -nt Makefile ]]; then
     ./configure --prefix=/opt/nginx \

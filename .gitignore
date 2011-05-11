@@ -38,4 +38,7 @@ src/util.c
 ctags
 go
 util/gprof
-all.sh
+all
+build10
+buildroot/
+

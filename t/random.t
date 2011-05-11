@@ -28,7 +28,7 @@ __DATA__
     }
 --- more_headers
 Transfer-Encoding: chunked
---- request_eval
+--- request eval
 $::data = '';
 my $count = (int rand 32766) + 1;
 for (my $i = 0; $i < $count; $i++) {
@@ -48,7 +48,7 @@ open my $out, '>/tmp/out.txt' or die $!;
 print $out $s;
 close $out;
 $s
---- response_body_eval
+--- response_body eval
 $::data
 --- timeout: 10
 
