@@ -223,10 +223,20 @@ the following command from the root of the chunkin module's source tree:
     $ ragel -G2 src/chunked_parser.rl
 </geshi>
 
+= Packages from users =
+
+== Fedora 13 RPM files ==
+
+The following source and binary rpm files are contributed by Ernest Folch, with nginx 0.8.54, ngx_chunkin v0.21 and ngx_headers_more v0.13:
+
+* [http://agentzh.org/misc/nginx/ernest/nginx-0.8.54-1.fc13.src.rpm nginx-0.8.54-1.fc13.src.rpm]
+* [http://agentzh.org/misc/nginx/ernest/nginx-0.8.54-1.fc13.x86_64.rpm nginx-0.8.54-1.fc13.x86_64.rpm]
+
 = Compatibility =
 
 The following versions of Nginx should work with this module:
 
+* '''1.0.x'''                       (last tested: 1.0.2)
 * '''0.8.x'''                       (last tested: 0.8.54)
 * '''0.7.x >= 0.7.21'''             (last tested: 0.7.67)
 
