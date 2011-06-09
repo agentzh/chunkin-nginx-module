@@ -39,7 +39,7 @@ fi
 cd nginx-$version/ || exit 1
 
 if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$root/util/build.sh" -nt Makefile ]]; then
-    ./configure --prefix=/opt/nginx \
+    ./configure --prefix=$target \
           --add-module=$root/../echo-nginx-module \
           --add-module=$root $opts \
           --with-debug
@@ -49,11 +49,11 @@ if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$
   #--without-http_ssi_module  # we cannot disable ssi because echo_location_async depends on it (i dunno why?!)
 
 fi
-if [ -f /opt/nginx/sbin/nginx ]; then
-    rm -f /opt/nginx/sbin/nginx
+if [ -f $target/sbin/nginx ]; then
+    rm -f $target/sbin/nginx
 fi
-if [ -f /opt/nginx/logs/nginx.pid ]; then
-    kill `cat /opt/nginx/logs/nginx.pid`
+if [ -f $target/logs/nginx.pid ]; then
+    kill `cat $target/logs/nginx.pid`
 fi
 make -j3
 make install
