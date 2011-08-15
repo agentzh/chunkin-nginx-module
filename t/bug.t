@@ -576,3 +576,25 @@ hello\r
 DELETE
 hello
 
+
+
+=== TEST 25: CR LF across the boundary
+--- config
+    chunkin on;
+    location /ar.do {
+        echo $request_method;
+        echo_request_body;
+    }
+--- more_headers
+Transfer-Encoding: chunked
+--- request eval
+"DELETE /ar.do
+5\r
+hell\r\r
+0\r
+\r
+"
+--- response_body eval
+"DELETE
+hell\r"
+
