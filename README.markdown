@@ -71,12 +71,12 @@ To enable the magic, just turn on the `chunkin` config option and define a custo
       }
 
 
-No other modification is required in your nginx.conf file and everything should work out of the box including the standard `proxy module` (except for those `known issues`). Note that the `chunkin` directive is not allowed in the location block while the `chunkin_resume` directive is only allowed on in `locations`.
+No other modification is required in your nginx.conf file and everything should work out of the box including the standard [proxy module](http://wiki.nginx.org/NginxHttpProxyModule) (except for those `known issues`). Note that the `chunkin` directive is not allowed in the location block while the `chunkin_resume` directive is only allowed on in `locations`.
 
-The core module's `client_body_buffer_size`, `client_max_body_size`, and `client_body_timeout` directive settings are honored. Note that, the "body sizes" here always indicate chunked-encoded body, not the data that has already been decoded. Basically, the
+The core module's [client_body_buffer_size](http://wiki.nginx.org/NginxHttpCoreModule#client_body_buffer_size), [client_max_body_size](http://wiki.nginx.org/NginxHttpCoreModule#client_max_body_size), and [client_body_timeout](http://wiki.nginx.org/NginxHttpCoreModule#client_body_timeout) directive settings are honored. Note that, the "body sizes" here always indicate chunked-encoded body, not the data that has already been decoded. Basically, the
 chunked-encoded body will always be slightly larger than the original data that is not encoded.
 
-The `client_body_in_file_only` and `client_body_in_single_buffer` settings are followed partially. See `Know Issues`.
+The [client_body_in_file_only](http://wiki.nginx.org/NginxHttpCoreModule#client_body_in_file_only) and [client_body_in_single_buffer](http://wiki.nginx.org/NginxHttpCoreModule#client_body_in_single_buffer) settings are followed partially. See `Know Issues`.
 
 This module is not supposed to be merged into the Nginx core because I've used [Ragel](http://www.complang.org/ragel/) to generate the chunked encoding parser for joy :)
 
@@ -138,11 +138,11 @@ chunkin_max_chunks_per_buf
 
 **context:** *http, server, location*
 
-Set the max chunk count threshold for the buffer determined by the `client_body_buffer_size` directive.
-If the average chunk size is `1 KB` and your `client_body_buffer_size` setting
+Set the max chunk count threshold for the buffer determined by the [client_body_buffer_size](http://wiki.nginx.org/NginxHttpCoreModule#client_body_buffer_size) directive.
+If the average chunk size is `1 KB` and your [client_body_buffer_size](http://wiki.nginx.org/NginxHttpCoreModule#client_body_buffer_size) setting
 is 1 meta bytes, then you should set this threshold to `1024` or `2048`.
 
-When the raw body size is exceeding `client_body_buffer_size` *or* the chunk counter is exceeding this `chunkin_max_chunks_per_buf` setting, the decoded data will be temporarily buffered into disk files, and then the main buffer gets cleared and the chunk counter gets reset back to 0 (or `1` if there's a "pending chunk").
+When the raw body size is exceeding [client_body_buffer_size](http://wiki.nginx.org/NginxHttpCoreModule#client_body_buffer_size) *or* the chunk counter is exceeding this `chunkin_max_chunks_per_buf` setting, the decoded data will be temporarily buffered into disk files, and then the main buffer gets cleared and the chunk counter gets reset back to 0 (or `1` if there's a "pending chunk").
 
 This directive was first introduced in the `v0.17` release.
 
@@ -315,7 +315,7 @@ v0.15
 
 v0.14
 -----
-* now we no longer skip those operations between the (interrupted) ngx_http_process_request_header and the server rewrite phase. this fixed the security issues regarding the `internal` directive as well as SSL sessions.
+* now we no longer skip those operations between the (interrupted) ngx_http_process_request_header and the server rewrite phase. this fixed the security issues regarding the [internal](http://wiki.nginx.org/NginxHttpCoreModule#internal) directive as well as SSL sessions.
 * try to ignore CR/LF/SP/HT at the begining of the chunked body.
 * now we allow HT as padding spaces and ignore leading CRLFs.
 * improved diagnostic info in the error.log messages when parsefail occurs.
@@ -380,7 +380,7 @@ At the moment, [LWP::UserAgent](http://search.cpan.org/perldoc?LWP::UserAgent) i
 
 Because a single nginx server (by default, `localhost:1984`) is used across all the test scripts (`.t` files), it's meaningless to run the test suite in parallel by specifying `-jN` when invoking the `prove` utility.
 
-Some parts of the test suite requires modules `proxy` and `echo` to be enabled as well when building Nginx.
+Some parts of the test suite requires modules [proxy](http://wiki.nginx.org/NginxHttpProxyModule) and [echo](http://wiki.nginx.org/NginxHttpEchoModule) to be enabled as well when building Nginx.
 
 Known Issues
 ============
@@ -447,6 +447,6 @@ See Also
 * The orginal announcement thread on the Nginx mailing list: ["The chunkin module: Experimental chunked input support for Nginx"](http://forum.nginx.org/read.php?2,22967).
 * The original [blog post](http://agentzh.spaces.live.com/blog/cns!FF3A735632E41548!481.entry) about this module's initial development.
 * The thread discussing chunked input support on the nginx-devel mailing list: ["Chunked request body and HTTP header parser"](http://nginx.org/pipermail/nginx-devel/2009-December/000021.html).
-* The `echo module` for Nginx module's automated testing.
+* The [echo module](http://wiki.nginx.org/NginxHttpEchoModule) for Nginx module's automated testing.
 * [RFC 2616 - Chunked Transfer Coding](http://tools.ietf.org/html/rfc2616#section-3.6.1).
 
