@@ -104,7 +104,8 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
             dd("chunks total size: %d", ctx->chunks_total_size);
 
-            rc = ngx_http_chunkin_set_content_length_header(r, ctx->chunks_total_size);
+            rc = ngx_http_chunkin_set_content_length_header(r,
+                    ctx->chunks_total_size);
 
             if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
                 return rc;
@@ -246,7 +247,10 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
     if (ctx->just_after_preread) {
         ctx->just_after_preread = 0;
 
-        dd("Just after preread and ctx->chunks defined (bytes read: %d, chunk size: %d, last chars %c %c %c)", ctx->chunk_bytes_read, ctx->chunk_size, *(r->header_in->pos - 2), *(r->header_in->pos - 1), *r->header_in->pos);
+        dd("Just after preread and ctx->chunks defined (bytes read: %d, "
+                "chunk size: %d, last chars %c %c %c)", ctx->chunk_bytes_read,
+                ctx->chunk_size, *(r->header_in->pos - 2),
+                *(r->header_in->pos - 1), *r->header_in->pos);
 
         for (cl = ctx->chunks; cl; cl = cl->next) {
             b = cl->buf;
@@ -275,8 +279,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                     && clcf->client_max_body_size < ctx->raw_body_size)
             {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "chunkin: client intended to send too large body: %O bytes",
-                          (off_t) ctx->raw_body_size);
+                          "chunkin: client intended to send too large body: "
+                          "%O bytes", (off_t) ctx->raw_body_size);
 
                 return NGX_HTTP_REQUEST_ENTITY_TOO_LARGE;
             }
@@ -314,7 +318,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                             rb->buf->end - rb->buf->start,
                             ctx->chunks_count);
 
-                    rc = ngx_http_write_request_body(r, ctx->chunks, ctx->chunks_count);
+                    rc = ngx_http_write_request_body(r, ctx->chunks,
+                            ctx->chunks_count);
 
                     if (rc != NGX_OK) {
                         return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -368,7 +373,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
             n = c->recv(c, rb->buf->last, size);
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                           "chunkin: http chunked client request body recv %z", n);
+                           "chunkin: http chunked client request body recv %z",
+                           n);
 
             if (n == NGX_AGAIN) {
                 dd("NGX_AGAIN caught");
@@ -416,7 +422,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                     size = p + n - rb->buf->last;
                     if (size) {
                         dd("found remaining data for pipelined requests");
-                        if (size > (size_t) (r->header_in->end - ctx->saved_header_in_pos))
+                        if (size > (size_t) (r->header_in->end
+                                    - ctx->saved_header_in_pos))
                         {
                             /* XXX enlarge the r->header_in buffer... */
                             r->keepalive = 0;
@@ -650,9 +657,11 @@ ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body,
         tf->pool = r->pool;
 
         if (rb->buf && rb->buf->last == rb->buf->end) {
-            tf->warn = "a client request body is buffered to a temporary file (exceeding client_body_buffer_size)";
+            tf->warn = "a client request body is buffered to a temporary file "
+                "(exceeding client_body_buffer_size)";
         } else {
-            tf->warn = "a client request body is buffered to a temporary file (exceeding chunkin_max_chunks_per_buf)";
+            tf->warn = "a client request body is buffered to a temporary file "
+                "(exceeding chunkin_max_chunks_per_buf)";
         }
 
         tf->log_level = r->request_body_file_log_level;
