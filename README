@@ -1,6 +1,5 @@
 Name
-    chunkin-nginx-module - HTTP 1.1 chunked-encoding request body support
-    for Nginx.
+    ngx_chunkin - HTTP 1.1 chunked-encoding request body support for Nginx.
 
     *This module is not distributed with the Nginx source.* See the
     installation instructions.
@@ -66,10 +65,10 @@ Description
       }
 
     No other modification is required in your nginx.conf file and everything
-    should work out of the box including the standard proxy module (except
-    for those known issues). Note that the chunkin directive is not allowed
-    in the location block while the chunkin_resume directive is only allowed
-    on in "locations".
+    should work out of the box including the standard [module
+    (HttpProxyModule)] (except for those known issues). Note that the
+    chunkin directive is not allowed in the location block while the
+    chunkin_resume directive is only allowed on in "locations".
 
     The core module's client_body_buffer_size, client_max_body_size, and
     client_body_timeout directive settings are honored. Note that, the "body
@@ -118,14 +117,18 @@ Directives
 
     context: *http, server*
 
+    phase: *access*
+
     Enables or disables this module's hooks.
 
   chunkin_resume
     syntax: *chunkin_resume*
 
-    default: *none*
+    default: *no*
 
     context: *location*
+
+    phase: *content*
 
     This directive must be used in your custom "411 error page" location to
     help this module work correctly. For example:
@@ -206,9 +209,8 @@ Trouble Shooting
     When combining this module with ngx_proxy and ngx_fastcgi, nginx sends a
     "Transfer-Encoding: " header which is invalid and not being treated well
     by some webservers on backend, for example, riak. So a work-around for
-    now is to use the ngx_headers_more
-    (<http://wiki.nginx.org/NginxHttpHeadersMoreModule>) module to remove
-    the "Transfer-Encoding" completely, as in
+    now is to use the ngx_headers_more module to remove the
+    "Transfer-Encoding" completely, as in
 
     chunkin on;
 
@@ -476,7 +478,7 @@ Getting involved
     a commit bit to the source repository on GitHub.
 
 Author
-    agentzh (章亦春) *<agentzh@gmail.com>*
+    Zhang "agentzh" Yichun (章亦春) *<agentzh@gmail.com>*
 
     This wiki page is also maintained by the author himself, and everybody
     is encouraged to improve this page as well.
@@ -490,7 +492,8 @@ Copyright & License
     Copyright (c) 2009, Taobao Inc., Alibaba Group ( http://www.taobao.com
     ).
 
-    Copyright (c) 2009, agentzh <agentzh@gmail.com>.
+    Copyright (c) 2009, 2010, 2011, Zhang "agentzh" Yichun (章亦春)
+    <agentzh@gmail.com>.
 
     This module is licensed under the terms of the BSD license.
 
@@ -539,7 +542,7 @@ See Also
         (<http://nginx.org/pipermail/nginx-devel/2009-December/000021.html>)
         .
 
-    *   The echo module for Nginx module's automated testing.
+    *   The [module (HttpEchoModule)] for Nginx module's automated testing.
 
     *   RFC 2616 - Chunked Transfer Coding
         (<http://tools.ietf.org/html/rfc2616#section-3.6.1>).
