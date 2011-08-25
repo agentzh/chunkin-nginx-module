@@ -136,7 +136,7 @@ This directive was first introduced in the [v0.17](http://wiki.nginx.org/HttpChu
 
 chunkin_max_chunks_per_buf
 --------------------------
-**syntax:** *chunkin_max_chunks_per_buf <number>*
+**syntax:** *chunkin_max_chunks_per_buf &lt;number&gt;*
 
 **default:** *512*
 
@@ -409,7 +409,7 @@ You'll be very welcomed to submit patches to the [author](http://wiki.nginx.org/
 Author
 ======
 
-Zhang "agentzh" Yichun (章亦春) *<agentzh@gmail.com>*
+Zhang "agentzh" Yichun (章亦春) *&lt;agentzh@gmail.com&gt;*
 
 This wiki page is also maintained by the author himself, and everybody is encouraged to improve this page as well.
 
