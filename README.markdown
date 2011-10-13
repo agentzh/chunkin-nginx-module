@@ -13,7 +13,7 @@ This module is considered production ready.
 Version
 =======
 
-This document describes chunkin-nginx-module [v0.21](http://github.com/agentzh/chunkin-nginx-module/tarball/v0.21) released on August 3, 2010.
+This document describes chunkin-nginx-module [v0.21](http://github.com/agentzh/chunkin-nginx-module/tags) released on August 3, 2010.
 
 Synopsis
 ========
@@ -228,7 +228,7 @@ the version 0.8.41 (see [nginx compatibility](http://wiki.nginx.org/HttpChunkinM
     $ make install
 
 
-Download the latest version of the release tarball of this module from [chunkin-nginx-module file list](http://github.com/agentzh/chunkin-nginx-module/downloads).
+Download the latest version of the release tarball of this module from [chunkin-nginx-module file list](http://github.com/agentzh/chunkin-nginx-module/tags).
 
 For Developers
 --------------
