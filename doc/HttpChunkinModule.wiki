@@ -10,7 +10,7 @@ This module is considered production ready.
 
 = Version =
 
-This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/tags v0.21] released on August 3, 2010.
+This document describes chunkin-nginx-module [http://github.com/agentzh/chunkin-nginx-module/tags v0.22] released on October 14, 2011.
 
 = Synopsis =
 
@@ -177,42 +177,22 @@ I haven't fully grokked all the details among <code>r->header_in</code>, <code>c
 busy/free lists and those so-called "large header buffers". Is there a
 clean and safe way to reallocate or extend the <code>r->header_in</code> buffer?
 
-= Trouble Shooting =
-
-When combining this module with ngx_proxy and ngx_fastcgi, nginx sends a "Transfer-Encoding: " header which is invalid and not being treated well by some webservers on backend, for example, riak. So a work-around for now is to use the [[HttpHeadersMoreModule|ngx_headers_more]] module to remove the <code>Transfer-Encoding</code> completely, as in
-
-<geshi lang="nginx">
-chunkin on;
-
-error_page 411 = @my_411_error;
-    location @my_411_error {
-    chunkin_resume;
-}
-
-location / {
-    more_clear_input_headers 'Transfer-Encoding';
-    proxy_pass http://riak;
-}
-</geshi>
-
-Thanks [http://github.com/hoodoos hoodoos] for sharing this trick :)
-
 = Installation =
 
-Grab the nginx source code from [http://nginx.net/ nginx.net], for example,
-the version 0.8.41 (see [[#Compatibility|nginx compatibility]]), and then build the source with this module:
+Grab the nginx source code from [http://nginx.org/ nginx.org], for example,
+the version 1.0.8 (see [[#Compatibility|nginx compatibility]]), and then build the source with this module:
 
 <geshi lang="bash">
-    $ wget 'http://sysoev.ru/nginx/nginx-0.8.41.tar.gz'
-    $ tar -xzvf nginx-0.8.41.tar.gz
-    $ cd nginx-0.8.41/
+    wget 'http://nginx.org/download/nginx-1.0.8.tar.gz'
+    tar -xzvf nginx-1.0.8.tar.gz
+    cd nginx-1.0.8/
     
     # Here we assume you would install you nginx under /opt/nginx/.
-    $ ./configure --prefix=/opt/nginx \
+    ./configure --prefix=/opt/nginx \
         --add-module=/path/to/chunkin-nginx-module
      
-    $ make -j2
-    $ make install
+    make -j2
+    make install
 </geshi>
 
 Download the latest version of the release tarball of this module from [http://github.com/agentzh/chunkin-nginx-module/tags chunkin-nginx-module file list].
@@ -240,7 +220,8 @@ The following source and binary rpm files are contributed by Ernest Folch, with 
 
 The following versions of Nginx should work with this module:
 
-* '''1.0.x'''                       (last tested: 1.0.2)
+* '''1.1.x'''                       (last tested: 1.1.5)
+* '''1.0.x'''                       (last tested: 1.0.8)
 * '''0.8.x'''                       (last tested: 0.8.54)
 * '''0.7.x >= 0.7.21'''             (last tested: 0.7.67)
 
@@ -260,6 +241,11 @@ Although a lot of effort has been put into testing and code tuning, there must b
 Available on github at [http://github.com/agentzh/chunkin-nginx-module agentzh/chunkin-nginx-module].
 
 = ChangeLog =
+
+== v0.22 ==
+* now we remove the request header Transfer-Encoding completely because at least Apache will complain about the empty-value <code>Transfer-Encoding</code> request header. thanks hoodoos and Sandesh Kotwal.
+* now we allow DELETE requests with chunked request bodies per hoodoos's request.
+* now we use the 2-clause BSD license.
 
 == v0.21 ==
 * applied a patch from Gong Kaihui (龚开晖) to always call <code>post_handler</code> in <code>ngx_http_chunkin_read_chunked_request_body</code>.
