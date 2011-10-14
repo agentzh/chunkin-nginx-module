@@ -1,10 +1,17 @@
 /* Copyright (C) agentzh */
 
+#ifndef DDEBUG
 #define DDEBUG 0
-
+#endif
 #include "ddebug.h"
 
 #include "ngx_http_chunkin_util.h"
+
+
+static ngx_int_t ngx_http_chunkin_rm_header(ngx_list_t *l, ngx_table_elt_t *h);
+static ngx_int_t ngx_http_chunkin_rm_header_helper(ngx_list_t *l,
+    ngx_list_part_t *cur, ngx_uint_t i);
+
 
 static ngx_str_t ngx_http_chunkin_content_length_header_key =
     ngx_string("Content-Length");
@@ -13,11 +20,22 @@ static ngx_str_t ngx_http_chunkin_content_length_header_key =
 void
 ngx_http_chunkin_clear_transfer_encoding(ngx_http_request_t *r)
 {
+    ngx_int_t           rc;
+
     if (r->headers_in.transfer_encoding) {
-        r->headers_in.transfer_encoding->value.len = 0;
-        r->headers_in.transfer_encoding->value.data = (u_char *) "";
-        r->headers_in.transfer_encoding->hash = 0;
-        r->headers_in.transfer_encoding = NULL;
+        rc = ngx_http_chunkin_rm_header(&r->headers_in.headers,
+                                        r->headers_in.transfer_encoding);
+
+        if (rc == NGX_OK) {
+            r->headers_in.transfer_encoding = NULL;
+        } else {
+            /* not found */
+
+            r->headers_in.transfer_encoding->value.len = 0;
+            r->headers_in.transfer_encoding->value.data = (u_char *) "";
+            r->headers_in.transfer_encoding->hash = 0;
+            r->headers_in.transfer_encoding = NULL;
+        }
     }
 }
 
@@ -403,5 +421,130 @@ ngx_http_chunkin_internal_redirect(ngx_http_request_t *r,
     ngx_http_handler(r);
 
     return NGX_DONE;
+}
+
+
+static ngx_int_t
+ngx_http_chunkin_rm_header(ngx_list_t *l, ngx_table_elt_t *h)
+{
+    ngx_uint_t                   i;
+    ngx_list_part_t             *part;
+    ngx_table_elt_t             *data;
+
+    part = &l->part;
+    data = part->elts;
+
+    for (i = 0; /* void */; i++) {
+        dd("i: %d, part: %p", (int) i, part);
+
+        if (i >= part->nelts) {
+            if (part->next == NULL) {
+                break;
+            }
+
+            part = part->next;
+            h = part->elts;
+            i = 0;
+        }
+
+        if (&data[i] == h) {
+            dd("found header");
+
+            return ngx_http_chunkin_rm_header_helper(l, part, i);
+        }
+    }
+
+    return NGX_ERROR;
+}
+
+
+static ngx_int_t
+ngx_http_chunkin_rm_header_helper(ngx_list_t *l, ngx_list_part_t *cur,
+        ngx_uint_t i)
+{
+    ngx_table_elt_t             *data;
+    ngx_list_part_t             *new, *part;
+
+    dd("list rm item: part %p, i %d, nalloc %d", cur, (int) i,
+            (int) l->nalloc);
+
+    data = cur->elts;
+
+    dd("cur: nelts %d, nalloc %d", (int) cur->nelts,
+            (int) l->nalloc);
+
+    if (i == 0) {
+        cur->elts = (char *) cur->elts + l->size;
+        cur->nelts--;
+
+        if (cur == l->last) {
+            if (l->nalloc > 1) {
+                l->nalloc--;
+                return NGX_OK;
+            }
+
+            /* l->nalloc == 1 */
+
+            part = &l->part;
+            while (part->next != cur) {
+                if (part->next == NULL) {
+                    return NGX_ERROR;
+                }
+                part = part->next;
+            }
+
+            part->next = NULL;
+            l->last = part;
+
+            return NGX_OK;
+        }
+
+        if (cur->nelts == 0) {
+            part = &l->part;
+            while (part->next != cur) {
+                if (part->next == NULL) {
+                    return NGX_ERROR;
+                }
+                part = part->next;
+            }
+
+            part->next = cur->next;
+
+            return NGX_OK;
+        }
+
+        return NGX_OK;
+    }
+
+    if (i == cur->nelts - 1) {
+        cur->nelts--;
+
+        if (cur == l->last) {
+            l->nalloc--;
+        }
+
+        return NGX_OK;
+    }
+
+    new = ngx_palloc(l->pool, sizeof(ngx_list_part_t));
+    if (new == NULL) {
+        return NGX_ERROR;
+    }
+
+    new->elts = &data[i + 1];
+    new->nelts = cur->nelts - i - 1;
+    new->next = cur->next;
+
+    l->nalloc = new->nelts;
+
+    cur->nelts = i;
+    cur->next = new;
+    if (cur == l->last) {
+        l->last = new;
+    }
+
+    cur = new;
+
+    return NGX_OK;
 }
 

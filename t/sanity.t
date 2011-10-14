@@ -133,7 +133,6 @@ Host: 127.0.0.1:\$ServerPort\r
 Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
-Transfer-Encoding: \r
 Content-Length: 10\r
 
 "
@@ -179,7 +178,6 @@ Host: 127.0.0.1:\$ServerPort\r
 Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
-Transfer-Encoding: \r
 Content-Length: 0\r
 
 "
@@ -206,7 +204,6 @@ Host: 127.0.0.1:\$ServerPort\r
 Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
-Transfer-Encoding: \r
 Content-Length: 1\r
 
 "
@@ -319,7 +316,6 @@ Host: 127.0.0.1:\$ServerPort\r
 Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
-Transfer-Encoding: \r
 Content-Length: 10\r
 
 "
