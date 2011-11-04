@@ -195,14 +195,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
 
     dd("reading chunked input eagerly...");
 
-    /* XXX this is a hack for now */
-
-    if (conf->keepalive
-            && r->headers_in.connection_type ==
-                NGX_HTTP_CONNECTION_KEEP_ALIVE) {
-        dd("re-enable r->keepalive...");
-        r->keepalive = 1;
-    } else {
+    if (!conf->keepalive && r->keepalive) {
+        dd("dis-enabling r->keepalive...");
         r->keepalive = 0;
     }
 
