@@ -13,7 +13,7 @@ This module is considered production ready.
 Version
 =======
 
-This document describes chunkin-nginx-module [v0.22](http://github.com/agentzh/chunkin-nginx-module/tags) released on October 14, 2011.
+This document describes ngx_chunkin [v0.23rc2](http://github.com/agentzh/chunkin-nginx-module/tags) released on November 24, 2011.
 
 Synopsis
 ========
@@ -237,7 +237,7 @@ Compatibility
 The following versions of Nginx should work with this module:
 
 * **1.1.x**                       (last tested: 1.1.5)
-* **1.0.x**                       (last tested: 1.0.8)
+* **1.0.x**                       (last tested: 1.0.10)
 * **0.8.x**                       (last tested: 0.8.54)
 * **0.7.x >= 0.7.21**             (last tested: 0.7.67)
 
@@ -403,8 +403,6 @@ Copyright & License
 ===================
 
 The basic client request body reading code is based on the `ngx_http_read_client_request_body` function and its utility functions in the Nginx 0.8.20 core. This part of code is copyrighted by Igor Sysoev.
-
-Copyright (c) 2009, Taobao Inc., Alibaba Group ( <http://www.taobao.com> ).
 
 Copyright (c) 2009, 2010, 2011, Zhang "agentzh" Yichun (章亦春) <agentzh@gmail.com>.
 
