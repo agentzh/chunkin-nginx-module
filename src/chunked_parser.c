@@ -2,8 +2,9 @@
 #line 1 "src/chunked_parser.rl"
 /* Copyright (C) agentzh */
 
-#define EXTENDED_DEBUG 1
+#ifndef DDEBUG
 #define DDEBUG 0
+#endif
 
 #include "ddebug.h"
 
@@ -18,9 +19,9 @@ enum {
 };
 
 
-#line 19 "src/chunked_parser.rl"
+#line 20 "src/chunked_parser.rl"
 
-#line 24 "src/chunked_parser.c"
+#line 25 "src/chunked_parser.c"
 static const int chunked_start = 1;
 static const int chunked_first_final = 43;
 static const int chunked_error = 0;
@@ -28,7 +29,7 @@ static const int chunked_error = 0;
 static const int chunked_en_main = 1;
 
 
-#line 20 "src/chunked_parser.rl"
+#line 21 "src/chunked_parser.rl"
 
 
 ngx_int_t
@@ -38,12 +39,12 @@ ngx_http_chunkin_init_chunked_parser(ngx_http_request_t *r,
     int cs;
 
     
-#line 42 "src/chunked_parser.c"
+#line 43 "src/chunked_parser.c"
 	{
 	cs = chunked_start;
 	}
 
-#line 29 "src/chunked_parser.rl"
+#line 30 "src/chunked_parser.rl"
 
     ctx->chunks = NULL;
     ctx->next_chunk = NULL;
@@ -66,10 +67,10 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 {
     int                 cs   = ctx->parser_state;
     ngx_connection_t    *c   = r->connection;
-    char                *pos = (char *) *pos_addr;
-    char                *p   = (char *) *pos_addr;
-    char                *pe  = (char *) last;
-    char                *eof = NULL;
+    signed char         *pos = (signed char *) *pos_addr;
+    signed char         *p   = (signed char *) *pos_addr;
+    signed char         *pe  = (signed char *) last;
+    signed char         *eof = NULL;
     ngx_buf_t           *b;
     ngx_flag_t          done = 0;
     ngx_str_t           pre, post;
@@ -78,11 +79,11 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
     ssize_t             rest;
 
     
-#line 235 "src/chunked_parser.rl"
+#line 236 "src/chunked_parser.rl"
 
 
     
-#line 86 "src/chunked_parser.c"
+#line 87 "src/chunked_parser.c"
 	{
 	short _widec;
 	if ( p == pe )
@@ -102,77 +103,77 @@ case 1:
 		goto tr2;
 	goto st0;
 tr3:
-#line 226 "src/chunked_parser.rl"
+#line 227 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	goto st0;
 tr9:
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 226 "src/chunked_parser.rl"
+#line 227 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	goto st0;
 tr11:
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 226 "src/chunked_parser.rl"
+#line 227 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
-#line 230 "src/chunked_parser.rl"
+#line 231 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	goto st0;
 tr13:
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 230 "src/chunked_parser.rl"
+#line 231 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	goto st0;
 tr23:
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 	goto st0;
 tr29:
-#line 217 "src/chunked_parser.rl"
+#line 218 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
-#line 220 "src/chunked_parser.rl"
+#line 221 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	goto st0;
 tr33:
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 220 "src/chunked_parser.rl"
+#line 221 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	goto st0;
 tr35:
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 220 "src/chunked_parser.rl"
+#line 221 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
-#line 176 "src/chunked_parser.rl"
+#line 177 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	goto st0;
 tr37:
-#line 176 "src/chunked_parser.rl"
+#line 177 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	goto st0;
 tr40:
-#line 180 "src/chunked_parser.rl"
+#line 181 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	goto st0;
 tr43:
-#line 220 "src/chunked_parser.rl"
+#line 221 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	goto st0;
-#line 165 "src/chunked_parser.c"
+#line 166 "src/chunked_parser.c"
 st0:
 cs = 0;
 	goto _out;
 tr0:
-#line 97 "src/chunked_parser.rl"
+#line 98 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
         }
-#line 103 "src/chunked_parser.rl"
+#line 104 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -189,7 +190,7 @@ tr0:
         }
 	goto st2;
 tr6:
-#line 103 "src/chunked_parser.rl"
+#line 104 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -209,7 +210,7 @@ st2:
 	if ( ++p == pe )
 		goto _test_eof2;
 case 2:
-#line 213 "src/chunked_parser.c"
+#line 214 "src/chunked_parser.c"
 	switch( (*p) ) {
 		case 9: goto st3;
 		case 13: goto st4;
@@ -259,7 +260,7 @@ case 6:
 		goto tr14;
 	goto tr13;
 tr14:
-#line 65 "src/chunked_parser.rl"
+#line 66 "src/chunked_parser.rl"
 	{
             done = 1;
         }
@@ -268,7 +269,7 @@ st43:
 	if ( ++p == pe )
 		goto _test_eof43;
 case 43:
-#line 272 "src/chunked_parser.c"
+#line 273 "src/chunked_parser.c"
 	goto tr13;
 st7:
 	if ( ++p == pe )
@@ -578,13 +579,13 @@ case 20:
 		goto st12;
 	goto st20;
 tr2:
-#line 97 "src/chunked_parser.rl"
+#line 98 "src/chunked_parser.rl"
 	{
             ctx->chunk_bytes_read = 0;
             ctx->chunk_size = 0;
             ctx->chunk_size_order = 0;
         }
-#line 103 "src/chunked_parser.rl"
+#line 104 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -601,7 +602,7 @@ tr2:
         }
 	goto st21;
 tr7:
-#line 103 "src/chunked_parser.rl"
+#line 104 "src/chunked_parser.rl"
 	{
             ctx->chunk_size <<= 4;
             ctx->chunk_size_order++;
@@ -621,7 +622,7 @@ st21:
 	if ( ++p == pe )
 		goto _test_eof21;
 case 21:
-#line 625 "src/chunked_parser.c"
+#line 626 "src/chunked_parser.c"
 	switch( (*p) ) {
 		case 9: goto st22;
 		case 13: goto st23;
@@ -662,7 +663,7 @@ case 24:
 	_widec = (*p);
 	_widec = (short)(128 + ((*p) - -128));
 	if ( 
-#line 69 "src/chunked_parser.rl"
+#line 70 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -670,7 +671,7 @@ case 24:
 		goto tr36;
 	goto tr35;
 tr36:
-#line 118 "src/chunked_parser.rl"
+#line 119 "src/chunked_parser.rl"
 	{
             ctx->chunk = ngx_http_chunkin_get_buf(r->pool, ctx);
 
@@ -689,7 +690,7 @@ tr36:
             b->last = b->pos = (u_char *) p;
             b->memory = 1;
         }
-#line 73 "src/chunked_parser.rl"
+#line 74 "src/chunked_parser.rl"
 	{
             /* optimization for buffered chunk data */
 
@@ -715,7 +716,7 @@ tr36:
         }
 	goto st25;
 tr39:
-#line 73 "src/chunked_parser.rl"
+#line 74 "src/chunked_parser.rl"
 	{
             /* optimization for buffered chunk data */
 
@@ -744,13 +745,13 @@ st25:
 	if ( ++p == pe )
 		goto _test_eof25;
 case 25:
-#line 748 "src/chunked_parser.c"
+#line 749 "src/chunked_parser.c"
 	_widec = (*p);
 	if ( (*p) < 13 ) {
 		if ( (*p) <= 12 ) {
 			_widec = (short)(128 + ((*p) - -128));
 			if ( 
-#line 69 "src/chunked_parser.rl"
+#line 70 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -759,7 +760,7 @@ case 25:
 		if ( 14 <= (*p) )
  {			_widec = (short)(128 + ((*p) - -128));
 			if ( 
-#line 69 "src/chunked_parser.rl"
+#line 70 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -767,7 +768,7 @@ case 25:
 	} else {
 		_widec = (short)(128 + ((*p) - -128));
 		if ( 
-#line 69 "src/chunked_parser.rl"
+#line 70 "src/chunked_parser.rl"
 
             ctx->chunk_bytes_read < ctx->chunk_size
          ) _widec += 256;
@@ -785,7 +786,7 @@ case 26:
 		goto tr41;
 	goto tr40;
 tr41:
-#line 137 "src/chunked_parser.rl"
+#line 138 "src/chunked_parser.rl"
 	{
             if (ctx->chunk_bytes_read != ctx->chunk_size) {
                 ngx_log_error(NGX_LOG_ERR, c->log, 0,
@@ -816,7 +817,7 @@ st27:
 	if ( ++p == pe )
 		goto _test_eof27;
 case 27:
-#line 820 "src/chunked_parser.c"
+#line 821 "src/chunked_parser.c"
 	if ( (*p) == 48 )
 		goto tr0;
 	if ( (*p) < 65 ) {
@@ -1196,16 +1197,16 @@ case 42:
 	switch ( cs ) {
 	case 14: 
 	case 36: 
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
 	break;
 	case 25: 
-#line 176 "src/chunked_parser.rl"
+#line 177 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
 	case 26: 
 	case 27: 
-#line 180 "src/chunked_parser.rl"
+#line 181 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data_terminator"; }
 	break;
 	case 29: 
@@ -1216,7 +1217,7 @@ case 42:
 	case 39: 
 	case 40: 
 	case 42: 
-#line 220 "src/chunked_parser.rl"
+#line 221 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	break;
 	case 2: 
@@ -1228,58 +1229,58 @@ case 42:
 	case 17: 
 	case 18: 
 	case 20: 
-#line 226 "src/chunked_parser.rl"
+#line 227 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	break;
 	case 23: 
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 220 "src/chunked_parser.rl"
+#line 221 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	break;
 	case 4: 
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 226 "src/chunked_parser.rl"
+#line 227 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
 	break;
 	case 6: 
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 230 "src/chunked_parser.rl"
+#line 231 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
 	case 21: 
 	case 22: 
-#line 217 "src/chunked_parser.rl"
+#line 218 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_size"; }
-#line 220 "src/chunked_parser.rl"
+#line 221 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
 	break;
 	case 24: 
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 220 "src/chunked_parser.rl"
+#line 221 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_ext"; }
-#line 176 "src/chunked_parser.rl"
+#line 177 "src/chunked_parser.rl"
 	{ err_ctx = "chunk_data"; }
 	break;
 	case 5: 
-#line 167 "src/chunked_parser.rl"
+#line 168 "src/chunked_parser.rl"
 	{ err_ctx = "CRLF"; }
-#line 226 "src/chunked_parser.rl"
+#line 227 "src/chunked_parser.rl"
 	{ err_ctx = "last_chunk"; }
-#line 230 "src/chunked_parser.rl"
+#line 231 "src/chunked_parser.rl"
 	{ err_ctx = "parser"; }
 	break;
-#line 1276 "src/chunked_parser.c"
+#line 1277 "src/chunked_parser.c"
 	}
 	}
 
 	_out: {}
 	}
 
-#line 238 "src/chunked_parser.rl"
+#line 239 "src/chunked_parser.rl"
 
     ctx->parser_state = cs;
 

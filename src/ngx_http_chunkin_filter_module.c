@@ -195,14 +195,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
 
     dd("reading chunked input eagerly...");
 
-    /* XXX this is a hack for now */
-
-    if (conf->keepalive
-            && r->headers_in.connection_type ==
-                NGX_HTTP_CONNECTION_KEEP_ALIVE) {
-        dd("re-enable r->keepalive...");
-        r->keepalive = 1;
-    } else {
+    if (!conf->keepalive && r->keepalive) {
+        dd("dis-enabling r->keepalive...");
         r->keepalive = 0;
     }
 
@@ -232,7 +226,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    dd("chunkin handler: header_in->pos: %d", (int)(r->header_in->pos - r->header_in->start));
+    dd("chunkin handler: header_in->pos: %d",
+            (int)(r->header_in->pos - r->header_in->start));
 
     rc = ngx_http_chunkin_read_chunked_request_body(r,
             ngx_http_chunkin_post_read);
@@ -301,7 +296,8 @@ ngx_http_chunkin_resume_handler(ngx_http_request_t *r) {
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_chunkin_filter_module);
 
-    dd("method: %.*s (%d)", (int) r->method_name.len, r->method_name.data, (int) r->method);
+    dd("method: %.*s (%d)", (int) r->method_name.len, r->method_name.data,
+            (int) r->method);
 
     if (!conf->enabled || r != r->main
             || (r->method != NGX_HTTP_PUT && r->method != NGX_HTTP_POST &&

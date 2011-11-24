@@ -39,6 +39,6 @@ ctags
 go
 util/gprof
 all
-build10
+build1[01]
 buildroot/
 work/
