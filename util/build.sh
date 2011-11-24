@@ -13,6 +13,7 @@ version=$1
 force=$2
 
 ngx-build $force $version \
+          --with-cc-opt="-funsigned-char" \
           --add-module=$root/../echo-nginx-module \
           --add-module=$root $opts \
           --with-debug

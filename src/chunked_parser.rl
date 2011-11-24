@@ -1,7 +1,8 @@
 /* Copyright (C) agentzh */
 
-#define EXTENDED_DEBUG 1
+#ifndef DDEBUG
 #define DDEBUG 0
+#endif
 
 #include "ddebug.h"
 
@@ -48,10 +49,10 @@ ngx_http_chunkin_run_chunked_parser(ngx_http_request_t *r,
 {
     int                 cs   = ctx->parser_state;
     ngx_connection_t    *c   = r->connection;
-    char                *pos = (char *) *pos_addr;
-    char                *p   = (char *) *pos_addr;
-    char                *pe  = (char *) last;
-    char                *eof = NULL;
+    signed char         *pos = (signed char *) *pos_addr;
+    signed char         *p   = (signed char *) *pos_addr;
+    signed char         *pe  = (signed char *) last;
+    signed char         *eof = NULL;
     ngx_buf_t           *b;
     ngx_flag_t          done = 0;
     ngx_str_t           pre, post;
