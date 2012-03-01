@@ -42,3 +42,5 @@ all
 build1[01]
 buildroot/
 work/
+nginx
+test-etc
