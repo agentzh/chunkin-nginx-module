@@ -1,7 +1,7 @@
 # vi:filetype=
 
 use lib 't/lib';
-use Test::Nginx::Socket::Chunkin;
+use Test::Nginx::Socket;
 
 repeat_each(3);
 #warn 'repeat each: ', repeat_each, "\n";
@@ -16,8 +16,8 @@ __DATA__
 
 === TEST 1: binary in data
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -36,8 +36,8 @@ Transfer-Encoding: chunked
 
 === TEST 2: CRLF in data (missing trailing CRLF)
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -56,8 +56,8 @@ Transfer-Encoding: chunked
 
 === TEST 3: CRLF in data
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -77,8 +77,8 @@ Transfer-Encoding: chunked
 
 === TEST 4: leading CRLF in data
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -98,8 +98,8 @@ ab\r
 
 === TEST 5: trailing CRLF in data
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -119,8 +119,8 @@ ab\r
 
 === TEST 6: embedded CRLF in data
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -140,7 +140,6 @@ cd\r
 
 === TEST 7: 413 in proxy
 --- config
-    chunkin on;
     location /main {
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
     }
@@ -163,8 +162,8 @@ ab\r
 
 === TEST 8: padding spaces
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -184,8 +183,8 @@ cd\r
 
 === TEST 9: padding spaces (using HT)
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -205,8 +204,8 @@ cd\r
 
 === TEST 10: padding spaces (using \t and ' ' in last chunk)
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -226,8 +225,8 @@ cd\r
 
 === TEST 11: padding LWS (using \t and ' '  with a leading CRLF in last chunk)
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -251,8 +250,8 @@ cd\r
 
 === TEST 12: leading CRLF
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -273,8 +272,8 @@ cd\r
 
 === TEST 13: zero-padding
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -294,8 +293,8 @@ cd\r
 
 === TEST 14: leading new lines
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -316,9 +315,9 @@ cd\r
 
 === TEST 15: internal guard
 --- config
-    chunkin on;
     location /ar.do {
         internal;
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -339,9 +338,9 @@ cd\r
 
 === TEST 16: phase issue
 --- config
-    chunkin on;
     location /ar.do {
         deny all;
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -360,8 +359,8 @@ a\r
 
 === TEST 17: contenth-length AND chunked
 --- config
-    chunkin on;
     location /aar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -389,8 +388,8 @@ hello\r
 
 === TEST 18: Content-length AND chunked
 --- config
-    chunkin on;
     location /aar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- raw_request eval
@@ -417,8 +416,8 @@ Connection: close\r
 
 === TEST 19: Content-length AND chunked (ready for the read_discard_request_body to work)
 --- config
-    chunkin on;
     location /aar.do {
+        echo_read_request_body;
         echo_request_body;
     }
 --- raw_request eval
@@ -445,9 +444,9 @@ Connection: close\r
 
 === TEST 20: packets in a single buf
 --- config
-    chunkin on;
     location /aar.do {
         client_body_buffer_size 1m;
+        echo_read_request_body;
         echo_request_body;
     }
 --- raw_request eval
@@ -474,9 +473,9 @@ User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNT
 
 === TEST 21: packets in a single buf
 --- config
-    chunkin on;
     location /aar.do {
         client_body_buffer_size 1m;
+        echo_read_request_body;
         echo_request_body;
     }
 --- raw_request eval
@@ -503,9 +502,9 @@ User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNT
 
 === TEST 22: packets in a single buf
 --- config
-    chunkin on;
     location /aar.do {
         client_body_buffer_size 1m;
+        echo_read_request_body;
         echo_request_body;
     }
 --- raw_request eval
@@ -533,7 +532,6 @@ User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNT
 
 === TEST 23: not exceeding max body limit (chunk spanning preread and rb->buf)
 --- config
-    chunkin on;
     location /main {
         client_body_buffer_size    10m;
         client_max_body_size       10m;
@@ -558,8 +556,8 @@ User-Agent: SonyEricssonW395/R1BA010 Profile/MIDP-2.1 Configuration/CLDC-1.1 UNT
 
 === TEST 24: binary in data
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo $request_method;
         echo_request_body;
     }
@@ -580,8 +578,8 @@ hello
 
 === TEST 25: CR LF across the boundary
 --- config
-    chunkin on;
     location /ar.do {
+        echo_read_request_body;
         echo $request_method;
         echo_request_body;
     }

@@ -1,7 +1,7 @@
 # vi:filetype=
 
 use lib 't/lib';
-use Test::Nginx::Socket::Chunkin;
+use Test::Nginx::Socket;
 
 plan tests => repeat_each() * 2 * blocks();
 
@@ -13,8 +13,8 @@ __DATA__
 
 === TEST 1: bad ext (missing leading ;)
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -33,8 +33,8 @@ abc\r
 
 === TEST 2: sanity
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -52,8 +52,8 @@ abc\r
 
 === TEST 3: with spaces
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -71,8 +71,8 @@ abc\r
 
 === TEST 4: ext with out val
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -90,8 +90,8 @@ abc\r
 
 === TEST 5: multiple exts
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers

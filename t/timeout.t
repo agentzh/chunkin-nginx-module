@@ -1,7 +1,7 @@
 # vi:filetype=
 
 use lib 't/lib';
-use Test::Nginx::Socket::Chunkin;
+use Test::Nginx::Socket;
 
 plan tests => repeat_each() * 2 * blocks();
 
@@ -13,7 +13,6 @@ __DATA__
 
 === TEST 1: bad chunk size in the 2nd chunk
 --- config
-    chunkin on;
     location /main {
         client_body_timeout 1;
         echo_read_request_body;
@@ -34,7 +33,6 @@ User-Agent: Java Browser
 
 === TEST 2: bad chunk size in the 2nd chunk (using standard client body reader)
 --- config
-    chunkin on;
     location /main {
         client_body_timeout 1;
         echo_read_request_body;

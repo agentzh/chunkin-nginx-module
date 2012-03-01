@@ -4,13 +4,13 @@ use lib 't/lib';
 
 my $skip_all;
 
-BEGIN { $skip_all = 1; }
+BEGIN { $skip_all = 0; }
 
-use Test::Nginx::Socket::Chunkin $skip_all ?
+use Test::Nginx::Socket $skip_all ?
     (skip_all => 'too experimental to run the tests properly :P')
     : ();
 
-plan tests => repeat_each() * 2 * blocks();
+plan tests => repeat_each() * 4 * blocks();
 
 no_diff;
 
@@ -20,15 +20,16 @@ __DATA__
 
 === TEST 1: sanity
 --- config
-    chunkin on;
     location /main {
         chunkin_keepalive on;
         client_body_buffer_size    4;
+        echo_read_request_body;
         echo_request_body;
     }
     location /main2 {
         chunkin_keepalive on;
         client_body_buffer_size    4;
+        echo_read_request_body;
         echo_request_body;
     }
 
@@ -48,14 +49,16 @@ hello\r
 0\r
 \r
 "]
---- response_body: hello,world
---- ONLY
+--- response_body eval
+[
+    "hello",
+    ",world"
+]
 
 
 
 === TEST 2: standard body read
 --- config
-    chunkin on;
     location /main {
         client_body_buffer_size    4;
         echo_read_request_body;
@@ -69,5 +72,6 @@ Content-Length: 5
 hello",
 "POST /main
 world"]
---- response_body: helloworld
+--- response_body eval
+["hello","world"]
 

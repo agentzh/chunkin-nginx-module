@@ -1,7 +1,7 @@
 # vi:filetype=
 
 use lib 't/lib';
-use Test::Nginx::Socket::Chunkin;
+use Test::Nginx::Socket;
 
 #worker_connections(1024);
 master_process_enabled(1);
@@ -20,10 +20,10 @@ __DATA__
 
 === TEST 1: single chunk
 --- config
-    chunkin on;
     location /ar.do {
         client_max_body_size       1m;
         client_body_buffer_size    512;
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -56,10 +56,10 @@ $::data
 
 === TEST 2: single chunk
 --- config
-    chunkin on;
     location /ar.do {
         client_max_body_size       1m;
         client_body_buffer_size    1k;
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers

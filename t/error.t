@@ -1,7 +1,7 @@
 # vi:filetype=
 
 use lib 't/lib';
-use Test::Nginx::Socket::Chunkin;
+use Test::Nginx::Socket;
 
 plan tests => repeat_each() * 2 * blocks();
 
@@ -25,8 +25,8 @@ hi
 
 === TEST 2: good chunked body
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -45,8 +45,8 @@ hello
 
 === TEST 3: chunk size too small
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -65,8 +65,8 @@ hello\r
 
 === TEST 4: chunk size too big
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -85,8 +85,8 @@ hello\r
 
 === TEST 5: chunk size even bigger
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -105,8 +105,8 @@ hello\r
 
 === TEST 6: chunk size WAY too big and rejected by ragel DFA
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -125,8 +125,8 @@ hello\r
 
 === TEST 7: missing LF after data chunk
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -144,8 +144,8 @@ hello\r0\r
 
 === TEST 8: missing CR after data chunk
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -164,8 +164,8 @@ hello
 
 === TEST 9: missing CRLF after data chunk
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -183,8 +183,8 @@ hello0\r
 
 === TEST 10: 2 zero chunks
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -202,9 +202,9 @@ Transfer-Encoding: chunked
 
 === TEST 11: 1 00 chunk and 1 zero chunk
 --- config
-    chunkin on;
     location /main {
         #echo "length: $http_content_length";
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -222,8 +222,8 @@ Transfer-Encoding: chunked
 
 === TEST 12: 1 00 chunk and 1 zero chunk
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -243,8 +243,8 @@ helloworld,hello\r
 
 === TEST 13: bad chunk size
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -263,8 +263,8 @@ hello\r
 
 === TEST 14: bad chunk size in the 2nd chunk
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers
@@ -286,8 +286,8 @@ hello\r
 
 === TEST 15: error near the end of big chunks
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo_request_body;
     }
 --- more_headers

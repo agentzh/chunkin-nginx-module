@@ -1,7 +1,7 @@
 # vi:ft=
 
 use lib 't/lib';
-use Test::Nginx::LWP::Chunkin;
+use Test::Nginx::LWP;
 
 plan tests => repeat_each() * 2 * blocks();
 
@@ -11,37 +11,8 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: off & POST
+=== TEST 1: on & GET
 --- config
-    chunkin off;
-    location /main {
-        echo hi;
-    }
---- request
-POST /main
---- chunked_body eval
-["hello", "world"]
---- error_code: 411
---- response_body_like: 411 Length Required
-
-
-
-=== TEST 2: default (off) & POST
---- config
-    location /main {
-    }
---- request
-POST /main
---- chunked_body eval
-["hello", "world"]
---- error_code: 411
---- response_body_like: 411 Length Required
-
-
-
-=== TEST 3: off & GET
---- config
-    chunkin off;
     location /main {
         echo hi;
     }
@@ -53,26 +24,12 @@ hi
 
 
 
-=== TEST 4: on & GET
+=== TEST 2: on & POST
 --- config
-    chunkin on;
     location /main {
-        echo hi;
-    }
---- request
-GET /main
---- response_body
-hi
---- error_code: 200
-
-
-
-=== TEST 5: on & POST
---- config
-    chunkin on;
-    location /main {
+        echo_read_request_body;
         echo $request_method;
-        #echo $echo_request_body;
+        echo $echo_request_body;
     }
 --- request
 POST /main
@@ -81,15 +38,17 @@ POST /main
 --- error_code: 200
 --- response_body
 POST
+helloworld
 
 
 
-=== TEST 6: raw request headers (indeed chunked)
+=== TEST 3: raw request headers (indeed chunked)
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo 'headers:';
         echo $echo_client_request_headers;
+        echo_request_body;
     }
 --- request
 POST /main
@@ -104,16 +63,15 @@ User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Transfer-Encoding: chunked\r
 
-"
+helloworld"
 
 
 
-=== TEST 7: request headers filtered by chunkin
+=== TEST 4: request headers filtered by chunkin
 This test passes only for nginx versions
 * 0.7.x >= 0.7.21
 * 0.8.x >= 0.8.10
 --- config
-    chunkin on;
     location /main {
         proxy_pass_request_headers on;
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
@@ -139,9 +97,8 @@ Content-Length: 10\r
 
 
 
-=== TEST 8: 0 chunk body
+=== TEST 5: 0 chunk body
 --- config
-    chunkin on;
     location /main {
         echo "body:";
         echo $echo_request_body;
@@ -158,11 +115,11 @@ POST /main
 
 
 
-=== TEST 9: 0 chunk body via proxy (header okay)
+=== TEST 6: 0 chunk body via proxy (header okay)
 --- config
-    chunkin on;
     location /main {
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
+        #proxy_pass $scheme://127.0.0.1:1113/proxy;
     }
     location /proxy {
         echo $echo_client_request_headers;
@@ -184,9 +141,8 @@ Content-Length: 0\r
 
 
 
-=== TEST 10: single char in preread
+=== TEST 7: single char in preread
 --- config
-    chunkin on;
     location /main {
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
     }
@@ -210,10 +166,10 @@ Content-Length: 1\r
 
 
 
-=== TEST 11: single char in preread (headers okay)
+=== TEST 8: single char in preread (headers okay)
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo "body:";
         echo $echo_request_body;
     }
@@ -228,12 +184,12 @@ a
 
 
 
-=== TEST 12: on & POST & read body & no single buf
+=== TEST 9: on & POST & read body & no single buf
 --- config
-    chunkin on;
     location /main {
+        echo_read_request_body;
         echo "body:";
-        echo $echo_request_body;
+        echo_request_body;
     }
 --- request
 POST /main
@@ -241,17 +197,17 @@ POST /main
 --- chunked_body eval
 ["hello", "world"]
 --- error_code: 200
---- response_body
+--- response_body chop
 body:
 helloworld
 
 
 
-=== TEST 13: on & POST & read body & single buf
+=== TEST 10: on & POST & read body & single buf
 --- config
-    chunkin on;
     location /main {
         client_body_in_single_buffer on;
+        echo_read_request_body;
         echo "body:";
         echo $echo_request_body;
     }
@@ -268,12 +224,12 @@ helloworld
 
 
 
-=== TEST 14: on & POST & read body & no single buf & echo_request_body
+=== TEST 11: on & POST & read body & no single buf & echo_request_body
 --- config
-    chunkin on;
     location /main {
         client_body_in_single_buffer on;
         echo "body:";
+        echo_read_request_body;
         echo_request_body;
         echo;
     }
@@ -290,13 +246,12 @@ helloworld
 
 
 
-=== TEST 15: request headers filtered by chunkin (with delay)
+=== TEST 12: request headers filtered by chunkin (with delay)
 This test passes only for nginx versions
 * 0.7.x >= 0.7.21
 * 0.8.x >= 0.8.10
 --- middle_chunk_delay: 0.01
 --- config
-    chunkin on;
     location /main {
         proxy_pass_request_headers on;
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
@@ -322,13 +277,12 @@ Content-Length: 10\r
 
 
 
-=== TEST 16: small buf (using 2-byte buf)
+=== TEST 13: small buf (using 2-byte buf)
 --- config
-    chunkin on;
     location /main {
         client_body_buffer_size    2;
+        echo_read_request_body;
         echo "body:";
-        echo $echo_request_body;
         echo_request_body;
     }
 --- request
@@ -340,18 +294,16 @@ POST /main
 --- error_code: 200
 --- response_body eval
 "body:
-
 helloworld"
 
 
 
-=== TEST 17: small buf (using 1-byte buf)
+=== TEST 14: small buf (using 1-byte buf)
 --- config
-    chunkin on;
     location /main {
         client_body_buffer_size    1;
         echo "body:";
-        echo $echo_request_body;
+        echo_read_request_body;
         echo_request_body;
     }
 --- request
@@ -363,18 +315,16 @@ POST /main
 --- error_code: 200
 --- response_body eval
 "body:
-
 helloworld"
 
 
 
-=== TEST 18: small buf (using 3-byte buf)
+=== TEST 15: small buf (using 3-byte buf)
 --- config
-    chunkin on;
     location /main {
         client_body_buffer_size    3;
+        echo_read_request_body;
         echo "body:";
-        echo $echo_request_body;
         echo_request_body;
     }
 --- request
@@ -386,16 +336,15 @@ POST /main
 --- error_code: 200
 --- response_body eval
 "body:
-
 helloworld"
 
 
 
-=== TEST 19: big chunk
+=== TEST 16: big chunk
 --- config
-    chunkin on;
     location /main {
         client_body_buffer_size    3;
+        echo_read_request_body;
         echo "body:";
         echo $echo_request_body;
         echo_request_body;
@@ -414,11 +363,11 @@ hello" . ("world" x 1024) . ('!' x 1024)
 
 
 
-=== TEST 20: in memory
+=== TEST 17: in memory
 --- config
-    chunkin on;
     location /main {
         client_body_buffer_size    4k;
+        echo_read_request_body;
         echo "body:";
         echo $echo_request_body;
     }
@@ -435,11 +384,10 @@ helloworld
 
 
 
-=== TEST 21: on & PUT
+=== TEST 18: on & PUT
 --- config
-    chunkin on;
     location /main {
-        #echo_read_request_body;
+        echo_read_request_body;
         echo_request_body;
     }
 --- request
