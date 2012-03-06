@@ -1,6 +1,6 @@
 diff -ur nginx-1.0.12/src/http/ngx_http_request_body.c nginx-1.0.12-patched/src/http/ngx_http_request_body.c
---- nginx-1.0.12/src/http/ngx_http_request_body.c	2012-03-01 22:16:20.999195138 +0800
-+++ nginx-1.0.12-patched/src/http/ngx_http_request_body.c	2012-03-01 22:16:11.451319107 +0800
+--- nginx-1.0.12/src/http/ngx_http_request_body.c	2012-03-06 17:22:29.989136700 +0800
++++ nginx-1.0.12-patched/src/http/ngx_http_request_body.c	2012-03-06 17:20:25.549263526 +0800
 @@ -16,6 +16,9 @@
      ngx_chain_t *body);
  static ngx_int_t ngx_http_read_discarded_request_body(ngx_http_request_t *r);
@@ -11,7 +11,7 @@ diff -ur nginx-1.0.12/src/http/ngx_http_request_body.c nginx-1.0.12-patched/src/
  
  
  /*
-@@ -37,6 +40,14 @@
+@@ -37,6 +40,10 @@
      ngx_http_request_body_t   *rb;
      ngx_http_core_loc_conf_t  *clcf;
  
@@ -19,16 +19,12 @@ diff -ur nginx-1.0.12/src/http/ngx_http_request_body.c nginx-1.0.12-patched/src/
 +        return ngx_http_chunkin_read_chunked_request_body(r, post_handler);
 +    }
 +
-+    if (r->headers_in.content_length_n < 0) {
-+        return NGX_HTTP_LENGTH_REQUIRED;
-+    }
-+
      r->main->count++;
  
      if (r->request_body || r->discard_body || r->content_length_n == 0) {
 diff -ur nginx-1.0.12/src/http/ngx_http_request.c nginx-1.0.12-patched/src/http/ngx_http_request.c
---- nginx-1.0.12/src/http/ngx_http_request.c	2012-03-01 22:16:21.002195069 +0800
-+++ nginx-1.0.12-patched/src/http/ngx_http_request.c	2012-03-01 22:16:11.453319177 +0800
+--- nginx-1.0.12/src/http/ngx_http_request.c	2012-03-06 17:22:29.989136700 +0800
++++ nginx-1.0.12-patched/src/http/ngx_http_request.c	2012-03-06 17:20:25.550260942 +0800
 @@ -1558,6 +1558,7 @@
          }
      }
@@ -61,8 +57,8 @@ diff -ur nginx-1.0.12/src/http/ngx_http_request.c nginx-1.0.12-patched/src/http/
  
      if (r->headers_in.connection_type == NGX_HTTP_CONNECTION_KEEP_ALIVE) {
 diff -ur nginx-1.0.12/src/http/ngx_http_request.h nginx-1.0.12-patched/src/http/ngx_http_request.h
---- nginx-1.0.12/src/http/ngx_http_request.h	2012-03-01 22:16:21.007194231 +0800
-+++ nginx-1.0.12-patched/src/http/ngx_http_request.h	2012-03-01 22:16:11.452319317 +0800
+--- nginx-1.0.12/src/http/ngx_http_request.h	2012-03-06 17:22:29.991136560 +0800
++++ nginx-1.0.12-patched/src/http/ngx_http_request.h	2012-03-06 17:20:25.550260942 +0800
 @@ -496,6 +496,7 @@
  
      unsigned                          pipeline:1;
