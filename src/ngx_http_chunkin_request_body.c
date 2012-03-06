@@ -1,7 +1,7 @@
 /* Copyright (C) agentzh */
 
 #ifndef DDEBUG
-#define DDEBUG 1
+#define DDEBUG 0
 #endif
 
 #include "ddebug.h"
@@ -46,17 +46,7 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
 
     dd("enter");
 
-    if (!r->chunked_in) {
-        if (r->headers_in.content_length_n >= 0) {
-            return ngx_http_read_client_request_body(r, post_handler);
-        }
-
-        return NGX_HTTP_LENGTH_REQUIRED;
-    }
-
     r->main->count++;
-
-    ngx_http_chunkin_clear_transfer_encoding(r);
 
     if (r->request_body || r->discard_body) {
         dd("body already read or body discarded");
@@ -68,6 +58,14 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
         dd("test expect failed");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
+
+    if (!r->chunked_in) {
+        dd("chunked in: %d", (int) r->chunked_in);
+
+        return ngx_http_read_client_request_body(r, post_handler);
+    }
+
+    ngx_http_chunkin_clear_transfer_encoding(r);
 
     rb = ngx_pcalloc(r->pool, sizeof(ngx_http_request_body_t));
     if (rb == NULL) {
@@ -276,7 +274,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
 #if 0
         dd("Just after preread and ctx->chunks defined (bytes read: %d, "
-                "chunk size: %d, last chars %c %c %c)", (int) ctx->chunk_bytes_read,
+                "chunk size: %d, last chars %c %c %c)",
+                (int) ctx->chunk_bytes_read,
                 (int) ctx->chunk_size, *(r->header_in->pos - 2),
                 *(r->header_in->pos - 1), *r->header_in->pos);
 #endif
@@ -343,7 +342,8 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
                 } else {
                     dd("save exceeding part to disk (%d bytes), buf size: %d, "
                             "chunks count: %d",
-                            (int) (ctx->chunks_total_size - ctx->chunks_written_size),
+                            (int) (ctx->chunks_total_size -
+                                ctx->chunks_written_size),
                             (int) (rb->buf->end - rb->buf->start),
                             (int) ctx->chunks_count);
 

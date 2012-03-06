@@ -11,7 +11,7 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: on & GET
+=== TEST 1: simple GET
 --- config
     location /main {
         echo hi;
@@ -24,7 +24,24 @@ hi
 
 
 
-=== TEST 2: on & POST
+=== TEST 2: proxy & GET
+--- config
+    location /t {
+        proxy_pass http://127.0.0.1:$server_port/main;
+    }
+
+    location /main {
+        echo hi;
+    }
+--- request
+GET /t
+--- response_body
+hi
+--- error_code: 200
+
+
+
+=== TEST 3: on & POST
 --- config
     location /main {
         echo_read_request_body;
@@ -42,7 +59,7 @@ helloworld
 
 
 
-=== TEST 3: raw request headers (indeed chunked)
+=== TEST 4: raw request headers (indeed chunked)
 --- config
     location /main {
         echo_read_request_body;
@@ -67,7 +84,7 @@ helloworld"
 
 
 
-=== TEST 4: request headers filtered by chunkin
+=== TEST 5: request headers filtered by chunkin
 This test passes only for nginx versions
 * 0.7.x >= 0.7.21
 * 0.8.x >= 0.8.10
@@ -97,7 +114,7 @@ Content-Length: 10\r
 
 
 
-=== TEST 5: 0 chunk body
+=== TEST 6: 0 chunk body
 --- config
     location /main {
         echo "body:";
@@ -115,7 +132,7 @@ POST /main
 
 
 
-=== TEST 6: 0 chunk body via proxy (header okay)
+=== TEST 7: 0 chunk body via proxy (header okay)
 --- config
     location /main {
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
@@ -141,7 +158,7 @@ Content-Length: 0\r
 
 
 
-=== TEST 7: single char in preread
+=== TEST 8: single char in preread
 --- config
     location /main {
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
@@ -166,7 +183,7 @@ Content-Length: 1\r
 
 
 
-=== TEST 8: single char in preread (headers okay)
+=== TEST 9: single char in preread (headers okay)
 --- config
     location /main {
         echo_read_request_body;
@@ -184,7 +201,7 @@ a
 
 
 
-=== TEST 9: on & POST & read body & no single buf
+=== TEST 10: on & POST & read body & no single buf
 --- config
     location /main {
         echo_read_request_body;
@@ -203,7 +220,7 @@ helloworld
 
 
 
-=== TEST 10: on & POST & read body & single buf
+=== TEST 11: on & POST & read body & single buf
 --- config
     location /main {
         client_body_in_single_buffer on;
@@ -224,7 +241,7 @@ helloworld
 
 
 
-=== TEST 11: on & POST & read body & no single buf & echo_request_body
+=== TEST 12: on & POST & read body & no single buf & echo_request_body
 --- config
     location /main {
         client_body_in_single_buffer on;
@@ -246,7 +263,7 @@ helloworld
 
 
 
-=== TEST 12: request headers filtered by chunkin (with delay)
+=== TEST 13: request headers filtered by chunkin (with delay)
 This test passes only for nginx versions
 * 0.7.x >= 0.7.21
 * 0.8.x >= 0.8.10
@@ -277,7 +294,7 @@ Content-Length: 10\r
 
 
 
-=== TEST 13: small buf (using 2-byte buf)
+=== TEST 14: small buf (using 2-byte buf)
 --- config
     location /main {
         client_body_buffer_size    2;
@@ -298,7 +315,7 @@ helloworld"
 
 
 
-=== TEST 14: small buf (using 1-byte buf)
+=== TEST 15: small buf (using 1-byte buf)
 --- config
     location /main {
         client_body_buffer_size    1;
@@ -319,7 +336,7 @@ helloworld"
 
 
 
-=== TEST 15: small buf (using 3-byte buf)
+=== TEST 16: small buf (using 3-byte buf)
 --- config
     location /main {
         client_body_buffer_size    3;
@@ -340,7 +357,7 @@ helloworld"
 
 
 
-=== TEST 16: big chunk
+=== TEST 17: big chunk
 --- config
     location /main {
         client_body_buffer_size    3;
@@ -363,7 +380,7 @@ hello" . ("world" x 1024) . ('!' x 1024)
 
 
 
-=== TEST 17: in memory
+=== TEST 18: in memory
 --- config
     location /main {
         client_body_buffer_size    4k;
@@ -384,7 +401,7 @@ helloworld
 
 
 
-=== TEST 18: on & PUT
+=== TEST 19: on & PUT
 --- config
     location /main {
         echo_read_request_body;
