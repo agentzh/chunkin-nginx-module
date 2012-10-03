@@ -598,3 +598,54 @@ hell\r\r
 "DELETE
 hell\r"
 
+
+
+=== TEST 26: no contenth-length nor chunked (PUT)
+--- config
+    chunkin on;
+    location /aar.do {
+        echo_request_body;
+    }
+--- raw_request eval
+"PUT /aar.do HTTP/1.1\r
+Host: data.test.com\r
+Content-Type:application/octet-stream\r
+User-Agent: SEC-SGHD840/1.0 NetFront/3.2 Profile/MIDP-2.0 Configuration/CLDC-1.1 UNTRUSTED/1.0\r
+Via: ZXWAP GateWay,ZTE Technologies\r
+x-up-calling-line-id: 841223657459\r
+Connection: close\r
+\r
+5\r
+hello\r
+0\r
+\r
+"
+--- response_body_like: 411 Length Required
+--- error_code: 411
+
+
+
+=== TEST 27: no contenth-length nor chunked (POST)
+--- config
+    chunkin on;
+    location /aar.do {
+        echo_request_body;
+    }
+--- raw_request eval
+"POST /aar.do HTTP/1.1\r
+Host: data.test.com\r
+Content-Type:application/octet-stream\r
+User-Agent: SEC-SGHD840/1.0 NetFront/3.2 Profile/MIDP-2.0 Configuration/CLDC-1.1 UNTRUSTED/1.0\r
+Via: ZXWAP GateWay,ZTE Technologies\r
+x-up-calling-line-id: 841223657459\r
+Connection: close\r
+\r
+5\r
+hello\r
+0\r
+\r
+"
+--- response_body_like: 411 Length Required
+--- error_code: 411
+--- SKIP
+

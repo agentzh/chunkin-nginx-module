@@ -1,6 +1,8 @@
 /* Copyright (C) agentzh */
 
+#ifndef DDEBUG
 #define DDEBUG 0
+#endif
 #include "ddebug.h"
 
 #include <ngx_config.h>
@@ -308,9 +310,7 @@ ngx_http_chunkin_resume_handler(ngx_http_request_t *r) {
         return NGX_HTTP_LENGTH_REQUIRED;
     }
 
-    if (r->method == NGX_HTTP_POST &&
-                ! ngx_http_chunkin_is_chunked_encoding(r->main))
-    {
+    if (!ngx_http_chunkin_is_chunked_encoding(r->main)) {
         dd("found POST request, but not chunked");
         return NGX_HTTP_LENGTH_REQUIRED;
     }
