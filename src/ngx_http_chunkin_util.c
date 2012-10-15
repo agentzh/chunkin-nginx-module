@@ -443,7 +443,7 @@ ngx_http_chunkin_rm_header(ngx_list_t *l, ngx_table_elt_t *h)
             }
 
             part = part->next;
-            h = part->elts;
+            data = part->elts;
             i = 0;
         }
 
