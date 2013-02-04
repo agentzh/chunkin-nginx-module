@@ -231,6 +231,8 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     dd("chunkin handler: header_in->pos: %d",
             (int)(r->header_in->pos - r->header_in->start));
 
+    r->request_body_in_persistent_file = 1;
+
     rc = ngx_http_chunkin_read_chunked_request_body(r,
             ngx_http_chunkin_post_read);
 
