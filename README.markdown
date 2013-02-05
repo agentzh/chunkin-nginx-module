@@ -13,7 +13,9 @@ Name
 Status
 ======
 
-This module is considered production ready.
+This module is no longer needed for Nginx 1.3.9+ because since 1.3.9, the Nginx core already has built-in support for the chunked request bodies.
+
+And this module is now only maintained for Nginx versions older than 1.3.9.
 
 Version
 =======
@@ -214,6 +216,41 @@ the version 1.0.8 (see [nginx compatibility](http://wiki.nginx.org/HttpChunkinMo
 
 Download the latest version of the release tarball of this module from [chunkin-nginx-module file list](http://github.com/agentzh/chunkin-nginx-module/tags).
 
+
+Installation on Ubuntu 10.04 LTS using apt/dpkg
+-----------------------------------------------
+
+You need to have dpkg-dev installed (apt-get install dpkg-dev)
+And this guide assumes we are using the official repo.
+
+    sudo -s
+    apt-get source nginx
+    apt-get build-dep nginx
+    wget 'https://github.com/agentzh/chunkin-nginx-module/tarball/v0.23rc2'
+    tar -xzvf v0.23rc2
+
+    #rename directory to make it easier to remember later.
+    mv agentzh-chunkin-* chunkin
+
+    #this next one of course will change depending on which repo/version you are using.
+    cd nginx-1.0.14/
+    vim debian/rules
+
+    #See the ./configure section (for both "override_dh_auto_build": and "configure_debug:")
+    #At this point it's a good idea to have a idea of what you will need of modules/addons. remove any lines you don't need.
+    #The current last item in the ./configure section needs to have '\' added.
+    #Then add this: --add-module=../chunkin
+
+    dpkg-buildpackage
+
+    cd ..
+    #the next one of course will change according to version/build
+    dpkg -i nginx_1.0.14-1~lucid_i386.deb
+
+    #verify install with nginx -V see that add-module=../chunkin is in the configurea arguemnts list.
+
+
+
 For Developers
 --------------
 
@@ -236,11 +273,12 @@ The following source and binary rpm files are contributed by Ernest Folch, with 
 * [nginx-0.8.54-1.fc13.src.rpm](http://agentzh.org/misc/nginx/ernest/nginx-0.8.54-1.fc13.src.rpm)
 * [nginx-0.8.54-1.fc13.x86_64.rpm](http://agentzh.org/misc/nginx/ernest/nginx-0.8.54-1.fc13.x86_64.rpm)
 
-Compatibility
-=============
+Nginx Compatibility
+===================
 
 The following versions of Nginx should work with this module:
 
+* **1.2.x**                       (last tested: 1.2.6)
 * **1.1.x**                       (last tested: 1.1.5)
 * **1.0.x**                       (last tested: 1.0.10)
 * **0.8.x**                       (last tested: 0.8.54)
@@ -250,13 +288,26 @@ Earlier versions of Nginx like 0.6.x and 0.5.x will *not* work.
 
 If you find that any particular version of Nginx above 0.7.21 does not work with this module, please consider [reporting a bug](http://wiki.nginx.org/HttpChunkinModule#Report_Bugs).
 
-Report Bugs
-===========
+Community
+=========
 
-Although a lot of effort has been put into testing and code tuning, there must be some serious bugs lurking somewhere in this module. So whenever you are bitten by any quirks, please don't hesitate to
+English Mailing List
+--------------------
 
-1. send a bug report or even patches to <agentzh@gmail.com>,
-1. or create a ticket on the [issue tracking interface](http://github.com/agentzh/chunkin-nginx-module/issues) provided by GitHub.
+The [openresty-en](https://groups.google.com/group/openresty-en) mailing list is for English speakers.
+
+Chinese Mailing List
+--------------------
+
+The [openresty](https://groups.google.com/group/openresty) mailing list is for Chinese speakers.
+
+Bugs and Patches
+================
+
+Please submit bug reports, wishlists, or patches by
+
+1. creating a ticket on the [GitHub Issue Tracker](http://github.com/agentzh/chunkin-nginx-module/issues),
+1. or posting to the [OpenResty community](http://wiki.nginx.org/HttpChunkinModule#Community).
 
 Source Repository
 =================
@@ -400,7 +451,7 @@ You'll be very welcomed to submit patches to the [author](http://wiki.nginx.org/
 Author
 ======
 
-Zhang "agentzh" Yichun (章亦春) *&lt;agentzh@gmail.com&gt;*
+Yichun "agentzh" Zhang (章亦春) *&lt;agentzh@gmail.com&gt;*, CloudFlare Inc.
 
 This wiki page is also maintained by the author himself, and everybody is encouraged to improve this page as well.
 
@@ -409,7 +460,7 @@ Copyright & License
 
 The basic client request body reading code is based on the `ngx_http_read_client_request_body` function and its utility functions in the Nginx 0.8.20 core. This part of code is copyrighted by Igor Sysoev.
 
-Copyright (c) 2009, 2010, 2011, Zhang "agentzh" Yichun (章亦春) <agentzh@gmail.com>.
+Copyright (c) 2009-2013, Yichun Zhang (agentzh), CloudFlare Inc.
 
 This module is licensed under the terms of the BSD license.
 
