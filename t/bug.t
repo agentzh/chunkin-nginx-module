@@ -649,3 +649,50 @@ hello\r
 --- error_code: 411
 --- SKIP
 
+
+
+=== TEST 28: did not work with subrequests
+--- config
+    chunkin on;
+
+    error_page 411 = @my_411_error;
+    location @my_411_error {
+        chunkin_resume;
+    }
+
+    location = /t {
+        content_by_lua_file html/a.lua;
+    }
+
+    location = /sub {
+        echo hello world;
+    }
+--- user_files
+>>> a.lua
+ngx.req.read_body()
+local res = ngx.location.capture("/sub")
+ngx.say("sr: ", res.status)
+--- raw_request eval
+"POST /t HTTP/1.1\r
+Host: localhost\r
+Transfer-Encoding: chunked\r
+\r
+5\r
+hello\r
+0\r
+\r
+"
+--- more_headers
+Transfer-Encoding: chunked
+--- stap2
+F(ngx_http_finalize_request) {
+    if ($r->main->count >= 3) {
+        printf("============ %d\n", $r->main->count)
+        print_ubacktrace()
+    }
+}
+--- response_body_body
+sr: 200
+--- no_error_log
+[error]
+

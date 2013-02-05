@@ -14,7 +14,9 @@ force=$2
 
 ngx-build $force $version \
           --with-cc-opt="-funsigned-char" \
+          --with-ld-opt="-L$PCRE_LIB -Wl,-rpath,$PCRE_LIB:$LUAJIT_LIB:/usr/local/lib" \
           --add-module=$root/../echo-nginx-module \
+          --add-module=$root/../lua-nginx-module \
           --add-module=$root $opts \
           --with-debug
           #\

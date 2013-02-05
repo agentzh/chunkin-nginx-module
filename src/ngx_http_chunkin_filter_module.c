@@ -359,7 +359,13 @@ ngx_http_chunkin_resume_handler(ngx_http_request_t *r) {
         return rc;
     }
 
-    return ngx_http_chunkin_internal_redirect(r, &r->main->uri, &r->main->args,
-            ctx);
+    rc = ngx_http_chunkin_internal_redirect(r, &r->main->uri, &r->main->args,
+                                            ctx);
+
+    /* ngx_http_process_request calls this to handle subrequests,
+     * so we need to call it here as well */
+    ngx_http_run_posted_requests(r->connection);
+
+    return rc;
 }
 
