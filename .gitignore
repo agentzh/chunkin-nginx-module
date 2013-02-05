@@ -39,6 +39,9 @@ ctags
 go
 util/gprof
 all
-build1[01]
+build1[0123]
 buildroot/
 work/
+*.plist
+Makefile
+nginx
