@@ -20,7 +20,7 @@ And this module is now only maintained for Nginx versions older than 1.3.9.
 Version
 =======
 
-This document describes ngx_chunkin [v0.23rc2](http://github.com/agentzh/chunkin-nginx-module/tags) released on November 24, 2011.
+This document describes ngx_chunkin [v0.23](http://github.com/agentzh/chunkin-nginx-module/tags) released on February 8, 2013.
 
 Synopsis
 ========
@@ -199,12 +199,12 @@ Installation
 ============
 
 Grab the nginx source code from [nginx.org](http://nginx.org/), for example,
-the version 1.0.8 (see [nginx compatibility](http://wiki.nginx.org/HttpChunkinModule#Compatibility)), and then build the source with this module:
+the version 1.2.6 (see [nginx compatibility](http://wiki.nginx.org/HttpChunkinModule#Compatibility)), and then build the source with this module:
 
 
-    wget 'http://nginx.org/download/nginx-1.0.8.tar.gz'
-    tar -xzvf nginx-1.0.8.tar.gz
-    cd nginx-1.0.8/
+    wget 'http://nginx.org/download/nginx-1.2.6.tar.gz'
+    tar -xzvf nginx-1.2.6.tar.gz
+    cd nginx-1.2.6/
     
     # Here we assume you would install you nginx under /opt/nginx/.
     ./configure --prefix=/opt/nginx \
