@@ -89,7 +89,7 @@ POST
     chunkin on;
     location /main {
         echo 'headers:';
-        echo $echo_client_request_headers;
+        echo -n $echo_client_request_headers;
     }
 --- request
 POST /main
@@ -103,7 +103,7 @@ Host: localhost:\$ServerPortForClient\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Transfer-Encoding: chunked\r
-
+\r
 "
 
 
@@ -120,7 +120,7 @@ This test passes only for nginx versions
     }
 
     location /proxy {
-        echo $echo_client_request_headers;
+        echo -n $echo_client_request_headers;
     }
 --- request
 POST /main
@@ -134,7 +134,7 @@ Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Content-Length: 10\r
-
+\r
 "
 
 
@@ -165,7 +165,7 @@ POST /main
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
     }
     location /proxy {
-        echo $echo_client_request_headers;
+        echo -n $echo_client_request_headers;
     }
 --- request
 POST /main
@@ -179,7 +179,7 @@ Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Content-Length: 0\r
-
+\r
 "
 
 
@@ -191,7 +191,7 @@ Content-Length: 0\r
         proxy_pass $scheme://127.0.0.1:$server_port/proxy;
     }
     location /proxy {
-        echo $echo_client_request_headers;
+        echo -n $echo_client_request_headers;
     }
 --- request
 POST /main
@@ -205,7 +205,7 @@ Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Content-Length: 1\r
-
+\r
 "
 
 
@@ -303,7 +303,7 @@ This test passes only for nginx versions
     }
 
     location /proxy {
-        echo $echo_client_request_headers;
+        echo -n $echo_client_request_headers;
     }
 --- request
 POST /main
@@ -317,7 +317,7 @@ Connection: close\r
 User-Agent: Test::Nginx::LWP\r
 Content-Type: text/plain\r
 Content-Length: 10\r
-
+\r
 "
 
 
