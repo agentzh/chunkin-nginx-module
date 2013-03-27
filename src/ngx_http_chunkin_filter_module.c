@@ -250,7 +250,6 @@ ngx_http_chunkin_handler(ngx_http_request_t *r)
     }
 
     ctx->done = 1;
-    r->header_in->pos = ctx->saved_header_in_pos;
 
     return NGX_DECLINED;
 }
