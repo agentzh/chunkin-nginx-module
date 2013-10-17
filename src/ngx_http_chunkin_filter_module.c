@@ -279,7 +279,7 @@ ngx_http_chunkin_post_read(ngx_http_request_t *r)
 
 
 static char* ngx_http_chunkin_resume(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf)
+    void *conf)
 {
     ngx_http_core_loc_conf_t        *clcf;
 
@@ -293,7 +293,8 @@ static char* ngx_http_chunkin_resume(ngx_conf_t *cf, ngx_command_t *cmd,
 
 
 static ngx_int_t
-ngx_http_chunkin_resume_handler(ngx_http_request_t *r) {
+ngx_http_chunkin_resume_handler(ngx_http_request_t *r)
+{
     ngx_int_t                   rc;
     ngx_http_chunkin_conf_t     *conf;
     ngx_http_chunkin_ctx_t      *ctx;

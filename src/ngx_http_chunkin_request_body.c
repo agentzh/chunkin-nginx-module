@@ -632,7 +632,7 @@ ngx_http_test_expect(ngx_http_request_t *r)
  * copyrighted by Igor Sysoev. */
 static ngx_int_t
 ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body,
-        int chain_count)
+    int chain_count)
 {
     ssize_t                    n;
     ngx_temp_file_t           *tf;

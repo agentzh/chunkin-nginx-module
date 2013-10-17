@@ -41,7 +41,8 @@ ngx_http_chunkin_clear_transfer_encoding(ngx_http_request_t *r)
 
 
 ngx_int_t
-ngx_http_chunkin_set_content_length_header(ngx_http_request_t *r, size_t len) {
+ngx_http_chunkin_set_content_length_header(ngx_http_request_t *r, size_t len)
+{
     ngx_table_elt_t             *h;
     ngx_list_part_t             *part;
     ngx_uint_t                  i;
@@ -185,7 +186,7 @@ ngx_http_chunkin_get_buf(ngx_pool_t *pool, ngx_http_chunkin_ctx_t *ctx)
  * copyrighted by Igor Sysoev. */
 ngx_int_t
 ngx_http_chunkin_restart_request(ngx_http_request_t *r,
-        ngx_http_chunkin_ctx_t *ctx)
+    ngx_http_chunkin_ctx_t *ctx)
 {
     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "chunkin: restart request: \"%V?%V\"",
@@ -460,7 +461,7 @@ ngx_http_chunkin_rm_header(ngx_list_t *l, ngx_table_elt_t *h)
 
 static ngx_int_t
 ngx_http_chunkin_rm_header_helper(ngx_list_t *l, ngx_list_part_t *cur,
-        ngx_uint_t i)
+    ngx_uint_t i)
 {
     ngx_table_elt_t             *data;
     ngx_list_part_t             *new, *part;
