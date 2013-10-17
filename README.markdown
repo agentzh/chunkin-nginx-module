@@ -8,7 +8,54 @@ Name
 
 **ngx_chunkin** - HTTP 1.1 chunked-encoding request body support for Nginx.
 
-*This module is not distributed with the Nginx source.* See [the installation instructions](http://wiki.nginx.org/HttpChunkinModule#Installation).
+*This module is not distributed with the Nginx source.* See [the installation instructions](#installation).
+
+Table of Contents
+=================
+
+* [Status](#status)
+* [Version](#version)
+* [Synopsis](#synopsis)
+* [Description](#description)
+    * [How it works](#how-it-works)
+* [Directives](#directives)
+    * [chunkin](#chunkin)
+    * [chunkin_resume](#chunkin_resume)
+    * [chunkin_max_chunks_per_buf](#chunkin_max_chunks_per_buf)
+    * [chunkin_keepalive](#chunkin_keepalive)
+* [Installation](#installation)
+    * [Installation on Ubuntu 10.04 LTS using apt/dpkg](#installation-on-ubuntu-1004-lts-using-aptdpkg)
+    * [For Developers](#for-developers)
+* [Packages from users](#packages-from-users)
+    * [Fedora 13 RPM files](#fedora-13-rpm-files)
+* [Nginx Compatibility](#nginx-compatibility)
+* [Community](#community)
+    * [English Mailing List](#english-mailing-list)
+    * [Chinese Mailing List](#chinese-mailing-list)
+* [Bugs and Patches](#bugs-and-patches)
+* [Source Repository](#source-repository)
+* [ChangeLog](#changelog)
+    * [v0.22](#v022)
+    * [v0.21](#v021)
+    * [v0.20](#v020)
+    * [v0.19](#v019)
+    * [v0.18](#v018)
+    * [v0.17](#v017)
+    * [v0.16](#v016)
+    * [v0.15](#v015)
+    * [v0.14](#v014)
+    * [v0.11](#v011)
+    * [v0.10](#v010)
+    * [v0.08](#v008)
+    * [v0.07](#v007)
+    * [v0.06](#v006)
+* [Test Suite](#test-suite)
+* [Known Issues](#known-issues)
+* [TODO](#todo)
+* [Getting involved](#getting-involved)
+* [Author](#author)
+* [Copyright & License](#copyright--license)
+* [See Also](#see-also)
 
 Status
 ======
@@ -56,6 +103,8 @@ Synopsis
       }
 
 
+[Back to TOC](#table-of-contents)
+
 Description
 ===========
 
@@ -63,7 +112,7 @@ This module adds [HTTP 1.1 chunked](http://tools.ietf.org/html/rfc2616#section-3
 
 Behind the scene, it registers an access-phase handler that will eagerly read and decode incoming request bodies when a `Transfer-Encoding: chunked` header triggers a `411` error page in Nginx. For requests that are not in the `chunked` transfer encoding, this module is a "no-op".
 
-To enable the magic, just turn on the [chunkin](http://wiki.nginx.org/HttpChunkinModule#chunkin) config option and define a custom `411 error_page` using [chunkin_resume](http://wiki.nginx.org/HttpChunkinModule#chunkin_resume), like this:
+To enable the magic, just turn on the [chunkin](#chunkin) config option and define a custom `411 error_page` using [chunkin_resume](#chunkin_resume), like this:
 
 
       server {
@@ -78,14 +127,16 @@ To enable the magic, just turn on the [chunkin](http://wiki.nginx.org/HttpChunki
       }
 
 
-No other modification is required in your nginx.conf file and everything should work out of the box including the standard [proxy module](http://wiki.nginx.org/HttpProxyModule) (except for those [known issues](http://wiki.nginx.org/HttpChunkinModule#Known_Issues)). Note that the [chunkin](http://wiki.nginx.org/HttpChunkinModule#chunkin) directive is not allowed in the location block while the [chunkin_resume](http://wiki.nginx.org/HttpChunkinModule#chunkin_resume) directive is only allowed on in `locations`.
+No other modification is required in your nginx.conf file and everything should work out of the box including the standard [proxy module](http://nginx.org/en/docs/http/ngx_http_proxy_module.html) (except for those [known issues](#known-issues)). Note that the [chunkin](#chunkin) directive is not allowed in the location block while the [chunkin_resume](#chunkin_resume) directive is only allowed on in `locations`.
 
-The core module's [client_body_buffer_size](http://wiki.nginx.org/HttpCoreModule#client_body_buffer_size), [client_max_body_size](http://wiki.nginx.org/HttpCoreModule#client_max_body_size), and [client_body_timeout](http://wiki.nginx.org/HttpCoreModule#client_body_timeout) directive settings are honored. Note that, the "body sizes" here always indicate chunked-encoded body, not the data that has already been decoded. Basically, the
+The core module's [client_body_buffer_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size), [client_max_body_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size), and [client_body_timeout](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_timeout) directive settings are honored. Note that, the "body sizes" here always indicate chunked-encoded body, not the data that has already been decoded. Basically, the
 chunked-encoded body will always be slightly larger than the original data that is not encoded.
 
-The [client_body_in_file_only](http://wiki.nginx.org/HttpCoreModule#client_body_in_file_only) and [client_body_in_single_buffer](http://wiki.nginx.org/HttpCoreModule#client_body_in_single_buffer) settings are followed partially. See [Know Issues](http://wiki.nginx.org/HttpChunkinModule#Known_Issues).
+The [client_body_in_file_only](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_in_file_only) and [client_body_in_single_buffer](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_in_single_buffer) settings are followed partially. See [Know Issues](#known-issues).
 
 This module is not supposed to be merged into the Nginx core because I've used [Ragel](http://www.complang.org/ragel/) to generate the chunked encoding parser for joy :)
+
+[Back to TOC](#table-of-contents)
 
 How it works
 ------------
@@ -103,8 +154,12 @@ Those modules using the standard `ngx_http_read_client_request_body` function to
 
 Special efforts have been made to reduce data copying and dynamic memory allocation.
 
+[Back to TOC](#table-of-contents)
+
 Directives
 ==========
+
+[Back to TOC](#table-of-contents)
 
 chunkin
 -------
@@ -117,6 +172,8 @@ chunkin
 **phase:** *access*
 
 Enables or disables this module's hooks.
+
+[Back to TOC](#table-of-contents)
 
 chunkin_resume
 --------------
@@ -139,7 +196,9 @@ This directive must be used in your custom `411 error page` location to help thi
 
 For the technical reason behind the necessity of this directive, please read the `nginx-devel` thread [Content-Length is not ignored for chunked requests: Nginx violates RFC 2616](http://nginx.org/pipermail/nginx-devel/2009-December/000041.html).
 
-This directive was first introduced in the [v0.17](http://wiki.nginx.org/HttpChunkinModule#v0.17) release.
+This directive was first introduced in the [v0.17](#v017) release.
+
+[Back to TOC](#table-of-contents)
 
 chunkin_max_chunks_per_buf
 --------------------------
@@ -149,13 +208,15 @@ chunkin_max_chunks_per_buf
 
 **context:** *http, server, location*
 
-Set the max chunk count threshold for the buffer determined by the [client_body_buffer_size](http://wiki.nginx.org/HttpCoreModule#client_body_buffer_size) directive.
-If the average chunk size is `1 KB` and your [client_body_buffer_size](http://wiki.nginx.org/HttpCoreModule#client_body_buffer_size) setting
+Set the max chunk count threshold for the buffer determined by the [client_body_buffer_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size) directive.
+If the average chunk size is `1 KB` and your [client_body_buffer_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size) setting
 is 1 meta bytes, then you should set this threshold to `1024` or `2048`.
 
-When the raw body size is exceeding [client_body_buffer_size](http://wiki.nginx.org/HttpCoreModule#client_body_buffer_size) *or* the chunk counter is exceeding this `chunkin_max_chunks_per_buf` setting, the decoded data will be temporarily buffered into disk files, and then the main buffer gets cleared and the chunk counter gets reset back to 0 (or `1` if there's a "pending chunk").
+When the raw body size is exceeding [client_body_buffer_size](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_body_buffer_size) *or* the chunk counter is exceeding this `chunkin_max_chunks_per_buf` setting, the decoded data will be temporarily buffered into disk files, and then the main buffer gets cleared and the chunk counter gets reset back to 0 (or `1` if there's a "pending chunk").
 
-This directive was first introduced in the [v0.17](http://wiki.nginx.org/HttpChunkinModule#v0.17) release.
+This directive was first introduced in the [v0.17](#v017) release.
+
+[Back to TOC](#table-of-contents)
 
 chunkin_keepalive
 -----------------
@@ -169,7 +230,7 @@ Turns on or turns off HTTP 1.1 keep-alive and HTTP 1.1 pipelining support.
 
 Keep-alive without pipelining should be quite stable but pipelining support is very preliminary, limited, and almost untested.
 
-This directive was first introduced in the [v0.07 release](http://wiki.nginx.org/HttpChunkinModule#v0.07).
+This directive was first introduced in the [v0.07 release](#v007).
 
 **Technical note on the HTTP 1.1 pipeling support**
 
@@ -195,11 +256,13 @@ I haven't fully grokked all the details among `r->header_in`, `c->buffer`,
 busy/free lists and those so-called "large header buffers". Is there a
 clean and safe way to reallocate or extend the `r->header_in` buffer?
 
+[Back to TOC](#table-of-contents)
+
 Installation
 ============
 
 Grab the nginx source code from [nginx.org](http://nginx.org/), for example,
-the version 1.2.6 (see [nginx compatibility](http://wiki.nginx.org/HttpChunkinModule#Compatibility)), and then build the source with this module:
+the version 1.2.6 (see [nginx compatibility](#compatibility)), and then build the source with this module:
 
 
     wget 'http://nginx.org/download/nginx-1.2.6.tar.gz'
@@ -216,6 +279,8 @@ the version 1.2.6 (see [nginx compatibility](http://wiki.nginx.org/HttpChunkinMo
 
 Download the latest version of the release tarball of this module from [chunkin-nginx-module file list](http://github.com/agentzh/chunkin-nginx-module/tags).
 
+
+[Back to TOC](#table-of-contents)
 
 Installation on Ubuntu 10.04 LTS using apt/dpkg
 -----------------------------------------------
@@ -251,6 +316,8 @@ And this guide assumes we are using the official repo.
 
 
 
+[Back to TOC](#table-of-contents)
+
 For Developers
 --------------
 
@@ -262,8 +329,12 @@ the following command from the root of the chunkin module's source tree:
     $ ragel -G2 src/chunked_parser.rl
 
 
+[Back to TOC](#table-of-contents)
+
 Packages from users
 ===================
+
+[Back to TOC](#table-of-contents)
 
 Fedora 13 RPM files
 -------------------
@@ -272,6 +343,8 @@ The following source and binary rpm files are contributed by Ernest Folch, with 
 
 * [nginx-0.8.54-1.fc13.src.rpm](http://agentzh.org/misc/nginx/ernest/nginx-0.8.54-1.fc13.src.rpm)
 * [nginx-0.8.54-1.fc13.x86_64.rpm](http://agentzh.org/misc/nginx/ernest/nginx-0.8.54-1.fc13.x86_64.rpm)
+
+[Back to TOC](#table-of-contents)
 
 Nginx Compatibility
 ===================
@@ -286,20 +359,28 @@ The following versions of Nginx should work with this module:
 
 Earlier versions of Nginx like 0.6.x and 0.5.x will *not* work.
 
-If you find that any particular version of Nginx above 0.7.21 does not work with this module, please consider [reporting a bug](http://wiki.nginx.org/HttpChunkinModule#Report_Bugs).
+If you find that any particular version of Nginx above 0.7.21 does not work with this module, please consider [reporting a bug](#report-bugs).
+
+[Back to TOC](#table-of-contents)
 
 Community
 =========
+
+[Back to TOC](#table-of-contents)
 
 English Mailing List
 --------------------
 
 The [openresty-en](https://groups.google.com/group/openresty-en) mailing list is for English speakers.
 
+[Back to TOC](#table-of-contents)
+
 Chinese Mailing List
 --------------------
 
 The [openresty](https://groups.google.com/group/openresty) mailing list is for Chinese speakers.
+
+[Back to TOC](#table-of-contents)
 
 Bugs and Patches
 ================
@@ -307,15 +388,21 @@ Bugs and Patches
 Please submit bug reports, wishlists, or patches by
 
 1. creating a ticket on the [GitHub Issue Tracker](http://github.com/agentzh/chunkin-nginx-module/issues),
-1. or posting to the [OpenResty community](http://wiki.nginx.org/HttpChunkinModule#Community).
+1. or posting to the [OpenResty community](#community).
+
+[Back to TOC](#table-of-contents)
 
 Source Repository
 =================
 
 Available on github at [agentzh/chunkin-nginx-module](http://github.com/agentzh/chunkin-nginx-module).
 
+[Back to TOC](#table-of-contents)
+
 ChangeLog
 =========
+
+[Back to TOC](#table-of-contents)
 
 v0.22
 -----
@@ -323,9 +410,13 @@ v0.22
 * now we allow DELETE requests with chunked request bodies per hoodoos's request.
 * now we use the 2-clause BSD license.
 
+[Back to TOC](#table-of-contents)
+
 v0.21
 -----
 * applied a patch from Gong Kaihui (龚开晖) to always call `post_handler` in `ngx_http_chunkin_read_chunked_request_body`.
+
+[Back to TOC](#table-of-contents)
 
 v0.20
 -----
@@ -334,57 +425,77 @@ v0.20
 * added support for chunked PUT requests.
 * now we always require "error_page 411 @resume" and no default (buggy) magic any more. thanks Gong Kaihui (龚开晖).
 
+[Back to TOC](#table-of-contents)
+
 v0.19
 -----
 * we now use ragel -G2 to generate the chunked parser and we're 36% faster.
 * we now eagerly read the data octets in the chunked parser and we're 43% faster.
+
+[Back to TOC](#table-of-contents)
 
 v0.18
 -----
 * added support for `chunk-extension` to the chunked parser as per [RFC 2616](http://tools.ietf.org/html/rfc2616#section-3.6.1), but we just ignore them (if any) because we don't understand them.
 * added more diagnostic information for certian error messages.
 
+[Back to TOC](#table-of-contents)
+
 v0.17
 -----
-* implemented the [chunkin_max_chunks_per_buf](http://wiki.nginx.org/HttpChunkinModule#chunkin_max_chunks_per_buf) directive to allow overriding the default `512` setting.
-* we now bypass nginx's [discard requesty body bug](http://nginx.org/pipermail/nginx-devel/2009-December/000041.html) by requiring our users to define explicit `411 error_page` with [chunkin_resume](http://wiki.nginx.org/HttpChunkinModule#chunkin_resume) in the error page location. Thanks J for reporting related bugs.
+* implemented the [chunkin_max_chunks_per_buf](#chunkin_max_chunks_per_buf) directive to allow overriding the default `512` setting.
+* we now bypass nginx's [discard requesty body bug](http://nginx.org/pipermail/nginx-devel/2009-December/000041.html) by requiring our users to define explicit `411 error_page` with [chunkin_resume](#chunkin_resume) in the error page location. Thanks J for reporting related bugs.
 * fixed `r->phase_handler` in our post read handler. our handler may run one more time before :P
 * the chunkin handler now returns `NGX_DECLINED` rather than `NGX_OK` when our `ngx_http_chunkin_read_chunked_request_body` function returns `NGX_OK`, to avoid bypassing other access-phase handlers.
+
+[Back to TOC](#table-of-contents)
 
 v0.16
 -----
 * turned off ddebug in the previous release. thanks J for reporting it.
 
+[Back to TOC](#table-of-contents)
+
 v0.15
 -----
 * fixed a regression that ctx->chunks_count never incremented in earlier versions.
 
+[Back to TOC](#table-of-contents)
+
 v0.14
 -----
-* now we no longer skip those operations between the (interrupted) ngx_http_process_request_header and the server rewrite phase. this fixed the security issues regarding the [internal](http://wiki.nginx.org/HttpCoreModule#internal) directive as well as SSL sessions.
+* now we no longer skip those operations between the (interrupted) ngx_http_process_request_header and the server rewrite phase. this fixed the security issues regarding the [internal](http://nginx.org/en/docs/http/ngx_http_core_module.html#internal) directive as well as SSL sessions.
 * try to ignore CR/LF/SP/HT at the begining of the chunked body.
 * now we allow HT as padding spaces and ignore leading CRLFs.
 * improved diagnostic info in the error.log messages when parsefail occurs.
+
+[Back to TOC](#table-of-contents)
 
 v0.11
 -----
 * added a random valid-chunked-request generator in t/random.t.
 * fixed a new connection leak issue caught by t/random.t.
 
+[Back to TOC](#table-of-contents)
+
 v0.10
 -----
 * fixed a serious bug in the chunked parser grammer: there would be ambiguity when CRLF appears in the chunked data sections. Thanks J for reporting it.
+
+[Back to TOC](#table-of-contents)
 
 v0.08
 -----
 * fixed gcc compilation errors on x86_64, thanks J for reporting it.
 * used the latest Ragel 6.6 to generate the `chunked_parser.c` file in the source tree.
 
+[Back to TOC](#table-of-contents)
+
 v0.07
 -----
 
 * marked the disgarded 411 error page's output chain bufs as consumed by setting `buf->pos = buf->last`. (See [this nginx-devel thread](http://nginx.org/pipermail/nginx-devel/2009-December/000025.html) for more details.)
-* added the [chunkin_keepalive](http://wiki.nginx.org/HttpChunkinModule#chunkin_keepalive) directive which can enable HTTP 1.1 keep-alive and HTTP 1.1 pipelining, and defaults to `off`.
+* added the [chunkin_keepalive](#chunkin_keepalive) directive which can enable HTTP 1.1 keep-alive and HTTP 1.1 pipelining, and defaults to `off`.
 * fixed the `alphtype` bug in the Ragel parser spec; which caused rejection of non-ascii octets in the chunked data. Thanks J for his bug report.
 * added `Test::Nginx::Socket` to test our nginx module on the socket level. Thanks J for his bug report.
 * rewrote the bufs recycling part and preread-buf-to-rb-buf transition part, also refactored the Ragel parser spec, thus eliminating lots of serious bugs.
@@ -403,9 +514,13 @@ v0.07
 * added some code to let the chunked parser handle special 0-size chunks that are not the last chunk.
 * fixed a connection leak bug regarding incorrect `r->main->count` reference counter handling for nginx 0.8.11+ (well, the `ngx_http_read_client_request_body` function in the nginx core also has this issue, I'll report it later.)
 
+[Back to TOC](#table-of-contents)
+
 v0.06
 -----
 * minor optimization: we won't traverse the output chain link if the chain count is not large enough.
+
+[Back to TOC](#table-of-contents)
 
 Test Suite
 ==========
@@ -426,7 +541,9 @@ At the moment, [LWP::UserAgent](http://search.cpan.org/perldoc?LWP::UserAgent) i
 
 Because a single nginx server (by default, `localhost:1984`) is used across all the test scripts (`.t` files), it's meaningless to run the test suite in parallel by specifying `-jN` when invoking the `prove` utility.
 
-Some parts of the test suite requires modules [proxy](http://wiki.nginx.org/HttpProxyModule) and [echo](http://wiki.nginx.org/HttpEchoModule) to be enabled as well when building Nginx.
+Some parts of the test suite requires modules [proxy](http://nginx.org/en/docs/http/ngx_http_proxy_module.html) and [echo](http://github.com/agentzh/echo-nginx-module) to be enabled as well when building Nginx.
+
+[Back to TOC](#table-of-contents)
 
 Known Issues
 ============
@@ -436,17 +553,23 @@ Known Issues
 * "client_body_in_file_only on" may *not* be obeyed for short contents and fast network.
 * HTTP 1.1 pipelining may not fully work yet.
 
+[Back to TOC](#table-of-contents)
+
 TODO
 ====
 
 * make the chunkin handler run at the end of the `access phase` rather than beginning.
 * add support for `trailers` as specified in the [RFC 2616](http://tools.ietf.org/html/rfc2616#section-3.6.1).
-* fix the [known issues](http://wiki.nginx.org/HttpChunkinModule#Known_Issues).
+* fix the [known issues](#known-issues).
+
+[Back to TOC](#table-of-contents)
 
 Getting involved
 ================
 
-You'll be very welcomed to submit patches to the [author](http://wiki.nginx.org/HttpChunkinModule#Author) or just ask for a commit bit to the [source repository](http://wiki.nginx.org/HttpChunkinModule#Source_Repository) on GitHub.
+You'll be very welcomed to submit patches to the [author](#author) or just ask for a commit bit to the [source repository](#source-repository) on GitHub.
+
+[Back to TOC](#table-of-contents)
 
 Author
 ======
@@ -454,6 +577,8 @@ Author
 Yichun "agentzh" Zhang (章亦春) *&lt;agentzh@gmail.com&gt;*, CloudFlare Inc.
 
 This wiki page is also maintained by the author himself, and everybody is encouraged to improve this page as well.
+
+[Back to TOC](#table-of-contents)
 
 Copyright & License
 ===================
@@ -484,6 +609,8 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+[Back to TOC](#table-of-contents)
+
 See Also
 ========
 
@@ -491,6 +618,6 @@ See Also
 * The orginal announcement thread on the Nginx mailing list: ["The chunkin module: Experimental chunked input support for Nginx"](http://forum.nginx.org/read.php?2,22967).
 * The original [blog post](http://agentzh.spaces.live.com/blog/cns!FF3A735632E41548!481.entry) about this module's initial development.
 * The thread discussing chunked input support on the nginx-devel mailing list: ["Chunked request body and HTTP header parser"](http://nginx.org/pipermail/nginx-devel/2009-December/000021.html).
-* The [echo module](http://wiki.nginx.org/HttpEchoModule) for Nginx module's automated testing.
+* The [echo module](http://github.com/agentzh/echo-nginx-module) for Nginx module's automated testing.
 * [RFC 2616 - Chunked Transfer Coding](http://tools.ietf.org/html/rfc2616#section-3.6.1).
 
