@@ -205,7 +205,7 @@ ngx_http_chunkin_restart_request(ngx_http_request_t *r,
 
     dd("DISCARD BODY: %d", (int)r->discard_body);
 
-    if ( ! ctx->r_discard_body ) {
+    if (!ctx->r_discard_body) {
         r->main->count++;
     }
 
@@ -413,7 +413,7 @@ ngx_http_chunkin_internal_redirect(ngx_http_request_t *r,
 
     dd("DISCARD BODY: %d", (int)r->discard_body);
 
-    if ( ! ctx->r_discard_body ) {
+    if (!ctx->r_discard_body) {
         r->main->count++;
     }
 

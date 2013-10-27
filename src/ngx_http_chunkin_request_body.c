@@ -1,6 +1,13 @@
-/* Copyright (C) agentzh */
 
+/*
+ * Copyright (C) Yichun Zhang (agentzh)
+ */
+
+
+#ifndef DDEBUG
 #define DDEBUG 0
+#endif
+
 
 #include "ddebug.h"
 
@@ -9,20 +16,19 @@
 #include "ngx_http_chunkin_filter_module.h"
 #include "ngx_http_chunkin_request_body.h"
 
+
 enum {
     MAX_CHUNKS_PER_DISK_WRITE = 512
 };
 
+
 static ngx_int_t ngx_http_test_expect(ngx_http_request_t *r);
-
 static void ngx_http_chunkin_read_chunked_request_body_handler(
-        ngx_http_request_t *r);
-
+    ngx_http_request_t *r);
 static ngx_int_t ngx_http_chunkin_do_read_chunked_request_body(
-        ngx_http_request_t *r);
-
+    ngx_http_request_t *r);
 static ngx_int_t ngx_http_write_request_body(ngx_http_request_t *r,
-        ngx_chain_t *body, int chain_count);
+    ngx_chain_t *body, int chain_count);
 
 
 /* this function's implementation is borrowed from nginx 0.8.20
@@ -511,7 +517,7 @@ ngx_http_chunkin_do_read_chunked_request_body(ngx_http_request_t *r)
 
         rb->bufs->buf = b;
 
-    } else if ( r->request_body_in_single_buf ) {
+    } else if (r->request_body_in_single_buf) {
         dd("request body in single buf");
 
         /* XXX we may not have to allocate a big buffer here */
@@ -725,4 +731,3 @@ ngx_http_write_request_body(ngx_http_request_t *r, ngx_chain_t *body,
 
     return NGX_OK;
 }
-
