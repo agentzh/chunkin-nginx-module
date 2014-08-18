@@ -74,35 +74,35 @@ Synopsis
 
 ```nginx
 
-      chunkin on;
-      
-      error_page 411 = @my_411_error;
-      location @my_411_error {
-          chunkin_resume;
-      }
-      
-      location /foo {
-          # your fastcgi_pass/proxy_pass/set/if and
-          # any other config directives go here...
-      }
-      ...
+  chunkin on;
+  
+  error_page 411 = @my_411_error;
+  location @my_411_error {
+      chunkin_resume;
+  }
+  
+  location /foo {
+      # your fastcgi_pass/proxy_pass/set/if and
+      # any other config directives go here...
+  }
+  ...
 ```
 
 ```nginx
 
-      chunkin on;
-      
-      error_page 411 = @my_411_error;
-      location @my_411_error {
-          chunkin_resume;
-      }
-      
-      location /bar {
-        chunkin_keepalive on;  # WARNING: too experimental!
-        
-        # your fastcgi_pass/proxy_pass/set/if and
-        # any other config directives go here...
-      }
+  chunkin on;
+  
+  error_page 411 = @my_411_error;
+  location @my_411_error {
+      chunkin_resume;
+  }
+  
+  location /bar {
+    chunkin_keepalive on;  # WARNING: too experimental!
+    
+    # your fastcgi_pass/proxy_pass/set/if and
+    # any other config directives go here...
+  }
 ```
 
 [Back to TOC](#table-of-contents)
@@ -118,16 +118,16 @@ To enable the magic, just turn on the [chunkin](#chunkin) config option and defi
 
 ```nginx
 
-      server {
-        chunkin on;
-    
-        error_page 411 = @my_411_error;
-        location @my_411_error {
-            chunkin_resume;
-        }
-    
-        ...
-      }
+  server {
+    chunkin on;
+
+    error_page 411 = @my_411_error;
+    location @my_411_error {
+        chunkin_resume;
+    }
+
+    ...
+  }
 ```
 
 No other modification is required in your nginx.conf file and everything should work out of the box including the standard [proxy module](http://nginx.org/en/docs/http/ngx_http_proxy_module.html) (except for those [known issues](#known-issues)). Note that the [chunkin](#chunkin) directive is not allowed in the location block while the [chunkin_resume](#chunkin_resume) directive is only allowed on in `locations`.
@@ -192,10 +192,10 @@ This directive must be used in your custom `411 error page` location to help thi
 
 ```nginx
 
-      error_page 411 = @my_error;
-      location @my_error {
-          chunkin_resume;
-      }
+  error_page 411 = @my_error;
+  location @my_error {
+      chunkin_resume;
+  }
 ```
 
 For the technical reason behind the necessity of this directive, please read the `nginx-devel` thread [Content-Length is not ignored for chunked requests: Nginx violates RFC 2616](http://nginx.org/pipermail/nginx-devel/2009-December/000041.html).
@@ -270,16 +270,16 @@ the version 1.2.6 (see [nginx compatibility](#compatibility)), and then build th
 
 ```bash
 
-    wget 'http://nginx.org/download/nginx-1.2.6.tar.gz'
-    tar -xzvf nginx-1.2.6.tar.gz
-    cd nginx-1.2.6/
-    
-    # Here we assume you would install you nginx under /opt/nginx/.
-    ./configure --prefix=/opt/nginx \
-        --add-module=/path/to/chunkin-nginx-module
-     
-    make -j2
-    make install
+wget 'http://nginx.org/download/nginx-1.2.6.tar.gz'
+tar -xzvf nginx-1.2.6.tar.gz
+cd nginx-1.2.6/
+
+# Here we assume you would install you nginx under /opt/nginx/.
+./configure --prefix=/opt/nginx \
+    --add-module=/path/to/chunkin-nginx-module
+ 
+make -j2
+make install
 ```
 
 Download the latest version of the release tarball of this module from [chunkin-nginx-module file list](http://github.com/agentzh/chunkin-nginx-module/tags).
@@ -294,31 +294,31 @@ You need to have dpkg-dev installed (apt-get install dpkg-dev)
 And this guide assumes we are using the official repo.
 ```bash
 
-    sudo -s
-    apt-get source nginx
-    apt-get build-dep nginx
-    wget 'https://github.com/agentzh/chunkin-nginx-module/tarball/v0.23rc2'
-    tar -xzvf v0.23rc2
+sudo -s
+apt-get source nginx
+apt-get build-dep nginx
+wget 'https://github.com/agentzh/chunkin-nginx-module/tarball/v0.23rc2'
+tar -xzvf v0.23rc2
 
-    #rename directory to make it easier to remember later.
-    mv agentzh-chunkin-* chunkin
+#rename directory to make it easier to remember later.
+mv agentzh-chunkin-* chunkin
 
-    #this next one of course will change depending on which repo/version you are using.
-    cd nginx-1.0.14/
-    vim debian/rules
+#this next one of course will change depending on which repo/version you are using.
+cd nginx-1.0.14/
+vim debian/rules
 
-    #See the ./configure section (for both "override_dh_auto_build": and "configure_debug:")
-    #At this point it's a good idea to have a idea of what you will need of modules/addons. remove any lines you don't need.
-    #The current last item in the ./configure section needs to have '\' added.
-    #Then add this: --add-module=../chunkin
+#See the ./configure section (for both "override_dh_auto_build": and "configure_debug:")
+#At this point it's a good idea to have a idea of what you will need of modules/addons. remove any lines you don't need.
+#The current last item in the ./configure section needs to have '\' added.
+#Then add this: --add-module=../chunkin
 
-    dpkg-buildpackage
+dpkg-buildpackage
 
-    cd ..
-    #the next one of course will change according to version/build
-    dpkg -i nginx_1.0.14-1~lucid_i386.deb
+cd ..
+#the next one of course will change according to version/build
+dpkg -i nginx_1.0.14-1~lucid_i386.deb
 
-    #verify install with nginx -V see that add-module=../chunkin is in the configurea arguemnts list.
+#verify install with nginx -V see that add-module=../chunkin is in the configurea arguemnts list.
 
 ```
 
@@ -333,7 +333,7 @@ the following command from the root of the chunkin module's source tree:
 
 ```bash
 
-    $ ragel -G2 src/chunked_parser.rl
+$ ragel -G2 src/chunked_parser.rl
 ```
 
 [Back to TOC](#table-of-contents)
@@ -539,8 +539,8 @@ To run it on your side:
 
 ```bash
 
-    $ cd test
-    $ PATH=/path/to/your/nginx-with-chunkin-module:$PATH prove -r t
+$ cd test
+$ PATH=/path/to/your/nginx-with-chunkin-module:$PATH prove -r t
 ```
 
 You need to terminate any Nginx processes before running the test suite if you have changed the Nginx server binary.
@@ -549,7 +549,7 @@ At the moment, [LWP::UserAgent](http://search.cpan.org/perldoc?LWP::UserAgent) i
 
 Because a single nginx server (by default, `localhost:1984`) is used across all the test scripts (`.t` files), it's meaningless to run the test suite in parallel by specifying `-jN` when invoking the `prove` utility.
 
-Some parts of the test suite requires modules [proxy](http://nginx.org/en/docs/http/ngx_http_proxy_module.html) and [echo](http://github.com/agentzh/echo-nginx-module) to be enabled as well when building Nginx.
+Some parts of the test suite requires modules [proxy](http://nginx.org/en/docs/http/ngx_http_proxy_module.html) and [echo](http://github.com/openresty/echo-nginx-module) to be enabled as well when building Nginx.
 
 [Back to TOC](#table-of-contents)
 
@@ -626,6 +626,6 @@ See Also
 * The orginal announcement thread on the Nginx mailing list: ["The chunkin module: Experimental chunked input support for Nginx"](http://forum.nginx.org/read.php?2,22967).
 * The original [blog post](http://agentzh.spaces.live.com/blog/cns!FF3A735632E41548!481.entry) about this module's initial development.
 * The thread discussing chunked input support on the nginx-devel mailing list: ["Chunked request body and HTTP header parser"](http://nginx.org/pipermail/nginx-devel/2009-December/000021.html).
-* The [echo module](http://github.com/agentzh/echo-nginx-module) for Nginx module's automated testing.
+* The [echo module](http://github.com/openresty/echo-nginx-module) for Nginx module's automated testing.
 * [RFC 2616 - Chunked Transfer Coding](http://tools.ietf.org/html/rfc2616#section-3.6.1).
 
