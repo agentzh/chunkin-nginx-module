@@ -174,15 +174,9 @@ ngx_http_chunkin_read_chunked_request_body(ngx_http_request_t *r,
     }
 
     dd("chunks total size after preread: %d, buf size: %d",
-            (int)ctx->chunks_total_size, (int)size);
+       (int)ctx->chunks_total_size, (int)size);
 
     rb->buf = ngx_create_temp_buf(r->pool, size);
-
-#if 0
-    /* XXX just for debugging... */
-    ngx_memzero(rb->buf->start, rb->buf->end - rb->buf->start);
-#endif
-
     if (rb->buf == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
