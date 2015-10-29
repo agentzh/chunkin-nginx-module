@@ -439,7 +439,7 @@ v0.19
 v0.18
 -----
 * added support for `chunk-extension` to the chunked parser as per [RFC 2616](http://tools.ietf.org/html/rfc2616#section-3.6.1), but we just ignore them (if any) because we don't understand them.
-* added more diagnostic information for certian error messages.
+* added more diagnostic information for certain error messages.
 
 [Back to TOC](#table-of-contents)
 
