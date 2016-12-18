@@ -577,7 +577,7 @@ You'll be very welcomed to submit patches to the [author](#author) or just ask f
 Author
 ======
 
-Yichun "agentzh" Zhang (章亦春) *&lt;agentzh@gmail.com&gt;*, CloudFlare Inc.
+Yichun "agentzh" Zhang (章亦春) *&lt;agentzh@gmail.com&gt;*, OpenResty Inc.
 
 This wiki page is also maintained by the author himself, and everybody is encouraged to improve this page as well.
 
@@ -588,7 +588,7 @@ Copyright & License
 
 The basic client request body reading code is based on the `ngx_http_read_client_request_body` function and its utility functions in the Nginx 0.8.20 core. This part of code is copyrighted by Igor Sysoev.
 
-Copyright (c) 2009-2013, Yichun Zhang (agentzh), CloudFlare Inc.
+Copyright (c) 2009-2017, Yichun Zhang (agentzh), OpenResty Inc.
 
 This module is licensed under the terms of the BSD license.
 
